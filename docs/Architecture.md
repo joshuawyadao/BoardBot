@@ -1,14 +1,18 @@
 # Architecture direction
 
-This describes the finalized planning baseline, not implemented modules. The first interface is a local React browser app targeting an M1 MacBook Pro. The repository still contains only documentation, GitHub configuration, verification scripts, and their tests. Build tooling, package versions, storage technology, and supported browser versions will be pinned during implementation.
+This records the agreed boundaries for the first Horrified: Dungeons & Dragons game and the current synthetic interaction prototype. The React app runs locally with Vite and TypeScript. Node.js 24 and npm package versions are pinned for the prototype; game storage and supported browser versions for the finished milestone remain open.
+
+## Current prototype
+
+`src/engine/sampleGame.ts` owns an invented four-location graph, three-action budget, action legality, and pure state transitions for Move and Wait. It rejects invalid and repeated commands without changing state. `src/session/useSampleSession.ts` uses a reducer and a 900 ms display timer to finish a committed resolution. `src/ui/App.tsx` presents the map, selection, confirmation, lock, and history. Reloading creates a fresh sample turn. The prototype has no dice, monsters, saved sessions, or Horrified rules. Its engine exercises the intended boundary; it is not the future verified game engine.
 
 ## Responsibilities
 
 | Component | Owns | Boundary |
 | --- | --- | --- |
 | Verified game data | Board graph, component definitions, quantities, source/version records | Incomplete entries cannot silently become supported gameplay |
-| Rules engine | State, legality, transitions, action costs, effects, end conditions | Independent of React, storage, and presentation |
-| Session runner | Turn/phase progression, commands, injected randomness, required choices, event history | Applies commands once through the rules engine |
+| Rules engine | State, legality, transitions, action costs, effects, end conditions | Independent of React, storage, and presentation; currently only a synthetic sample engine exists |
+| Session runner | Turn/phase progression, commands, injected randomness, required choices, event history | Applies commands once through the rules engine; the current reducer/timer only handles the sample turn |
 | React interface | Simplified board, action panel, descriptions, selections, confirmation, outcomes | Never duplicates rule decisions as a separate authority |
 | Local persistence | Versioned snapshots, pending choices, committed random results, recovery | Loading validates data and never executes imported code |
 | Future companion | Physical setup/tracking and sourced rules explanations | Reuses rules and data with a different interaction model |

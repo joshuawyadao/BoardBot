@@ -17,7 +17,7 @@ jobs:
   verify:
     name: CI Verify
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -25,3 +25,16 @@ jobs:
           persist-credentials: false
       - name: Verify repository and tooling tests
         run: ./scripts/verify-repository.sh
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Typecheck, build and test the sample engine
+        run: npm run build && npm test
+      - name: Install browser for interaction tests
+        run: npx playwright install --with-deps chromium
+      - name: Test the sample turn in Chromium
+        run: npm run test:e2e

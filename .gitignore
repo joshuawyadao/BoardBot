@@ -50,3 +50,7 @@ DerivedData/
 *.db
 *.log
 *.tmp
+
+# Browser test artifacts
+/playwright-report/
+/test-results/

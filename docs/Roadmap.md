@@ -1,6 +1,6 @@
 # Roadmap
 
-**Planning baseline finalized September 28, 2026.** Milestone 0 is complete. Application milestones have not started. The [work plan](Work-Plan.md) records the agreed build sequence and the [game-data checklist](Game-Data-Checklist.md) tracks research dependencies.
+**Planning baseline finalized September 28, 2026.** Milestone 0 is complete. Work on the first application milestone has begun with a synthetic interaction prototype; no Horrified game is playable yet. The [work plan](Work-Plan.md) records the agreed build sequence and the [game-data checklist](Game-Data-Checklist.md) tracks research dependencies.
 
 ## 0. Public project foundation - complete
 
@@ -10,10 +10,12 @@ MIT licensing, community policies, contribution templates, repository verificati
 
 Deliver a local React browser game for the M1 MacBook Pro, using one human-controlled hero against the Displacer Beast and Beholder. Use a simplified labeled map and generic markers. All five base heroes are selectable at completion; develop and validate them one at a time.
 
+**In progress:** A React sample-turn shell demonstrates hover/focus descriptions, selection, separate confirmation, action counts, a short resolution lock, and restart. Its four-location map, explorer, Move/Wait actions, and three-action allowance are invented. Reloading resets it. It does not satisfy the game, data, monster, offline acceptance, or save/resume criteria below.
+
 Build in this order:
 
 1. Verify required source data and register unresolved rulings; prepare synthetic fixtures where real data is pending.
-2. Establish the app and shared rules/command boundaries.
+2. Establish the app and shared rules/command boundaries. A synthetic prototype establishes the first UI/engine/session seam; the verified game engine is still to be built.
 3. Complete a game with one hero and the selected monster pair.
 4. Add and validate the remaining heroes.
 5. Finish the action panel, explanations, local recovery, offline behavior, and complete-game validation.
