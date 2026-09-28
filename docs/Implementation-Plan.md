@@ -1,32 +1,47 @@
 # Plan
 
-Prepare the empty BoardBot repository for public development using the conventions of the owner's other public projects. Establish the project as a future computer-based tool for solo board-game play and playtesting with bots, with an honest pre-implementation status, community guidance, repeatable verification, and GitHub security settings.
+**Status: finalized planning baseline, September 28, 2026. Application implementation has not started.**
+
+Build a local React browser app for practicing the original Horrified: Dungeons & Dragons on an M1 MacBook Pro. Deliver rules-enforced, on-screen solo play first; reuse the verified rules foundation for a physical-game companion later. Missing component details and unresolved rulings are explicit dependencies, not permission to guess.
 
 ## Scope
-- In: Initialize the local checkout on GitHub's configured `main` branch; adopt the established MIT license and community policies; document product direction and a phased roadmap; add issue/PR templates, repository checks and tests, CI, dependency maintenance, and public repository settings; commit and push the setup.
-- Out: Implement a playable game, choose an application stack, bundle commercial game content, add cloud AI/accounts/telemetry, publish a binary, or open/merge a pull request. Game selection remains a future product decision and does not block repository setup.
+- In: One human-controlled hero; all five base-game heroes selectable at milestone completion, validated individually; Displacer Beast and Beholder; a simplified labeled map with accurate connections; automated monster phases with required player choices; confirmation-based actions; local save/resume; offline gameplay after initial setup.
+- Out: Other monsters, promo heroes, Ravenloft, multiplayer, strategic bots controlling extra heroes, companion mode, cloud accounts/services, polished commercial artwork, and desktop packaging in the first milestone. This documentation update finalizes planning only and does not authorize starting application development.
 
 ## Action items
-[x] Inspect the empty local/remote repository and compare public setup conventions in Honkshool, MacroFactor Workout Bridge, and yarms. No existing BoardBot docs, code, tests, or assets exist.
-[x] Checkpoint this resolved plan on `main` before implementing the foundation (`bd5412d`).
-[x] Add README, MIT LICENSE, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, project AGENTS guidance, ignore rules, and editor defaults.
-[x] Write `docs/Product-Brief.md`, `docs/Architecture.md`, `docs/Roadmap.md`, and `docs/Verification.md`, separating intended behavior and deferred decisions from implemented capabilities.
-[x] Add GitHub bug/feature/game request forms, a PR template, a SHA-pinned `CI Verify` workflow, and weekly GitHub Actions Dependabot updates.
-[x] Add a dependency-free repository verifier with focused regression tests for missing files, broken relative links, unsafe public files, and valid fixtures; exercise local commands and YAML syntax checks.
-[x] Configure and verify the GitHub description/topics, squash-merge defaults, private vulnerability reporting, Dependabot alerts/security updates, and existing secret scanning/push protection. Keep settings consistent with the other public projects.
-[x] Review public content for personal data and third-party game assets, validate docs and checks, save the completed work with `save-branch`, and confirm the pushed commit's GitHub CI result.
+[ ] Complete the component inventory and rules register in `docs/Game-Data-Checklist.md`; record sources and confidence, resolve required gaps, and keep incomplete content visibly unavailable.
+[ ] Establish the React app and a rules engine independent of the interface, with explicit phases, legal commands, injected randomness, and synthetic test fixtures.
+[ ] Implement shared setup, movement, action budgets, items, citizens, perks, monster phases, and end conditions; reject invalid commands without changing state or spending resources.
+[ ] Deliver a complete internal playthrough with one validated hero and both selected monsters, including required choices during resolution; do not claim faithful gameplay while its data or rulings remain unverified.
+[ ] Implement and validate each remaining base hero, then expose all five for selection when the milestone is complete.
+[ ] Build the simplified board and action panel: remaining/available actions, hover descriptions, click to select, necessary targets/items, and a bottom Confirm button; provide keyboard-accessible descriptions too.
+[ ] Add local autosave, resume, and recovery that preserve committed random results, pending choices, and the action log; reject invalid saves and prevent duplicate action execution.
+[ ] Validate complete games, all supported hero abilities, edge cases, reload recovery, keyboard interaction, and disconnected play on the target Mac; update setup, architecture, and verification docs before describing the milestone as playable.
+
+## Action and recovery contract
+
+- Selecting, changing, or cancelling an unconfirmed action has no gameplay cost. There is no undo command in the initial design.
+- Confirm remains disabled until selections form a legal action. The engine checks legality again before committing it.
+- Once confirmed, block ordinary action selection and repeat confirmation until resolution ends. Enable only choices required by that resolution, including during monster phases.
+- Commit each action and random outcome once. A reload must not offer a new roll or repeat a card draw that has already been committed.
+- Autosave stable resolution boundaries, including pending choices with their already-determined outcomes. Save after each fully resolved action as well. Surface persistence failures and prevent silent progress beyond a recoverable state.
+- After resolution, refresh state, phase, action budget, legal options, and the readable result history. Temporary or bonus effects can change the budget; it is not a hard-coded fixed total.
+
+## Completion criteria
+
+A documented local setup on the M1 Mac can complete a game with either victory or defeat using each supported hero and the selected monster pair. Tests cover illegal actions, duplicate confirmation, interrupted resolution, temporary effects, player decision points, and save/reload without rerolling. All milestone-required data and rulings have verified sources or an explicitly documented user-approved interpretation. Gameplay, bundled assets, and local saves work without external network access after setup; the development server still needs to run locally.
+
+## Dependencies and later updates
+
+- Component reference photos/transcriptions: full cards and item quantities, hero tables, both sides of the Beholder reference, citizens, dice faces, and board/mat details. Track progress in the [game-data checklist](Game-Data-Checklist.md).
+- Edge-case rulings: keep publisher rules, reported developer correspondence, and unresolved interpretations distinct. Resolve each affected behavior before implementing it as an authoritative rule.
+- Before publishing third-party content, document its source and publication rights. Private reference photos stay outside tracked files. The simplified UI can use original labels and generic markers while content review proceeds.
+- Routine build tools, dependency versions, storage mechanism/schema, and supported browser versions will be selected and pinned during implementation. These do not reopen the agreed product scope.
+- Stage two is a physical-game companion for setup, tracking, and quick sourced rules/edge-case lookup. Other monsters, devices, and optional desktop packaging follow later.
 
 ## Open questions
-- None blocking. The first game and app stack are deliberately deferred to the playable prototype milestone; MIT follows the owner's existing public-project convention.
+- None blocking this planning baseline. The explicit research dependencies above remain open; finalized planning does not mean the rules or assets are fully verified.
 
-## Verification record
+## Documentation update and validation
 
-- `./scripts/verify-repository.sh`: passed locally on macOS with Python 3.11.2; all five end-to-end verifier tests passed. Also passed when invoked by absolute path from outside the checkout.
-- `sh -n scripts/verify-repository.sh`: passed. All six GitHub YAML files parsed successfully with Ruby's YAML library.
-- Tests in `tests/test_verify_repository.py` cover a valid fixture, a missing required document, a broken relative link, an ignored credential forcibly tracked by Git, and a symlink escaping the repository. Application tests are deferred because there is no application yet.
-- GitHub API readback confirmed public visibility, `main` as the configured default, description/topics, issues enabled, wiki disabled, squash merging enabled, other merge methods disabled, and automatic head-branch deletion after merge.
-- GitHub API readback confirmed private vulnerability reporting, Dependabot alerts/security updates, secret scanning, and push protection are enabled. No application dependency manifest exists yet.
-- No game assets, third-party runtime dependencies, personal save data, or credentials were added. The conduct reporting address and MIT attribution follow the owner's existing public repositories.
-- Plan checkpoint: `bd5412d`. Foundation checkpoint: `534c979`, pushed to `origin/main`. [CI Verify run 36466140635](https://github.com/joshuawyadao/BoardBot/actions/runs/36466140635) passed on the published foundation commit, including all five verifier tests.
-- GitHub recognized the MIT license and reported a 100% community profile. Bug/feature/game issue forms and the PR template are published. No pull request or release was created for this initial repository bootstrap.
-- The working tree was clean after the foundation push, with no unrelated files left unstaged. The remaining documentation checkpoint records these verified results.
+This task updates README, AGENTS guidance, product brief, architecture, roadmap, verification guidance, and the game-data checklist to match the planning decisions. No executable behavior changes, so no new test files are needed. Run the existing repository verifier and its five regression tests, inspect the documentation diff, and save the documentation checkpoint using the existing plan-implement-save/save-branch workflow. The earlier repository-foundation plan remains in Git history.
