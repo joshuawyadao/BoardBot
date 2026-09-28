@@ -1,0 +1,52 @@
+# Operating systems and editors
+.DS_Store
+.AppleDouble
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+!.env.template
+*.private.*
+*.key
+*.pem
+*.p8
+*.p12
+*.pfx
+credentials*.json
+secrets*.json
+
+# Dependencies, generated files, and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage/
+htmlcov/
+node_modules/
+.build/
+build/
+dist/
+DerivedData/
+*.egg-info/
+
+# Personal sessions and unpublished game experiments
+/local-data/
+/saves/
+/logs/
+/outputs/
+*.sqlite
+*.sqlite3
+*.db
+*.log
+*.tmp

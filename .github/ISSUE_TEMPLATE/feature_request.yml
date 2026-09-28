@@ -1,0 +1,35 @@
+name: Feature request
+description: Propose a focused improvement for solo play or bot playtesting.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Problem or user need
+      description: Describe the need before proposing an implementation. Use the game request form for a new game.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: What would a solo player or playtester be able to do?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and exclusions
+  - type: textarea
+    id: implications
+    attributes:
+      label: Data, content, and compatibility implications
+      description: Note storage, hidden information, network services, dependencies, platforms, and third-party game content.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List observable behaviors that demonstrate completion.
+    validations:
+      required: true

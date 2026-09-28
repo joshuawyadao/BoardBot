@@ -1,0 +1,41 @@
+name: Bug report
+description: Report a reproducible problem with repository tooling or an implemented feature.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        BoardBot currently has no playable app. For future game bugs, identify the game and rules version. Use invented data; exclude credentials, personal saves, private prototypes, and unlicensed assets. Report security vulnerabilities through the private Security link.
+  - type: textarea
+    id: observed
+    attributes:
+      label: What happened?
+      description: Describe the behavior and its impact.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Include a minimal setup, command or move sequence, and seed when applicable. Use synthetic data.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment and version
+      description: Include OS, commit or release, and tool/game/bot versions as relevant; omit device identifiers and private paths.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Share only sanitized logs or screenshots you can publish.

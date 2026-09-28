@@ -8,13 +8,23 @@ Prepare the empty BoardBot repository for public development using the conventio
 
 ## Action items
 [x] Inspect the empty local/remote repository and compare public setup conventions in Honkshool, MacroFactor Workout Bridge, and yarms. No existing BoardBot docs, code, tests, or assets exist.
-[ ] Checkpoint this resolved plan on `main` before implementing the foundation.
-[ ] Add README, MIT LICENSE, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, project AGENTS guidance, ignore rules, and editor defaults.
-[ ] Write `docs/Product-Brief.md`, `docs/Architecture.md`, `docs/Roadmap.md`, and `docs/Verification.md`, separating intended behavior and deferred decisions from implemented capabilities.
-[ ] Add GitHub bug/feature/game request forms, a PR template, a SHA-pinned `CI Verify` workflow, and weekly GitHub Actions Dependabot updates.
-[ ] Add a dependency-free repository verifier with focused regression tests for missing files, broken relative links, unsafe public files, and valid fixtures; exercise local commands and YAML syntax checks.
-[ ] Configure and verify the GitHub description/topics, squash-merge defaults, private vulnerability reporting, Dependabot alerts/security updates, and existing secret scanning/push protection. Keep settings consistent with the other public projects.
+[x] Checkpoint this resolved plan on `main` before implementing the foundation (`bd5412d`).
+[x] Add README, MIT LICENSE, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, project AGENTS guidance, ignore rules, and editor defaults.
+[x] Write `docs/Product-Brief.md`, `docs/Architecture.md`, `docs/Roadmap.md`, and `docs/Verification.md`, separating intended behavior and deferred decisions from implemented capabilities.
+[x] Add GitHub bug/feature/game request forms, a PR template, a SHA-pinned `CI Verify` workflow, and weekly GitHub Actions Dependabot updates.
+[x] Add a dependency-free repository verifier with focused regression tests for missing files, broken relative links, unsafe public files, and valid fixtures; exercise local commands and YAML syntax checks.
+[x] Configure and verify the GitHub description/topics, squash-merge defaults, private vulnerability reporting, Dependabot alerts/security updates, and existing secret scanning/push protection. Keep settings consistent with the other public projects.
 [ ] Review public content for personal data and third-party game assets, validate docs and checks, save the completed work with `save-branch`, and confirm the pushed commit's GitHub CI result.
 
 ## Open questions
 - None blocking. The first game and app stack are deliberately deferred to the playable prototype milestone; MIT follows the owner's existing public-project convention.
+
+## Verification record
+
+- `./scripts/verify-repository.sh`: passed locally on macOS with Python 3.11.2; all five end-to-end verifier tests passed. Also passed when invoked by absolute path from outside the checkout.
+- `sh -n scripts/verify-repository.sh`: passed. All six GitHub YAML files parsed successfully with Ruby's YAML library.
+- Tests in `tests/test_verify_repository.py` cover a valid fixture, a missing required document, a broken relative link, an ignored credential forcibly tracked by Git, and a symlink escaping the repository. Application tests are deferred because there is no application yet.
+- GitHub API readback confirmed public visibility, `main` as the configured default, description/topics, issues enabled, wiki disabled, squash merging enabled, other merge methods disabled, and automatic head-branch deletion after merge.
+- GitHub API readback confirmed private vulnerability reporting, Dependabot alerts/security updates, secret scanning, and push protection are enabled. No application dependency manifest exists yet.
+- No game assets, third-party runtime dependencies, personal save data, or credentials were added. The conduct reporting address and MIT attribution follow the owner's existing public repositories.
+- Push and GitHub CI confirmation remain to be recorded after publication.

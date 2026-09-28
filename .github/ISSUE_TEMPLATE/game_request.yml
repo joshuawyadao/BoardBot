@@ -1,0 +1,36 @@
+name: Game request
+description: Suggest a game for solo play or bot playtesting; a request does not imply support.
+title: "[Game]: "
+labels: [enhancement]
+body:
+  - type: input
+    id: game
+    attributes:
+      label: Game and edition
+      description: Give the title and edition, or identify it as your original game.
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Official source
+      description: Link to the publisher or an original project page if available. Do not upload a commercial rulebook.
+  - type: textarea
+    id: experience
+    attributes:
+      label: Solo experience and bot needs
+      description: Describe player count, human/bot seats, hidden information, and what you want to try or test.
+    validations:
+      required: true
+  - type: textarea
+    id: content
+    attributes:
+      label: Content provenance
+      description: What rules text or assets would be needed, and what license or permission allows publishing them? State unknown if this has not been established. Please do not attach private or unlicensed content.
+    validations:
+      required: true
+  - type: textarea
+    id: first_slice
+    attributes:
+      label: Smallest useful version
+      description: Describe a manageable first playable version and any rules or expansions to defer.
