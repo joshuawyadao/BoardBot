@@ -4,7 +4,7 @@ BoardBot is at the repository-foundation stage. Read the [README](README.md), [p
 
 ## Propose focused work
 
-Search existing issues first. Use the bug, feature, or game request form for a concrete outcome and observable acceptance criteria. Discuss a first game, application framework, external service, storage format, or major dependency in an issue before building around it. These choices affect the whole project.
+Search existing issues first. Use the bug, feature, or game request form for a concrete outcome and observable acceptance criteria. Discuss a new game, a change to the selected React approach, an external service, storage format, or major dependency in an issue before building around it. Follow the finalized implementation plan and its game-data dependencies for the initial solo milestone. These choices affect the whole project.
 
 For a game request, describe the edition, player count, solo experience, and bot behavior you want. Link to an official game page when one exists. Do not attach a commercial rulebook, scans, private prototype, or artwork as a substitute for permission to redistribute it.
 

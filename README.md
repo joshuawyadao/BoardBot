@@ -5,17 +5,17 @@
 
 BoardBot is a project for playing board games solo against bots on your computer and trying out games, strategies, and rule variations through repeatable playtests.
 
-> **Status: repository foundation.** There is no playable app, supported game, downloadable release, or game engine yet. This repository currently contains the product direction, contribution guidance, and automated repository checks. The first game and application technology are still to be selected.
+> **Status: repository foundation.** There is no playable app, supported game, downloadable release, or game engine yet. This repository currently contains the product direction, contribution guidance, and automated repository checks. The finalized first milestone targets the original Horrified: Dungeons & Dragons in a local React browser app on an M1 MacBook Pro. Application implementation has not started; component verification remains open.
 
-## Intended experience
+## Intended first experience
 
-- Choose a supported game and assign seats to yourself or local bot opponents.
-- Play at your own pace with visible legal moves and a readable turn history.
-- Save and resume a session, or replay a playtest using its recorded setup and random seed.
-- Run bots against each other to explore outcomes and compare strategies.
-- Try explicit, versioned rule variants without confusing them with the base game.
+- Play the entire game on screen with one human-controlled hero, choosing from all five base-game heroes once each is validated.
+- Face the Displacer Beast and Beholder, with rules-driven monster turns and required player choices.
+- Use a simplified labeled map with accurate connections and clearly indicated legal actions.
+- Hover for action descriptions, click to select, then use a bottom Confirm button. New actions stay locked while the current action resolves.
+- Save and resume locally, preserving committed dice/card outcomes and pending choices. Play without internet access after initial setup while the local development server is running.
 
-These are planned capabilities. A game will need its own implemented rules and tests; BoardBot does not currently import a rulebook or automatically learn an arbitrary board game. Bots may begin with simple random or heuristic policies. No paid AI service or account is required by this repository setup.
+These are planned capabilities. No game is currently playable. A later physical-game companion will reuse the rules foundation for setup, tracking, and sourced rules lookup. Other monsters, devices, optional desktop packaging, and broader bot playtesting follow later. No paid AI service or account is planned for the initial milestone.
 
 ## Get started
 
@@ -37,7 +37,8 @@ The check command works on macOS and Linux with a POSIX shell; Windows contribut
 | [Architecture direction](docs/Architecture.md) | Proposed rules, bots, sessions, and UI boundaries |
 | [Roadmap](docs/Roadmap.md) | Milestones toward a first playable game |
 | [Verification](docs/Verification.md) | Local checks, CI, and future game acceptance checks |
-| [Implementation plan](docs/Implementation-Plan.md) | The current setup task and its verification record |
+| [Implementation plan](docs/Implementation-Plan.md) | Finalized planning baseline, build order, and completion criteria |
+| [Game-data checklist](docs/Game-Data-Checklist.md) | Sources, missing component details, and unresolved rulings |
 
 ## Public development and game content
 

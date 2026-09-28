@@ -1,46 +1,42 @@
 # Roadmap
 
-Only milestone 0 is part of the repository setup. The remaining milestones describe future implementation; no game is currently playable.
+**Planning baseline finalized September 28, 2026.** Milestone 0 is complete. Application milestones have not started. The [implementation plan](Implementation-Plan.md) records the agreed build sequence and the [game-data checklist](Game-Data-Checklist.md) tracks research dependencies.
 
-## 0. Public project foundation
+## 0. Public project foundation - complete
 
-Provide clear project status and scope, MIT licensing, contribution and security policies, issue/PR forms, automated repository checks, and GitHub security configuration. A fresh checkout must pass the documented check command without API keys or third-party Python packages.
+MIT licensing, community policies, contribution templates, repository verification, CI, and GitHub security settings are established. Existing checks validate repository tooling, not gameplay.
 
-## 1. One playable game
+## 1. On-screen solo Horrified: Dungeons & Dragons
 
-Select a small first game with publishable content, decide the initial computer interface and stack, and implement its complete rules plus a basic bot. An original small demo game is a possible starting point; no selection has been made.
+Deliver a local React browser game for the M1 MacBook Pro, using one human-controlled hero against the Displacer Beast and Beholder. Use a simplified labeled map and generic markers. All five base heroes are selectable at completion; develop and validate them one at a time.
 
-Acceptance criteria:
+Build in this order:
 
-- A new contributor can start the prototype using documented commands.
-- One human can finish a game with bots filling the required other seats.
-- Legal moves, current turn, scoring, and the final result are clear.
-- Invalid actions preserve state; bot failures cannot silently corrupt a session.
-- Tests cover core moves, turn order, scoring, end conditions, and any hidden-information restrictions.
-- Documentation identifies game/rules versions, included assets and their licenses, and supported development environments.
-
-## 2. Durable solo sessions
-
-Add local save/resume, a readable history, and reproducible session fixtures.
+1. Verify required source data and register unresolved rulings; prepare synthetic fixtures where real data is pending.
+2. Establish the app and shared rules/command boundaries.
+3. Complete a game with one hero and the selected monster pair.
+4. Add and validate the remaining heroes.
+5. Finish the action panel, explanations, local recovery, offline behavior, and complete-game validation.
 
 Acceptance criteria:
 
-- A saved session resumes at the same turn and state.
-- A recorded setup and move sequence reproduce the same result with the same versions.
-- Invalid or incompatible saves produce clear errors and preserve existing data.
-- Users can distinguish their private live view from any full-information replay view.
+- A documented local setup starts the app and completes games with each supported hero, including victory and defeat paths.
+- Legal actions, current phase, remaining actions, inventory, and outcomes are understandable.
+- Hover/focus descriptions, click-to-select, and bottom-button confirmation follow the agreed flow; selection itself is free and there is no undo command.
+- Invalid moves and repeated submissions leave state unchanged. Controls lock during resolution while required decision controls remain usable.
+- Monster phases preserve player choices required by the rules.
+- Save/resume restores state and pending choices without rerolling, redrawing, or replaying committed actions; failures are visible and recoverable.
+- Gameplay works with internet disconnected after initial setup while the local server runs.
+- Required data, rule interpretations, and source/content provenance are verified and documented. Unsupported or incomplete content is not presented as validated.
 
-## 3. Useful bot playtesting
+## 2. Physical-game companion
 
-Add more than one bot policy, controlled bot-versus-bot runs, and clearly labeled summary results.
+Reuse the verified rules foundation for setup assistance, session tracking, and quick rules/edge-case lookup during physical play. Define manual input, correction, and rules-search behavior separately before implementation. Answers should distinguish published rules, reported clarifications, and unresolved interpretations.
 
-Acceptance criteria:
+## 3. Broader game and device support
 
-- Runs record seeds, policy settings, sample counts, and game/rules/bot versions.
-- A failed or timed-out run is identifiable and is not counted as a normal game result.
-- Results can be compared under the same setup and exported without personal data.
-- A documented rule variant is tested independently from the base rules.
+Add remaining monsters and their tests, then improve artwork and usability with documented content provenance. Expand platform/browser support and consider optional desktop packaging. These additions are not required to finish the initial two-monster solo milestone.
 
-## 4. Public playable release
+## Later exploration
 
-Polish keyboard access and interaction, document installation, and publish a tested build for explicitly supported platforms. Exercise clean installation and an entire game on each supported platform. State limits, game-content attribution, and save compatibility in release notes before adding more games.
+Other games, hero-playing bots, controlled bot simulations, and rule variants can follow demonstrated demand. Simulation results must identify the tested policies, versions, and samples; they do not prove balance or optimal strategy. Online multiplayer and paid services remain outside the current plan.

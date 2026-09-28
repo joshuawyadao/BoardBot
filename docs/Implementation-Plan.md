@@ -45,3 +45,5 @@ A documented local setup on the M1 Mac can complete a game with either victory o
 ## Documentation update and validation
 
 This task updates README, AGENTS guidance, product brief, architecture, roadmap, verification guidance, and the game-data checklist to match the planning decisions. No executable behavior changes, so no new test files are needed. Run the existing repository verifier and its five regression tests, inspect the documentation diff, and save the documentation checkpoint using the existing plan-implement-save/save-branch workflow. The earlier repository-foundation plan remains in Git history.
+
+Documentation verification passed: `./scripts/verify-repository.sh` validated the updated local links and repository files, and all five existing tooling regression tests passed. No application code, tests, game scans, or datasets were added in this planning update.

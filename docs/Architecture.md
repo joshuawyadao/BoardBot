@@ -1,37 +1,41 @@
 # Architecture direction
 
-This is a proposed design boundary for future work, not a description of implemented application modules. The repository currently contains documentation, GitHub configuration, `scripts/` for verification, and `tests/` for that tooling. No runtime dependencies or application framework have been selected.
+This describes the finalized planning baseline, not implemented modules. The first interface is a local React browser app targeting an M1 MacBook Pro. The repository still contains only documentation, GitHub configuration, verification scripts, and their tests. Build tooling, package versions, storage technology, and supported browser versions will be pinned during implementation.
 
 ## Responsibilities
 
 | Component | Owns | Boundary |
 | --- | --- | --- |
-| Game rules | State transitions, legal actions, turn order, scoring, end conditions | Does not depend on UI or a bot policy |
-| Bot policy | Choosing an action from a seat's observation | Cannot read the complete private game state or mutate it |
-| Session runner | Seat assignments, seeded randomness, action validation, event history | Sends all human and bot actions through the rules |
-| Play interface | Displaying the player's view and collecting input | Does not implement a second copy of the rules |
-| Persistence and replay | Versioned setup, actions, seeds, and save data | Validates input and makes incompatible versions explicit |
-| Simulation runner | Repeated bot sessions and aggregate results | Uses the same game rules as interactive play |
+| Verified game data | Board graph, component definitions, quantities, source/version records | Incomplete entries cannot silently become supported gameplay |
+| Rules engine | State, legality, transitions, action costs, effects, end conditions | Independent of React, storage, and presentation |
+| Session runner | Turn/phase progression, commands, injected randomness, required choices, event history | Applies commands once through the rules engine |
+| React interface | Simplified board, action panel, descriptions, selections, confirmation, outcomes | Never duplicates rule decisions as a separate authority |
+| Local persistence | Versioned snapshots, pending choices, committed random results, recovery | Loading validates data and never executes imported code |
+| Future companion | Physical setup/tracking and sourced rules explanations | Reuses rules and data with a different interaction model |
 
-Begin with small modules in one application. There is no need for separate services or a general plugin system to prove one game.
+Begin with small modules in one application. A general plugin system, remote backend, and strategic hero bots are unnecessary for the first milestone.
 
-## Turn contract
+## Action-resolution contract
 
-The runner asks the game which seat can act and obtains that seat's legal observation and actions. The human or bot chooses an action. The rules validate and apply it, returning the next state and public/private events. The runner records the transition and checks whether the game has ended before requesting another action.
+The interaction progresses through selecting, ready to confirm, resolving, optionally awaiting a required choice, and resolved/game over. These are conceptual states, not final code identifiers.
 
-Invalid actions must leave state unchanged. Bot errors or time limits should produce a visible recoverable result rather than freeze the session. A bot must not receive hidden opponent cards, secret objectives, or future random outcomes unless the selected game explicitly makes them public.
+- Selecting or cancelling has no game-state effect. Confirm requires all inputs and current legality.
+- The engine revalidates the submitted command, including phase and available resources. Invalid or duplicate commands must not spend an action, draw a card, roll again, or otherwise change state.
+- Ordinary action controls lock at submission, before animation or delayed processing. Required follow-up choices are distinct commands tied to the active resolution.
+- Monster phases follow the rules but can pause for player-controlled ties, defenses, effect ordering, or other decisions. Automation must not silently remove a choice granted by the rules.
+- A committed result is authoritative; animations only present it. Returning to ordinary selection requires completion of the current resolution and the correct game phase.
+- Action allowance can change through effects. Do not assume every successful interaction costs one action or every turn has the same budget.
 
-## Reproducibility and storage
+## Randomness and recovery
 
-The prototype should make randomness injectable. A later replay format needs a schema version, game and rules version, initial setup, seed or random-generator state, seat/bot configuration and versions, and an ordered action log. A seed alone is insufficient when algorithms or rules change. Do not establish a long-term save format before the first game's state and move model are understood.
+Inject randomness so test cases can reproduce dice and card behavior. Version snapshots with the game data, rules interpretation, and save schema. Preserve random-generator state or recorded outcomes, deck and bag state, active effects, and the ordered command/result history. A seed alone is insufficient across rule or algorithm changes.
 
-Reject malformed, oversized, or incompatible imported data with a useful error. Loading a save or game description must not execute code. Replaying a full session may reveal hidden information; distinguish replay/debug views from information exposed to a live bot.
+Persist committed outcomes before presenting a recoverable pending choice. Saving after each resolved action remains the normal stable boundary. On reload, restore the pending choice and its existing outcome; do not execute the original action again. During implementation, choose an atomic persistence approach and define recovery for interruptions between state commit and rendering. Surface storage failures without claiming a session was saved.
 
-## Decisions still to make
+Reject malformed or incompatible saves without replacing the current session. Initial storage remains local; cloud sync and cross-device conflict handling are out of scope. Keep private reference photos and personal sessions outside tracked files.
 
-- The first game and its content provenance.
-- Native desktop versus local browser interface, implementation language, and initial operating system targets.
-- Initial random/heuristic bot policies and a bounded policy for bot failures.
-- Persistence schema and whether simulation runs need a separate command-line entry point.
+## Offline and portability
 
-Record decisions here as they are made, with the reason and verification impact. Follow the [roadmap](Roadmap.md) before broadening the architecture.
+Bundle required runtime code and authorized assets locally. Gameplay must not depend on external fonts, remote images, cloud AI, or network APIs. Verify disconnected operation after initial setup with the local server running. Hosted offline caching and installable desktop packaging are later delivery choices, not capabilities already provided.
+
+Keep UI and persistence adapters separate from rules so the companion and other devices can reuse the same verified behavior. Future strategic bots should receive only the information allowed to their seat; they must use the same legal-command boundary.

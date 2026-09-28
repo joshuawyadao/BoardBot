@@ -1,33 +1,36 @@
 # Product brief
 
-## Purpose
+## Purpose and status
 
-BoardBot will let one person play a supported board game on their computer with bots filling other seats. It will also help that person try strategies and rule variations through repeatable playtests. The first audience is a solo player or hobbyist designer who wants a manageable local session without arranging a group.
+BoardBot's first experience is for practicing the original Horrified: Dungeons & Dragons, understanding its rules and edge cases, and completing solo games on a computer. The planning baseline is finalized as of September 28, 2026. Only repository tooling and documentation exist; no playable application or complete verified game dataset exists yet.
 
-## Current state
+## Agreed first milestone
 
-Only repository setup, public contribution materials, and development checks exist. There are no supported games, runnable app, game assets, or released builds. The first game, interface framework, and supported desktop platforms remain undecided. Python is used for repository checks and does not select the application language.
+- A local React browser application, initially validated on an M1 MacBook Pro.
+- One human-controlled hero. All five base-game heroes are selectable by milestone completion, implemented and validated individually during development.
+- Displacer Beast and Beholder as the initial monster pair. Monster behavior follows the rules; this milestone does not need strategic bots controlling additional heroes.
+- A fully on-screen game, using a simplified map with clear location labels, accurate connections, and generic markers. Richer art can follow as the project matures and content provenance is established.
+- Rules enforce action costs, movement, hero-specific abilities, resources, timing, and end conditions. A rejected action changes no gameplay state.
+- Local saves and offline gameplay after initial setup. A browser UI does not require a remote gameplay service. Development still requires a running local server; initial dependency installation may require internet access.
 
-## Intended workflows
+## Action interaction
 
-1. **Play a game:** choose an implemented game and rules version, configure seats and bots, start a session, make legal moves, see public results, and reach a clear end state.
-2. **Resume a session:** save locally and return to the same turn with the same game state and bot configuration.
-3. **Try an idea:** choose a documented rule variation or bot policy, record the setup and seed, play or simulate, and inspect the move history and outcome.
-4. **Compare runs:** repeat controlled setups and compare outcomes while retaining the game, bot, and rules versions needed to interpret them.
+The action panel shows remaining actions and the applicable action allowance, including temporary changes. Hover explains an action; keyboard focus provides the same information. Clicking selects an action without executing it. The player chooses any required destination, target, or items and confirms with a button at the bottom of the panel.
 
-Simulation outcomes describe the tested policies and sample. They should not be presented as proof that a game is balanced or a strategy is optimal.
+The engine rechecks legality on confirmation. While an action resolves, ordinary selections and repeat submissions are disabled. If resolution needs a player decision, only the controls for that decision become available. The panel refreshes when resolution finishes. The player can change or cancel an unconfirmed selection; the initial design has no undo command.
 
-## Product principles
+## Continuity and learning
 
-- Start with one complete, testable game and a small usable play loop.
-- Keep play local by default and make any future network use explicit.
-- Prefer clear state, legal actions, and understandable bot behavior over elaborate presentation.
-- Give bots only the information their seat is allowed to know.
-- Treat reproducibility and a useful turn history as part of playtesting.
-- Make game support and content provenance explicit. An arbitrary rulebook is not executable game support.
+Use a readable turn history and explanations of unavailable actions. Save after resolved actions and at recoverable pending choices. Resuming must preserve already-committed dice rolls and card draws rather than rerolling or duplicating an action. Save errors should be visible and preserve the last recoverable session. Detailed implementation and storage choices remain to be made within these requirements.
 
-## Initial boundaries
+## Later experiences
 
-The first prototype does not require online multiplayer, matchmaking, user accounts, cloud saves, a marketplace, a large game catalog, or an LLM service. Downloadable builds and platform support follow a working prototype. Commercial game integrations require documented content provenance and permissions before publication.
+Stage two is a companion for physical play: setup assistance, session tracking, and quick sourced rules/edge-case lookup. Reuse the verified rules foundation while letting the player report physical outcomes and correct tracking mistakes. The companion's detailed interaction design is future work.
 
-See the [roadmap](Roadmap.md) for staged acceptance criteria and the [architecture direction](Architecture.md) for proposed responsibilities.
+Later expansions may include remaining monsters, other devices, optional desktop packaging, more games, strategic hero bots, and repeatable simulation. Accounts, telemetry, paid AI services, online multiplayer, and cloud saves are not required for the first milestone.
+
+## Research dependencies
+
+The [game-data checklist](Game-Data-Checklist.md) distinguishes available references, unverified details, and missing inputs. Photos and transcriptions from the owner's game are reference material; receiving them does not automatically establish public redistribution permission. Do not silently convert unresolved interpretations into official rules.
+
+See the [implementation plan](Implementation-Plan.md) for execution order, the [roadmap](Roadmap.md) for milestones, and the [architecture](Architecture.md) for boundaries.

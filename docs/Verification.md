@@ -28,8 +28,18 @@ The verifier is a small repository hygiene check, not a complete Markdown parser
 
 ## GitHub CI
 
-The `CI Verify` workflow runs the same command on pushes to `main`, pull requests, and manual dispatch. It uses a pinned checkout action, read-only repository permissions, disabled persisted checkout credentials, a short timeout, and cancellation of superseded runs. Dependabot checks the GitHub Actions dependency weekly. Add runtime dependency manifests and their update configuration only when the application stack is selected.
+The `CI Verify` workflow runs the same command on pushes to `main`, pull requests, and manual dispatch. It uses a pinned checkout action, read-only repository permissions, disabled persisted checkout credentials, a short timeout, and cancellation of superseded runs. Dependabot checks the GitHub Actions dependency weekly. Add runtime dependency manifests and their update configuration when the selected React app is implemented and package versions are pinned.
 
-## Acceptance checks for future gameplay
+## Acceptance checks for the planned solo game
 
-When a playable game is added, test legal/illegal actions, turn order, scoring, end conditions, hidden information, deterministic fixtures, and bot failures. For saves, test round trips, malformed data, incompatible versions, and preservation of the prior session on failure. A clean install and a complete human-versus-bot game are required before describing a build as publicly playable. See the [roadmap](Roadmap.md).
+No gameplay tests exist yet. During implementation, add focused engine tests for setup, legal/illegal commands, action budgets, movement, resource costs, hero abilities, monster resolution, and end conditions. Derive cases from verified sources in the [game-data checklist](Game-Data-Checklist.md); keep unresolved interpretations visible.
+
+Test that invalid actions preserve state and that repeated confirmation cannot spend twice, redraw, or reroll. Exercise effects that alter action availability and decisions within monster phases. Verify the selected pair and each base hero independently, then complete games through both victory and defeat paths.
+
+Test local save/resume after completed actions and during required choices, preserving committed random outcomes. Include malformed/incompatible saves, storage failure, and interruption between commit and display. The previous valid session must survive failed loading or persistence.
+
+Browser acceptance should cover hover and keyboard-focus descriptions, click-to-select without execution, disabled Confirm for incomplete choices, locked controls during resolution, usable required-choice controls, and clear results. Validate the simplified map's graph independently of its appearance.
+
+On the target M1 Mac, perform clean setup and full solo play. Disconnect internet after setup, keep the local server running, and check startup, gameplay, required assets, and save/resume. No runtime request to a remote service may be needed to complete the session. Record actual browser/OS versions and limitations when tested.
+
+The finalized [implementation plan](Implementation-Plan.md) and [roadmap](Roadmap.md) define milestone completion. Passing today's repository checks is not evidence of gameplay correctness.
