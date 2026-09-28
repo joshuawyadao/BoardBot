@@ -6,7 +6,7 @@ Build a local React browser app for practicing the original Horrified: Dungeons 
 
 This is the durable project baseline. Update it intentionally when agreed scope or requirements change; do not replace it for routine feature tasks. The [roadmap](Roadmap.md) summarizes milestones. [Implementation-Plan.md](Implementation-Plan.md) is temporary task tracking and may be rewritten for each task.
 
-The current React shell has an original four-location map, a sample explorer, Move and Wait, a fixed three-action turn, select/review/Confirm, a 900 ms resolution display lock, and restart. It resets on reload. It is a preliminary interaction step, not a verified Horrified rules engine or playable game. Rules data, monsters, all base heroes, recovery, and milestone acceptance remain open.
+The current React shell has an original four-location map, a sample explorer, Move and Wait, a fixed three-action turn, highlighted board destinations, select/review/Confirm, descriptions in a reserved inline help area, a 900 ms resolution display lock, and restart. A scrollable session log retains numbered sample turns and respects readers who scroll back, with Jump to latest. The session resets on reload. It is a preliminary interaction step, not a verified Horrified rules engine or playable game. Rules data, monsters, all base heroes, recovery, and milestone acceptance remain open.
 
 ## Scope
 - In: One human-controlled hero; all five base-game heroes selectable at milestone completion, validated individually; Displacer Beast and Beholder; a simplified labeled map with accurate connections; automated monster phases with required player choices; confirmation-based actions; local save/resume; offline gameplay after initial setup.
@@ -18,7 +18,7 @@ The current React shell has an original four-location map, a sample explorer, Mo
 [ ] Implement shared setup, movement, action budgets, items, citizens, perks, monster phases, and end conditions; reject invalid commands without changing state or spending resources.
 [ ] Deliver a complete internal playthrough with one validated hero and both selected monsters, including required choices during resolution; do not claim faithful gameplay while its data or rulings remain unverified.
 [ ] Implement and validate each remaining base hero, then expose all five for selection when the milestone is complete.
-[ ] Extend the prototype board and action panel to verified game data: remaining/available actions, hover and keyboard-focus descriptions, click to select, necessary targets/items, and a bottom Confirm button. The sample demonstrates the basic interaction but not game-specific targets, costs, or rules.
+[ ] Extend the prototype board and action panel to verified game data: remaining/available actions, hover and keyboard-focus descriptions, click to select, necessary targets/items, and a bottom Confirm button. The sample demonstrates the basic interaction with direct board destination selection, but not game-specific targets, costs, or rules.
 [ ] Add local autosave, resume, and recovery that preserve committed random results, pending choices, and the action log; reject invalid saves and prevent duplicate action execution.
 [ ] Validate complete games, all supported hero abilities, edge cases, reload recovery, keyboard interaction, and disconnected play on the target Mac; update setup, architecture, and verification docs before describing the milestone as playable.
 

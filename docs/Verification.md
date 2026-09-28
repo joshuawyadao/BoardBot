@@ -13,7 +13,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-`npm run verify` typechecks and builds the React prototype, runs its engine tests, then calls `./scripts/verify-repository.sh`. The shell script finds the repository relative to itself, so an absolute script path also works from another directory. It runs the repository verifier, Python unittest discovery, and Git whitespace checks for staged and unstaged changes. The Python tests can also be run directly:
+`npm run verify` typechecks and builds the React prototype, runs its engine and session tests, then calls `./scripts/verify-repository.sh`. The shell script finds the repository relative to itself, so an absolute script path also works from another directory. It runs the repository verifier, Python unittest discovery, and Git whitespace checks for staged and unstaged changes. The Python tests can also be run directly:
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
@@ -26,7 +26,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 - Selected private or generated files are rejected when included in Git's tracked/nonignored file inventory, including files forcibly tracked despite ignore rules.
 - The verifier's success and failure behavior is exercised with temporary repositories and synthetic fixtures.
 - Git reports no whitespace errors in staged or unstaged diffs.
-- Three sample-engine tests cover invalid/duplicate actions and completion transitions. Four Playwright tests cover confirmation and lock behavior, keyboard interaction, local requests and reload reset, and a narrow viewport.
+- Three sample-engine tests cover invalid/duplicate actions and completion transitions. Three session tests cover log continuity, numbered turns, and stale-command handling across restarts. Six Playwright tests cover confirmation and lock behavior, keyboard interaction, direct board destination selection, stable hover/focus help, session-log scrolling, local requests and reload reset, and a narrow viewport.
 
 The repository verifier is a small hygiene check, not a complete Markdown parser or secret scanner. It does not validate external URLs, Markdown heading anchors, every credential format, content ownership, or gameplay. Review content before publishing it. The engine and browser tests validate only the synthetic sample, not Horrified rules, monsters, saves, or completed games. The prototype was exercised on a macOS 27 arm64 host with Node.js 24.19 and Chromium 153; target M1 hardware has not been separately validated.
 
@@ -42,7 +42,7 @@ Test that invalid actions preserve state and that repeated confirmation cannot s
 
 Test local save/resume after completed actions and during required choices, preserving committed random outcomes. Include malformed/incompatible saves, storage failure, and interruption between commit and display. The previous valid session must survive failed loading or persistence.
 
-Browser acceptance should cover hover and keyboard-focus descriptions, click-to-select without execution, disabled Confirm for incomplete choices, locked controls during resolution, usable required-choice controls, and clear results. Validate the simplified map's graph independently of its appearance.
+Browser acceptance should cover hover and keyboard-focus descriptions in the reserved help area, click-to-select without execution, disabled Confirm for incomplete choices, locked controls during resolution, usable required-choice controls, and clear results. Board destinations should show legal connections and remain subject to confirmation. The session log should preserve earlier turns without pulling a reader away from older entries; test save and reload separately once implemented. Validate the simplified map's graph independently of its appearance.
 
 On the target M1 Mac, perform clean setup and full solo play. Disconnect internet after setup, keep the local server running, and check startup, gameplay, required assets, and save/resume. No runtime request to a remote service may be needed to complete the session. Record actual browser/OS versions and limitations when tested.
 

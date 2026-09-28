@@ -18,7 +18,7 @@ npm ci
 npm run dev
 ```
 
-Open http://127.0.0.1:5173 in your browser. Choose Move and a connected location, or Wait; review the selection and press Confirm. The invented explorer has three actions. Each confirmed action displays a brief, roughly 900 ms resolution during which action controls are locked. Start a new sample turn after all three actions. Reloading resets progress. There is no undo or persistence. Once dependencies are installed, this sample runs locally without a gameplay service or account.
+Open http://127.0.0.1:5173 in your browser. Choose Move, then select a highlighted location directly on the board, or choose Wait. Review the selection and press Confirm. Hover or focus an action to read its description in the help area below the actions. The invented explorer has three actions. Each confirmed action displays a brief, roughly 900 ms resolution during which action controls are locked. Start a new sample turn after all three actions. The scrollable session log keeps earlier turns until you reload; it follows new entries while you are at the bottom and offers Jump to latest when you scroll back. Reloading resets everything. There is no undo or persistence. Once dependencies are installed, this sample runs locally without a gameplay service or account.
 
 ## Intended first experience
 
@@ -40,7 +40,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-The first command typechecks, builds, runs sample engine tests, and runs repository checks. The browser tests use Playwright Chromium. `./scripts/verify-repository.sh` remains available for repository checks alone. The shell script works on macOS and Linux; Windows contributors can use WSL. These are contributor prerequisites, not supported platforms for a finished game. No API keys are needed. See [verification](docs/Verification.md) for coverage and limits.
+The first command typechecks, builds, runs sample engine and session tests, and runs repository checks. The browser tests use Playwright Chromium. `./scripts/verify-repository.sh` remains available for repository checks alone. The shell script works on macOS and Linux; Windows contributors can use WSL. These are contributor prerequisites, not supported platforms for a finished game. No API keys are needed. See [verification](docs/Verification.md) for coverage and limits.
 
 ## Project direction
 

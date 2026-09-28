@@ -13,7 +13,8 @@ test('selection is free; confirmation commits once and locks controls until reso
   await expect(page.getByTestId('action-budget')).toHaveText('3 / 3');
   await expect(confirm).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Ruins', exact: true })).toHaveAttribute('aria-disabled', 'true');
-  await page.getByLabel('Destination', { exact: true }).selectOption('crossroads');
+  await expect(page.getByRole('combobox')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Crossroads', exact: true }).click();
   await expect(confirm).toBeEnabled();
   await page.getByRole('button', { name: 'Clear selection' }).click();
   await expect(confirm).toBeDisabled();
@@ -39,7 +40,7 @@ test('a keyboard user can read descriptions and complete then restart a sample t
   await page.clock.pauseAt(new Date('2026-01-01T01:00:00Z'));
   const wait = page.getByRole('button', { name: 'Wait Stay' });
   await wait.focus();
-  await expect(page.getByRole('tooltip').filter({ hasText: 'Remain at your current location' })).toBeVisible();
+  await expect(page.getByRole('note', { name: 'Action details' }).filter({ hasText: 'Stay at your current location' })).toBeVisible();
   for (let remaining = 2; remaining >= 0; remaining--) {
     await wait.focus();
     await page.keyboard.press('Enter');
@@ -51,10 +52,12 @@ test('a keyboard user can read descriptions and complete then restart a sample t
   }
   await expect(page.getByRole('heading', { name: 'Sample turn complete' })).toBeVisible();
   await expect(wait).toBeDisabled();
-  await expect(page.getByRole('listitem')).toHaveCount(3);
+  await expect(page.getByRole('log').getByRole('listitem')).toHaveCount(4);
   await page.getByRole('button', { name: 'Start a new sample turn' }).click();
   await expect(page.getByTestId('action-budget')).toHaveText('3 / 3');
-  await expect(page.getByText('Your explorer is at camp. Confirm an action to begin.')).toBeVisible();
+  await expect(page.getByRole('log').getByRole('listitem')).toHaveCount(5);
+  await expect(page.getByRole('log').getByText('Waited at camp.', { exact: true })).toHaveCount(3);
+  await expect(page.getByRole('log').getByText('TURN 2', { exact: true })).toBeVisible();
 });
 
 test('browser runtime uses only local requests and reload explicitly starts a fresh sample', async ({ page }) => {
@@ -82,7 +85,64 @@ test('narrow screens keep the board and controls within the viewport', async ({ 
   await page.getByRole('button', { name: 'How to play' }).click();
   await expect(page.getByRole('heading', { name: 'Your first sample turn' })).toBeVisible();
   await page.getByRole('button', { name: 'Move Explore' }).click();
-  await page.getByLabel('Destination', { exact: true }).selectOption('crossroads');
+  await expect(page.getByRole('combobox')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Crossroads', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Confirm action' })).toBeEnabled();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+
+test('hover details do not overlap or shift action controls and update on pointer and keyboard navigation', async ({ page }) => {
+  await page.goto('/');
+  const move = page.getByRole('button', { name: 'Move Explore' });
+  const wait = page.getByRole('button', { name: 'Wait Stay' });
+  const help = page.getByRole('note', { name: 'Action details' });
+  const moveBefore = await move.boundingBox();
+  const waitBefore = await wait.boundingBox();
+  await wait.hover();
+  await expect(help).toContainText('Stay at your current location');
+  const helpBox = await help.boundingBox();
+  expect(helpBox!.y).toBeGreaterThanOrEqual(waitBefore!.y + waitBefore!.height);
+  await move.hover();
+  await expect(help).toContainText('Choose a highlighted location on the board');
+  expect(await move.boundingBox()).toEqual(moveBefore);
+  expect(await wait.boundingBox()).toEqual(waitBefore);
+  await wait.focus();
+  await expect(help).toContainText('Stay at your current location');
+  await page.keyboard.press('Shift+Tab');
+  await expect(move).toBeFocused();
+  await expect(help).toContainText('Choose a highlighted location on the board');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('button', { name: 'Crossroads', exact: true })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('button', { name: 'Confirm action' })).toBeEnabled();
+  await expect(page.getByTestId('action-budget')).toHaveText('3 / 3');
+});
+
+test('session log follows new entries but preserves the reading position until jumping to latest', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
+  await page.goto('/');
+  await page.clock.pauseAt(new Date('2026-01-01T01:00:00Z'));
+  const log = page.getByRole('log', { name: 'Session history' });
+  for (let action = 0; action < 3; action++) {
+    await page.getByRole('button', { name: 'Wait Stay' }).click();
+    await page.getByRole('button', { name: 'Confirm action' }).click();
+    await page.clock.runFor(950);
+  }
+  await page.getByRole('button', { name: 'Start a new sample turn' }).click();
+  await expect.poll(() => log.evaluate(element => element.scrollHeight - element.clientHeight - element.scrollTop)).toBeLessThan(2);
+  // Scroll using the keyboard, then leave focus at the log while the next action resolves.
+  await log.focus();
+  await page.keyboard.press('Home');
+  await page.clock.runFor(250);
+  await expect(page.getByRole('button', { name: 'Jump to latest' })).toBeEnabled();
+  await expect.poll(() => log.evaluate(element => element.scrollTop)).toBe(0);
+  const previousPosition = await log.evaluate(element => element.scrollTop);
+  await page.getByRole('button', { name: 'Wait Stay' }).click();
+  await page.getByRole('button', { name: 'Confirm action' }).click();
+  await expect(log.getByRole('listitem')).toHaveCount(6);
+  expect(await log.evaluate(element => element.scrollTop)).toBe(previousPosition);
+  await page.getByRole('button', { name: 'Jump to latest' }).click();
+  await expect.poll(() => log.evaluate(element => element.scrollHeight - element.clientHeight - element.scrollTop)).toBeLessThan(2);
+  await expect(page.getByRole('button', { name: 'Up to date' })).toBeDisabled();
 });

@@ -1,22 +1,10 @@
 import { useEffect, useReducer } from 'react';
-import { createGame, finishResolution, submitAction } from '../engine/sampleGame';
-import type { Action, GameState } from '../engine/sampleGame';
-
-type SessionCommand =
-  | { type: 'confirm'; action: Action; revision: number }
-  | { type: 'finish'; id: number }
-  | { type: 'restart' };
-
-function reduceSession(state: GameState, command: SessionCommand): GameState {
-  switch (command.type) {
-    case 'confirm': return submitAction(state, command.action, command.revision);
-    case 'finish': return finishResolution(state, command.id);
-    case 'restart': return state.phase === 'complete' ? createGame() : state;
-  }
-}
+import type { Action } from '../engine/sampleGame';
+import { createSession, reduceSession } from './sampleSession';
 
 export function useSampleSession() {
-  const [game, dispatch] = useReducer(reduceSession, undefined, createGame);
+  const [session, dispatch] = useReducer(reduceSession, undefined, createSession);
+  const { game, entries, turnNumber } = session;
   const resolutionId = game.pending?.id;
 
   useEffect(() => {
@@ -28,6 +16,8 @@ export function useSampleSession() {
 
   return {
     game,
+    entries,
+    turnNumber,
     confirm: (action: Action) => dispatch({ type: 'confirm', action, revision: game.revision }),
     restart: () => dispatch({ type: 'restart' }),
   };

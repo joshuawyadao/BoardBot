@@ -4,7 +4,7 @@ This records the agreed boundaries for the first Horrified: Dungeons & Dragons g
 
 ## Current prototype
 
-`src/engine/sampleGame.ts` owns an invented four-location graph, three-action budget, action legality, and pure state transitions for Move and Wait. It rejects invalid and repeated commands without changing state. `src/session/useSampleSession.ts` uses a reducer and a 900 ms display timer to finish a committed resolution. `src/ui/App.tsx` presents the map, selection, confirmation, lock, and history. Reloading creates a fresh sample turn. The prototype has no dice, monsters, saved sessions, or Horrified rules. Its engine exercises the intended boundary; it is not the future verified game engine.
+`src/engine/sampleGame.ts` owns an invented four-location graph, three-action budget, action legality, and pure state transitions for Move and Wait. It rejects invalid and repeated commands without changing state. `src/session/sampleSession.ts` owns the session reducer, numbered turns, and append-only in-memory log entries. It keeps game revisions increasing across sample-turn resets so stale commands cannot apply to a new turn. `src/session/useSampleSession.ts` wraps that reducer and uses a 900 ms display timer to finish a committed resolution. `src/ui/App.tsx` presents the map, selection, reserved action-help area, confirmation, and lock; `src/ui/SessionLog.tsx` renders the scrollable session log. It follows new entries only while the reader is at the bottom and offers Jump to latest. Reloading creates a fresh session. The prototype has no dice, monsters, saved sessions, or Horrified rules. Its engine exercises the intended boundary; it is not the future verified game engine.
 
 ## Responsibilities
 
@@ -24,6 +24,7 @@ Begin with small modules in one application. A general plugin system, remote bac
 The interaction progresses through selecting, ready to confirm, resolving, optionally awaiting a required choice, and resolved/game over. These are conceptual states, not final code identifiers.
 
 - Selecting or cancelling has no game-state effect. Confirm requires all inputs and current legality.
+- In the prototype, Move highlights reachable board locations. Choosing one selects a destination; confirmation remains a separate step. Hover or focus shows action details in a reserved area without covering controls or moving them.
 - The engine revalidates the submitted command, including phase and available resources. Invalid or duplicate commands must not spend an action, draw a card, roll again, or otherwise change state.
 - Ordinary action controls lock at submission, before animation or delayed processing. Required follow-up choices are distinct commands tied to the active resolution.
 - Monster phases follow the rules but can pause for player-controlled ties, defenses, effect ordering, or other decisions. Automation must not silently remove a choice granted by the rules.

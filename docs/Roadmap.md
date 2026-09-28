@@ -10,7 +10,7 @@ MIT licensing, community policies, contribution templates, repository verificati
 
 Deliver a local React browser game for the M1 MacBook Pro, using one human-controlled hero against the Displacer Beast and Beholder. Use a simplified labeled map and generic markers. All five base heroes are selectable at completion; develop and validate them one at a time.
 
-**In progress:** A React sample-turn shell demonstrates hover/focus descriptions, selection, separate confirmation, action counts, a short resolution lock, and restart. Its four-location map, explorer, Move/Wait actions, and three-action allowance are invented. Reloading resets it. It does not satisfy the game, data, monster, offline acceptance, or save/resume criteria below.
+**In progress:** A React sample-turn shell demonstrates hover/focus descriptions in a reserved help area, selecting highlighted destinations directly on the board, separate confirmation, action counts, a short resolution lock, and restart. A scrollable log keeps numbered sample turns and lets the reader jump to the latest entry. Its four-location map, explorer, Move/Wait actions, and three-action allowance are invented. Reloading resets the session. It does not satisfy the game, data, monster, offline acceptance, or save/resume criteria below.
 
 Build in this order:
 

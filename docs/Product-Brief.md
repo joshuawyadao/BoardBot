@@ -2,7 +2,7 @@
 
 ## Purpose and status
 
-BoardBot's first game experience is for practicing the original Horrified: Dungeons & Dragons, understanding its rules and edge cases, and completing solo games on a computer. The planning baseline was finalized September 28, 2026. A local React interaction prototype now offers an invented map and three-action sample turn. It exercises selection, confirmation, and a brief resolution lock. No Horrified gameplay or complete verified game dataset exists yet; the sample resets on reload.
+BoardBot's first game experience is for practicing the original Horrified: Dungeons & Dragons, understanding its rules and edge cases, and completing solo games on a computer. The planning baseline was finalized September 28, 2026. A local React interaction prototype now offers an invented map and three-action sample turn. It exercises board destination selection, confirmation, a brief resolution lock, and a session log across sample turns. No Horrified gameplay or complete verified game dataset exists yet; the sample resets on reload.
 
 ## Agreed first milestone
 
@@ -15,13 +15,13 @@ BoardBot's first game experience is for practicing the original Horrified: Dunge
 
 ## Action interaction
 
-The planned action panel shows remaining actions and the applicable action allowance, including temporary changes. The prototype shows a fixed sample allowance of three. Hover explains an action; keyboard focus provides the same information. Clicking selects an action without executing it. The player chooses any required destination, target, or items and confirms with a button at the bottom of the panel.
+The planned action panel shows remaining actions and the applicable action allowance, including temporary changes. The prototype shows a fixed sample allowance of three. Hover explains an action; keyboard focus provides the same information in a reserved area below the action buttons, without covering or shifting controls. Clicking selects an action without executing it. For Move in the prototype, the player selects a highlighted connected location directly on the board; the separate bottom Confirm button executes the reviewed choice. Future game actions may require other targets or items.
 
 The engine rechecks legality on confirmation. While an action resolves, ordinary selections and repeat submissions are disabled. If resolution needs a player decision, only the controls for that decision become available. The panel refreshes when resolution finishes. The player can change or cancel an unconfirmed selection; the initial design has no undo command.
 
 ## Continuity and learning
 
-The prototype has a readable sample turn history and explains unavailable moves. The game milestone requires saving after resolved actions and at recoverable pending choices. Resuming must preserve already-committed dice rolls and card draws rather than rerolling or duplicating an action. Save errors should be visible and preserve the last recoverable session. The prototype has no save or resume; detailed storage choices remain to be made within these requirements.
+The prototype has a scrollable, chat-style session log that keeps numbered sample turns as new turns start. It follows new entries while the reader is at the bottom and provides Jump to latest after scrolling back. The log is only in memory and resets on reload. The game milestone requires saving after resolved actions and at recoverable pending choices. Resuming must preserve already-committed dice rolls and card draws rather than rerolling or duplicating an action. Save errors should be visible and preserve the last recoverable session. The prototype has no save or resume; detailed storage choices remain to be made within these requirements.
 
 ## Later experiences
 
