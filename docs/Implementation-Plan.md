@@ -14,7 +14,7 @@ Build a local React and TypeScript interaction prototype on `feat/solo-game-shel
 [x] Add browser tests for free selection, keyboard use, confirmation, resolution locking and a complete sample turn; inspect the rendered interface.
 [x] Update README, AGENTS, architecture, product/roadmap status and verification docs, preserving durable requirements; extend CI and dependency updates.
 [x] Run repository checks, type checking, engine tests, browser tests and production build. Verify no external runtime requests and record actual platform limitations.
-[ ] Commit and push, open/attach a draft PR, request Codex review, run Brooks review and follow checks/feedback to a terminal result; do not merge.
+[x] Commit and push, open/attach a draft PR, request Codex review, run Brooks review and follow checks/feedback to a terminal result; do not merge.
 
 ## Open questions
 - None. Use Node 24, React, TypeScript and Vite; exact versions and lockfile are recorded in the repository. The prototype resets on reload and says so explicitly. A synthetic turn ends after three one-action moves or waits; it does not model any real game's action allowance.
@@ -26,4 +26,4 @@ Build a local React and TypeScript interaction prototype on `feat/solo-game-shel
 - Manually inspected the local UI in the in-app browser and confirmed a move, the lock, updated allowance and history. Tested host: macOS 27 arm64, Node 24.19; this does not certify all M1/browser combinations.
 - PR #1 opened as draft; Codex review requested. Initial poll: no feedback yet; CI Verify running; no merge conflicts.
 - Brooks PR review: 100/100, no actionable findings across the engine, session, UI, tests, and configuration. Generated lockfile excluded. The initial scaffold is a large but coherent slice; no speculative plugin/bot framework or UI-owned rule validation was introduced. Review does not certify real-game accuracy, persistence, Safari, or full assistive-technology behavior.
-- CI Verify passed on the first PR run (46 seconds). No CI fixes or merge-conflict resolution were required. Codex review remains pending after repeated checks.
+- CI Verify passed on the first PR run (46 seconds). No CI fixes or merge-conflict resolution were required. Codex review timed out after more than five minutes of repeated conversation/review-thread checks (request 19:25:55 UTC; final poll 19:31:31 UTC). No bot review or comments arrived. This external review gate is blocked, so PR #1 remains a draft and is not declared merge-ready. Resume the PR review cycle on PR #1 when review becomes available.
