@@ -14,7 +14,7 @@ Refine the existing solo-game shell from hands-on feedback: make board destinati
 [x] Update tests for board choice, illegal/duplicate input, keyboard movement, unobstructed hover changes, session log retention, auto-scroll and manual scroll preservation.
 [x] Update README, Product-Brief, Architecture, Roadmap, Work-Plan and Verification for the resulting interaction; preserve game-data dependencies.
 [x] Run npm run verify and npm run test:e2e, inspect desktop/narrow browser layouts, and address observed regressions.
-[ ] Commit and push to feat/solo-game-shell, update PR #1 and inspect CI/review status without merging.
+[x] Commit and push to feat/solo-game-shell, update PR #1 and inspect CI/review status without merging.
 
 ## Open questions
 - None blocking the description/log improvements. An optional movement preference was requested; the existing select-then-confirm behavior remains the baseline unless the user chooses immediate movement.
@@ -26,4 +26,4 @@ Refine the existing solo-game shell from hands-on feedback: make board destinati
 - Manual in-app browser inspection verified highlighted destination selection by keyboard, a confirmed move, resolution locking and the new message. Mouse interaction is covered by Chromium tests.
 - Incremental review found no actionable issues. Session revisions remain monotonic across turn resets so stale prior-turn commands cannot spend or append messages.
 - Confirmation stays separate in this pass; the optional preference question has not received an answer. No scope change to actual game rules, persistence, or undo.
-- PR #1 remains an existing draft; its earlier Codex review request has not received a response. CI on this follow-up is pending publication.
+- PR #1 remains an existing draft; its earlier Codex review request has not received a response. The refinements and matching PR description were published; CI Verify passed on 47fd768 in 40 seconds. No merge conflicts were reported. The final documentation checkpoint is subject to the same CI workflow.
