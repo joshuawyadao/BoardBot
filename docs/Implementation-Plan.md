@@ -24,4 +24,6 @@ Build a local React and TypeScript interaction prototype on `feat/solo-game-shel
 - Build and typecheck passed; three engine tests and five repository tooling tests passed.
 - Four Chromium browser tests passed after replacing the implicit destination label with an explicit label/control association. The tests cover same-tick repeat confirmation, resolution locking, keyboard completion/restart, local-only requests/reload reset, and a narrow viewport. Resolution tests pause the clock to avoid wall-clock races.
 - Manually inspected the local UI in the in-app browser and confirmed a move, the lock, updated allowance and history. Tested host: macOS 27 arm64, Node 24.19; this does not certify all M1/browser combinations.
-- GitHub CI and Codex/Brooks PR review pending.
+- PR #1 opened as draft; Codex review requested. Initial poll: no feedback yet; CI Verify running; no merge conflicts.
+- Brooks PR review: 100/100, no actionable findings across the engine, session, UI, tests, and configuration. Generated lockfile excluded. The initial scaffold is a large but coherent slice; no speculative plugin/bot framework or UI-owned rule validation was introduced. Review does not certify real-game accuracy, persistence, Safari, or full assistive-technology behavior.
+- CI Verify passed on the first PR run (46 seconds). No CI fixes or merge-conflict resolution were required. Codex review remains pending after repeated checks.

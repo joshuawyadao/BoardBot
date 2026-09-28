@@ -54,3 +54,6 @@ DerivedData/
 # Browser test artifacts
 /playwright-report/
 /test-results/
+
+# Local review history
+/.brooks-lint-history.json
