@@ -2,7 +2,7 @@
 
 BoardBot is a public, early-stage project for solo board-game play and playtesting with bots on a computer. Read `README.md` and relevant files under `docs/` before making changes. The selected first milestone is the original Horrified: Dungeons & Dragons, with a local React browser interface on an M1 MacBook Pro. No playable app exists yet. Preserve the distinction between finalized planning and implemented behavior; treat unresolved entries in `docs/Game-Data-Checklist.md` as dependencies, not guessed rules.
 
-- Keep work scoped and update `docs/Implementation-Plan.md` for implementation tasks. Record durable product/architecture choices in the relevant canonical docs.
+- Keep work scoped and use `docs/Implementation-Plan.md` only for temporary, per-task tracking; it may be replaced by the implementation workflow. Preserve `docs/Work-Plan.md` as the durable detailed baseline and `docs/Roadmap.md` as the milestone overview. Update these intentionally when agreed direction changes, and preserve their requirements when merging feature branches. Record durable product/architecture choices in the relevant canonical docs.
 - Run `./scripts/verify-repository.sh` before submitting changes. Add focused tests for changed executable behavior; do not imply repository checks validate gameplay.
 - Keep rules, bot decisions, session orchestration, and UI separate as described in `docs/Architecture.md`. Test legal moves, hidden information, deterministic replay, and end conditions when they are implemented.
 - Do not commit credentials, personal data, private game prototypes, generated artifacts, or third-party content without documented publication rights. Use synthetic fixtures and preserve license notices.

@@ -1,6 +1,6 @@
 # Roadmap
 
-**Planning baseline finalized September 28, 2026.** Milestone 0 is complete. Application milestones have not started. The [implementation plan](Implementation-Plan.md) records the agreed build sequence and the [game-data checklist](Game-Data-Checklist.md) tracks research dependencies.
+**Planning baseline finalized September 28, 2026.** Milestone 0 is complete. Application milestones have not started. The [work plan](Work-Plan.md) records the agreed build sequence and the [game-data checklist](Game-Data-Checklist.md) tracks research dependencies.
 
 ## 0. Public project foundation - complete
 

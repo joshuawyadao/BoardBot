@@ -4,11 +4,13 @@ BoardBot is at the repository-foundation stage. Read the [README](README.md), [p
 
 ## Propose focused work
 
-Search existing issues first. Use the bug, feature, or game request form for a concrete outcome and observable acceptance criteria. Discuss a new game, a change to the selected React approach, an external service, storage format, or major dependency in an issue before building around it. Follow the finalized implementation plan and its game-data dependencies for the initial solo milestone. These choices affect the whole project.
+Search existing issues first. Use the bug, feature, or game request form for a concrete outcome and observable acceptance criteria. Discuss a new game, a change to the selected React approach, an external service, storage format, or major dependency in an issue before building around it. Follow the finalized [work plan](docs/Work-Plan.md) and its game-data dependencies for the initial solo milestone. These choices affect the whole project.
 
 For a game request, describe the edition, player count, solo experience, and bot behavior you want. Link to an official game page when one exists. Do not attach a commercial rulebook, scans, private prototype, or artwork as a substitute for permission to redistribute it.
 
 ## Development workflow
+
+Use `docs/Implementation-Plan.md` for the current task only; future tasks may replace it. Keep lasting requirements in [Work-Plan.md](docs/Work-Plan.md) and milestones in [Roadmap.md](docs/Roadmap.md). When merging branches, preserve those durable documents and update them only for intentional changes to the project direction.
 
 1. Fork the repository if needed and create a descriptive branch from `main`.
 2. Keep each pull request focused on one user-visible outcome.

@@ -37,7 +37,7 @@ The check command works on macOS and Linux with a POSIX shell; Windows contribut
 | [Architecture direction](docs/Architecture.md) | Proposed rules, bots, sessions, and UI boundaries |
 | [Roadmap](docs/Roadmap.md) | Milestones toward a first playable game |
 | [Verification](docs/Verification.md) | Local checks, CI, and future game acceptance checks |
-| [Implementation plan](docs/Implementation-Plan.md) | Finalized planning baseline, build order, and completion criteria |
+| [Work plan](docs/Work-Plan.md) | Finalized planning baseline, build order, and completion criteria |
 | [Game-data checklist](docs/Game-Data-Checklist.md) | Sources, missing component details, and unresolved rulings |
 
 ## Public development and game content

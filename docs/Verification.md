@@ -42,4 +42,4 @@ Browser acceptance should cover hover and keyboard-focus descriptions, click-to-
 
 On the target M1 Mac, perform clean setup and full solo play. Disconnect internet after setup, keep the local server running, and check startup, gameplay, required assets, and save/resume. No runtime request to a remote service may be needed to complete the session. Record actual browser/OS versions and limitations when tested.
 
-The finalized [implementation plan](Implementation-Plan.md) and [roadmap](Roadmap.md) define milestone completion. Passing today's repository checks is not evidence of gameplay correctness.
+The finalized [work plan](Work-Plan.md) and [roadmap](Roadmap.md) define milestone completion. Passing today's repository checks is not evidence of gameplay correctness.
