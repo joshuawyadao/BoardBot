@@ -14,7 +14,7 @@ Prepare the empty BoardBot repository for public development using the conventio
 [x] Add GitHub bug/feature/game request forms, a PR template, a SHA-pinned `CI Verify` workflow, and weekly GitHub Actions Dependabot updates.
 [x] Add a dependency-free repository verifier with focused regression tests for missing files, broken relative links, unsafe public files, and valid fixtures; exercise local commands and YAML syntax checks.
 [x] Configure and verify the GitHub description/topics, squash-merge defaults, private vulnerability reporting, Dependabot alerts/security updates, and existing secret scanning/push protection. Keep settings consistent with the other public projects.
-[ ] Review public content for personal data and third-party game assets, validate docs and checks, save the completed work with `save-branch`, and confirm the pushed commit's GitHub CI result.
+[x] Review public content for personal data and third-party game assets, validate docs and checks, save the completed work with `save-branch`, and confirm the pushed commit's GitHub CI result.
 
 ## Open questions
 - None blocking. The first game and app stack are deliberately deferred to the playable prototype milestone; MIT follows the owner's existing public-project convention.
@@ -27,4 +27,6 @@ Prepare the empty BoardBot repository for public development using the conventio
 - GitHub API readback confirmed public visibility, `main` as the configured default, description/topics, issues enabled, wiki disabled, squash merging enabled, other merge methods disabled, and automatic head-branch deletion after merge.
 - GitHub API readback confirmed private vulnerability reporting, Dependabot alerts/security updates, secret scanning, and push protection are enabled. No application dependency manifest exists yet.
 - No game assets, third-party runtime dependencies, personal save data, or credentials were added. The conduct reporting address and MIT attribution follow the owner's existing public repositories.
-- Push and GitHub CI confirmation remain to be recorded after publication.
+- Plan checkpoint: `bd5412d`. Foundation checkpoint: `534c979`, pushed to `origin/main`. [CI Verify run 36466140635](https://github.com/joshuawyadao/BoardBot/actions/runs/36466140635) passed on the published foundation commit, including all five verifier tests.
+- GitHub recognized the MIT license and reported a 100% community profile. Bug/feature/game issue forms and the PR template are published. No pull request or release was created for this initial repository bootstrap.
+- The working tree was clean after the foundation push, with no unrelated files left unstaged. The remaining documentation checkpoint records these verified results.
