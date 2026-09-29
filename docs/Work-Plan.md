@@ -1,15 +1,15 @@
 # Work plan
 
-**Status: finalized planning baseline, September 28, 2026. A synthetic interaction prototype is implemented; the Horrified game milestone remains in progress.**
+**Status: finalized planning baseline, September 28, 2026; interaction refinements agreed September 29. A synthetic interaction prototype is implemented; the Horrified game milestone remains in progress.**
 
 Build a local React browser app for practicing the original Horrified: Dungeons & Dragons on an M1 MacBook Pro. Deliver rules-enforced, on-screen solo play first; reuse the verified rules foundation for a physical-game companion later. Missing component details and unresolved rulings are explicit dependencies, not permission to guess.
 
 This is the durable project baseline. Update it intentionally when agreed scope or requirements change; do not replace it for routine feature tasks. The [roadmap](Roadmap.md) summarizes milestones. [Implementation-Plan.md](Implementation-Plan.md) is temporary task tracking and may be rewritten for each task.
 
-The current React shell has an original four-location map, a sample explorer, Move and Wait, a fixed three-action turn, highlighted board destinations, select/review/Confirm, descriptions in a reserved inline help area, a 900 ms resolution display lock, and restart. A scrollable session log retains numbered sample turns and respects readers who scroll back, with Jump to latest. The session resets on reload. It is a preliminary interaction step, not a verified Horrified rules engine or playable game. Rules data, monsters, all base heroes, recovery, and milestone acceptance remain open.
+The current React shell has an original four-location map, a sample explorer, Move and Wait, and a fixed three-action turn. A floating eight-card tray occupies reserved space below the map: Move is usable, while Guide, Pick Up, Share, Advance, Defeat, Special Action, and Perks are inspectable unavailable previews. Move highlights connected destinations and executes when a destination is clicked. The separate invented Wait control uses selection and Confirm. An explicit End Hero Phase works early or at zero actions, after resolution, and logs the boundary once; there is no Monster Phase yet. A roughly 900 ms display lock prevents new actions during resolution. The right-side Event log retains numbered sample turns and respects readers who scroll back, with Jump to latest; it moves below the board on narrow screens. The session resets on reload. This is an interaction step, not a verified Horrified rules engine or playable game. Rules data, monsters, all base heroes, recovery, and milestone acceptance remain open.
 
 ## Scope
-- In: One human-controlled hero; all five base-game heroes selectable at milestone completion, validated individually; Displacer Beast and Beholder; a simplified labeled map with accurate connections; automated monster phases with required player choices; confirmation-based actions; local save/resume; offline gameplay after initial setup.
+- In: One human-controlled hero; all five base-game heroes selectable at milestone completion, validated individually; Displacer Beast and Beholder; a simplified labeled map with accurate connections; automated monster phases with required player choices; direct board movement and confirmation for consequential choices; local save/resume; offline gameplay after initial setup.
 - Out: Other monsters, promo heroes, Ravenloft, multiplayer, strategic bots controlling extra heroes, companion mode, cloud accounts/services, polished commercial artwork, and desktop packaging in the first milestone.
 
 ## Action items
@@ -18,15 +18,17 @@ The current React shell has an original four-location map, a sample explorer, Mo
 [ ] Implement shared setup, movement, action budgets, items, citizens, perks, monster phases, and end conditions; reject invalid commands without changing state or spending resources.
 [ ] Deliver a complete internal playthrough with one validated hero and both selected monsters, including required choices during resolution; do not claim faithful gameplay while its data or rulings remain unverified.
 [ ] Implement and validate each remaining base hero, then expose all five for selection when the milestone is complete.
-[ ] Extend the prototype board and action panel to verified game data: remaining/available actions, hover and keyboard-focus descriptions, click to select, necessary targets/items, and a bottom Confirm button. The sample demonstrates the basic interaction with direct board destination selection, but not game-specific targets, costs, or rules.
+[ ] Connect the floating tray to verified game data: available/remaining actions, card costs, hover/focus/tap explanations, action-specific targets and items, and engine-provided reasons for illegal actions. Keep unavailable cards in stable positions. The sample demonstrates layout and direct movement, but not game-specific targets, costs, perks, or rules. Confirm consequential item and dice choices before committing.
 [ ] Add local autosave, resume, and recovery that preserve committed random results, pending choices, and the action log; reject invalid saves and prevent duplicate action execution.
 [ ] Validate complete games, all supported hero abilities, edge cases, reload recovery, keyboard interaction, and disconnected play on the target Mac; update setup, architecture, and verification docs before describing the milestone as playable.
 
 ## Action and recovery contract
 
-- Selecting, changing, or cancelling an unconfirmed action has no gameplay cost. There is no undo command in the initial design.
-- Confirm remains disabled until selections form a legal action. The engine checks legality again before committing it.
-- Once confirmed, block ordinary action selection and repeat confirmation until resolution ends. Enable only choices required by that resolution, including during monster phases.
+- Selecting, changing, or cancelling an uncommitted action has no gameplay cost. There is no undo command in the initial design.
+- Move executes when the player clicks a highlighted legal destination; consequential item or roll choices require review and Confirm. The engine rechecks legality at execution. Incomplete or illegal choices cannot be committed.
+- Once committed, block ordinary action selection and repeat submission until resolution ends. Enable only choices required by that resolution, including during monster phases.
+- Keep temporarily invalid cards visible with specific reasons, without changing their tray positions. Legality may differ by monster and action; do not assume shared location is a universal requirement for Advance or Defeat.
+- End the Hero Phase explicitly, early or at zero paid actions, only after any current resolution. Eligible free perks remain available at zero actions until that boundary, subject to their own timing and prerequisites. The sample implements only the explicit boundary, not perks or a Monster Phase.
 - Commit each action and random outcome once. A reload must not offer a new roll or repeat a card draw that has already been committed.
 - Autosave stable resolution boundaries, including pending choices with their already-determined outcomes. Save after each fully resolved action as well. Surface persistence failures and prevent silent progress beyond a recoverable state.
 - After resolution, refresh state, phase, action budget, legal options, and the readable result history. Temporary or bonus effects can change the budget; it is not a hard-coded fixed total.

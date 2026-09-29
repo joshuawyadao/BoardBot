@@ -48,7 +48,8 @@ export function createGame(): GameState {
 
 export function getActionReason(state: GameState, action: Action): string | null {
   if (state.phase === 'resolving') return 'Finish the current action first.'
-  if (state.phase === 'complete' || state.actionsRemaining === 0) return 'The sample turn is complete.'
+  if (state.phase === 'complete') return 'The sample Hero Phase has ended.'
+  if (state.actionsRemaining === 0) return 'No actions remain. End the Hero Phase when ready.'
 
   if (action.type === 'wait') return null
   if (action.type !== 'move') return 'Unknown action.'
@@ -61,6 +62,23 @@ export function getActionReason(state: GameState, action: Action): string | null
       (to === state.location && from === action.destination),
   )
   return adjacent ? null : 'Choose a connected location.'
+}
+
+export function getEndPhaseReason(state: GameState): string | null {
+  if (state.phase === 'resolving') return 'Finish the current action first.'
+  if (state.phase === 'complete') return 'The sample Hero Phase has already ended.'
+  return null
+}
+
+/** End the synthetic Hero Phase explicitly, with or without actions remaining. */
+export function endHeroPhase(state: GameState, expectedRevision: number): GameState {
+  if (state.revision !== expectedRevision || getEndPhaseReason(state) !== null) return state
+  return {
+    ...state,
+    phase: 'complete',
+    revision: state.revision + 1,
+    history: [...state.history, 'Ended the sample Hero Phase.'],
+  }
 }
 
 /** Invalid and repeated commands return the original state without spending an action. */
@@ -90,7 +108,7 @@ export function finishResolution(state: GameState, id: number): GameState {
   if (state.phase !== 'resolving' || state.pending?.id !== id) return state
   return {
     ...state,
-    phase: state.actionsRemaining === 0 ? 'complete' : 'ready',
+    phase: 'ready',
     pending: null,
     revision: state.revision + 1,
   }

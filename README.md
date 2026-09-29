@@ -18,17 +18,18 @@ npm ci
 npm run dev
 ```
 
-Open http://127.0.0.1:5173 in your browser. Choose Move, then select a highlighted location directly on the board, or choose Wait. Review the selection and press Confirm. Hover or focus an action to read its description in the help area below the actions. The invented explorer has three actions. Each confirmed action displays a brief, roughly 900 ms resolution during which action controls are locked. Start a new sample turn after all three actions. The scrollable session log keeps earlier turns until you reload; it follows new entries while you are at the bottom and offers Jump to latest when you scroll back. Reloading resets everything. There is no undo or persistence. Once dependencies are installed, this sample runs locally without a gameplay service or account.
+Open http://127.0.0.1:5173 in your browser. Choose Move in the floating tray, then click a highlighted board destination to move immediately. Wait (sample) uses a separate Confirm button. Hover, focus, or tap a card to inspect it in the fixed help area; planned cards explain why they are unavailable. The invented explorer has three actions. After a roughly 900 ms resolution lock, choose another action or explicitly End Hero Phase, even if actions remain. Reaching zero actions does not end the phase automatically. The right-side Event log keeps earlier sample turns until you reload; it follows new entries while you are at the bottom and offers Jump to latest when you scroll back. On narrow screens the log moves below the board. Reloading resets everything. There is no undo or persistence. Once dependencies are installed, this sample runs locally without a gameplay service or account.
 
 ## Intended first experience
 
 - Play the entire game on screen with one human-controlled hero, choosing from all five base-game heroes once each is validated.
 - Face the Displacer Beast and Beholder, with rules-driven monster turns and required player choices.
 - Use a simplified labeled map with accurate connections and clearly indicated legal actions.
-- Hover for action descriptions, click to select, then use a bottom Confirm button. New actions stay locked while the current action resolves.
+- Use a floating action tray within space reserved at the bottom of the map, with stable positions and action costs. Temporarily illegal actions stay visible with a reason. Selecting Move highlights legal destinations, and clicking one executes it; consequential item or roll choices require confirmation. New actions stay locked while the current action resolves.
+- End the Hero Phase explicitly; reaching zero paid actions must not prevent eligible free perks before that boundary.
 - Save and resume locally, preserving committed dice/card outcomes and pending choices. Play without internet access after initial setup while the local development server is running.
 
-These are planned Horrified capabilities. The sample turn only tests the interaction pattern; its map, actions, and action budget are invented. A later physical-game companion will reuse the rules foundation for setup, tracking, and sourced rules lookup. Other monsters, devices, optional desktop packaging, and broader bot playtesting follow later. No paid AI service or account is planned for the initial milestone.
+These are planned Horrified capabilities. The sample turn only tests the interaction pattern; its map, actions, and action budget are invented. Its Guide, Pick Up, Share, Advance, Defeat, Special Action, and Perks cards are unavailable previews, not implemented game actions or legal-rule checks. A later physical-game companion will reuse the rules foundation for setup, tracking, and sourced rules lookup. Other monsters, devices, optional desktop packaging, and broader bot playtesting follow later. No paid AI service or account is planned for the initial milestone.
 
 ## Get started
 

@@ -19,6 +19,7 @@ export function useSampleSession() {
     entries,
     turnNumber,
     confirm: (action: Action) => dispatch({ type: 'confirm', action, revision: game.revision }),
+    endHeroPhase: () => dispatch({ type: 'end-phase', revision: game.revision }),
     restart: () => dispatch({ type: 'restart' }),
   };
 }

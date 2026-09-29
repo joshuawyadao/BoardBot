@@ -1,10 +1,10 @@
-import { createGame, finishResolution, submitAction } from '../engine/sampleGame'
+import { createGame, endHeroPhase, finishResolution, submitAction } from '../engine/sampleGame'
 import type { Action, GameState } from '../engine/sampleGame'
 
 export interface SessionEntry {
   readonly id: string
   readonly turn: number
-  readonly kind: 'start' | 'action'
+  readonly kind: 'start' | 'action' | 'phase'
   readonly message: string
 }
 
@@ -16,6 +16,7 @@ export interface SampleSession {
 
 export type SessionCommand =
   | { readonly type: 'confirm'; readonly action: Action; readonly revision: number }
+  | { readonly type: 'end-phase'; readonly revision: number }
   | { readonly type: 'finish'; readonly id: number }
   | { readonly type: 'restart' }
 
@@ -54,6 +55,19 @@ export function reduceSession(session: SampleSession, command: SessionCommand): 
     case 'finish': {
       const game = finishResolution(session.game, command.id)
       return game === session.game ? session : { ...session, game }
+    }
+    case 'end-phase': {
+      const game = endHeroPhase(session.game, command.revision)
+      if (game === session.game) return session
+      return {
+        ...session,
+        game,
+        entries: appendEntry(session, {
+          turn: session.turnNumber,
+          kind: 'phase',
+          message: game.history[game.history.length - 1],
+        }),
+      }
     }
     case 'restart': {
       if (session.game.phase !== 'complete') return session

@@ -8,14 +8,24 @@ Apply the agreed floating action tray and right-side event log to the synthetic 
 
 ## Action items
 [x] Inspect README, Architecture, Product-Brief, Work-Plan, Roadmap, Verification, current engine/session/UI tests, and existing PR state.
-[ ] Checkpoint the resolved plan before implementation.
-[ ] Add a revision-checked end-phase command in the sample engine/session. Keep the phase ready at zero actions, reject paid actions there, and reject ending during resolution or replaying stale commands.
-[ ] Recompose the board, bottom floating tray, and right-side log. Keep planned actions visible and inspectable but non-executable; retain Wait as an explicitly synthetic confirmation exercise.
-[ ] Execute legal board destinations immediately after selecting Move; preserve duplicate guards, keyboard access, resolution locking, and explanatory hover/focus/tap behavior.
-[ ] Update engine/session/browser coverage for explicit phase ending, immediate movement, unavailable actions, responsive geometry, stable help, and log reading position.
-[ ] Update README, Product-Brief, Architecture, Work-Plan, Roadmap, and Verification to distinguish implemented behavior from the agreed future free-perk and monster requirements.
-[ ] Run `npm run verify` and `npm run test:e2e`, inspect the browser, review the diff, and correct regressions.
+[x] Checkpoint the resolved plan before implementation.
+[x] Add a revision-checked end-phase command in the sample engine/session. Keep the phase ready at zero actions, reject paid actions there, and reject ending during resolution or replaying stale commands.
+[x] Recompose the board, bottom floating tray, and right-side log. Keep planned actions visible and inspectable but non-executable; retain Wait as an explicitly synthetic confirmation exercise.
+[x] Execute legal board destinations immediately after selecting Move; preserve duplicate guards, keyboard access, resolution locking, and explanatory hover/focus/tap behavior.
+[x] Update engine/session/browser coverage for explicit phase ending, immediate movement, unavailable actions, responsive geometry, stable help, and log reading position.
+[x] Update README, Product-Brief, Architecture, Work-Plan, Roadmap, and Verification to distinguish implemented behavior from the agreed future free-perk and monster requirements.
+[x] Run `npm run verify` and `npm run test:e2e`, inspect the browser, review the diff, and correct regressions.
 [ ] Save and push the branch, update existing PR #1, and check its CI/review/mergeability status without merging.
 
 ## Open questions
 - None. Destination selection executes movement. Other consequential choices retain confirmation. End Hero Phase is explicit even when no paid actions remain; future eligible perks remain available independently of the paid-action budget.
+
+## Verification and review ledger
+- Plan checkpoint: `c00652b` — Plan the floating action tray and explicit phase ending.
+- Local verification passed: `npm run verify` (type checking, production build, 8 engine/session tests, 5 repository tests) and `npm run test:e2e` (8 browser tests).
+- Browser coverage includes direct movement, duplicate/stale commands, keyboard confirmation, early and zero-action phase ending, locked resolution, unavailable-card explanations, desktop/mobile geometry, and retained log reading position.
+- Two initial browser fixture failures were corrected: compare help layout after scrolling into view, and generate enough session entries to exercise log overflow. The full browser suite then passed.
+- Desktop visual inspection confirmed that the tray clears all map locations and the event log occupies the right rail. The temporary viewport override was reset after inspection. Safari and a screen reader were not manually tested.
+- Brooks review found no actionable concerns. Rules, session orchestration, and UI remain separate; planned cards cannot dispatch gameplay commands.
+- Existing external Codex review requested on PR #1 previously timed out after repeated polling and is still unanswered. This remains a review blocker, not a passing review. No Codex feedback or reactions were available to handle.
+- This is a synthetic interaction prototype. Real heroes, monsters, items, perks, persistence, and Horrified legality remain future work dependent on verified game data.

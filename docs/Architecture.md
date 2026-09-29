@@ -4,7 +4,7 @@ This records the agreed boundaries for the first Horrified: Dungeons & Dragons g
 
 ## Current prototype
 
-`src/engine/sampleGame.ts` owns an invented four-location graph, three-action budget, action legality, and pure state transitions for Move and Wait. It rejects invalid and repeated commands without changing state. `src/session/sampleSession.ts` owns the session reducer, numbered turns, and append-only in-memory log entries. It keeps game revisions increasing across sample-turn resets so stale commands cannot apply to a new turn. `src/session/useSampleSession.ts` wraps that reducer and uses a 900 ms display timer to finish a committed resolution. `src/ui/App.tsx` presents the map, selection, reserved action-help area, confirmation, and lock; `src/ui/SessionLog.tsx` renders the scrollable session log. It follows new entries only while the reader is at the bottom and offers Jump to latest. Reloading creates a fresh session. The prototype has no dice, monsters, saved sessions, or Horrified rules. Its engine exercises the intended boundary; it is not the future verified game engine.
+`src/engine/sampleGame.ts` owns an invented four-location graph, three-action budget, action legality, pure Move/Wait transitions, and an explicit End Hero Phase transition. It rejects invalid, stale, and repeated commands without changing state. At zero actions it remains in the ready phase until the player ends it. `src/session/sampleSession.ts` owns the session reducer, numbered turns, and append-only in-memory action/phase log entries. It keeps game revisions increasing across sample-turn resets so stale commands cannot apply to a new turn. `src/session/useSampleSession.ts` wraps that reducer and uses a 900 ms display timer to finish a committed resolution. `src/ui/App.tsx` presents the map with reserved space for a floating action tray, direct movement, a confirmed sample Wait, help, and lock. `src/ui/actionCatalog.ts` labels the eight visible card positions; only Move is executable. `src/ui/SessionLog.tsx` renders the right-side Event log, which moves below the board on narrow screens. It follows new entries only while the reader is at the bottom and offers Jump to latest. Reloading creates a fresh session. The prototype has no dice, monsters, playable perks, saved sessions, or Horrified rules. Its engine exercises the intended boundary; it is not the future verified game engine.
 
 ## Responsibilities
 
@@ -13,7 +13,7 @@ This records the agreed boundaries for the first Horrified: Dungeons & Dragons g
 | Verified game data | Board graph, component definitions, quantities, source/version records | Incomplete entries cannot silently become supported gameplay |
 | Rules engine | State, legality, transitions, action costs, effects, end conditions | Independent of React, storage, and presentation; currently only a synthetic sample engine exists |
 | Session runner | Turn/phase progression, commands, injected randomness, required choices, event history | Applies commands once through the rules engine; the current reducer/timer only handles the sample turn |
-| React interface | Simplified board, action panel, descriptions, selections, confirmation, outcomes | Never duplicates rule decisions as a separate authority |
+| React interface | Simplified board, floating tray, Event log, descriptions, selections, confirmation where needed, outcomes | Never duplicates rule decisions as a separate authority |
 | Local persistence | Versioned snapshots, pending choices, committed random results, recovery | Loading validates data and never executes imported code |
 | Future companion | Physical setup/tracking and sourced rules explanations | Reuses rules and data with a different interaction model |
 
@@ -21,15 +21,16 @@ Begin with small modules in one application. A general plugin system, remote bac
 
 ## Action-resolution contract
 
-The interaction progresses through selecting, ready to confirm, resolving, optionally awaiting a required choice, and resolved/game over. These are conceptual states, not final code identifiers.
+The interaction progresses through selection or targeting, optional confirmation, resolution, any required follow-up choice, and an explicit phase boundary. These are conceptual states, not final code identifiers.
 
-- Selecting or cancelling has no game-state effect. Confirm requires all inputs and current legality.
-- In the prototype, Move highlights reachable board locations. Choosing one selects a destination; confirmation remains a separate step. Hover or focus shows action details in a reserved area without covering controls or moving them.
+- Selecting or cancelling has no game-state effect. In the prototype, Move highlights reachable board locations and clicking one commits the move immediately. Consequential choices such as item spending or dice rolls require complete review and confirmation. Hover, focus, or tap shows action details in a reserved area above the stable cards.
+- An unavailable action stays in its tray position with a specific reason. The UI can preview legality, but only the engine authorizes a command. Monster challenge and defeat prerequisites must use verified monster-specific data. Eligible free perks do not depend on remaining paid actions and remain available until the explicit Hero Phase end, subject to their own timing rules.
 - The engine revalidates the submitted command, including phase and available resources. Invalid or duplicate commands must not spend an action, draw a card, roll again, or otherwise change state.
 - Ordinary action controls lock at submission, before animation or delayed processing. Required follow-up choices are distinct commands tied to the active resolution.
 - Monster phases follow the rules but can pause for player-controlled ties, defenses, effect ordering, or other decisions. Automation must not silently remove a choice granted by the rules.
 - A committed result is authoritative; animations only present it. Returning to ordinary selection requires completion of the current resolution and the correct game phase.
 - Action allowance can change through effects. Do not assume every successful interaction costs one action or every turn has the same budget.
+- End Hero Phase is an explicit, revision-guarded command, allowed early or at zero actions while ready and disallowed during resolution. Record that boundary once; subsequent Monster Phase behavior awaits the verified game engine.
 
 ## Randomness and recovery
 

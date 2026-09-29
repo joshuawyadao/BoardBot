@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   createGame,
+  endHeroPhase,
   finishResolution,
   getActionReason,
+  getEndPhaseReason,
   submitAction,
   type Action,
 } from './sampleGame'
@@ -42,7 +44,7 @@ describe('sample action engine', () => {
     expect(submitAction(ready, { type: 'wait' }, 1)).toBe(ready)
   })
 
-  it('finishes the sample turn after three confirmed actions', () => {
+  it('keeps the Hero Phase ready at zero actions until explicitly ended', () => {
     let state = createGame()
     for (const action of [
       { type: 'wait' },
@@ -55,12 +57,41 @@ describe('sample action engine', () => {
     }
 
     expect(state).toMatchObject({
-      phase: 'complete',
+      phase: 'ready',
       actionsRemaining: 0,
       actionAllowance: 3,
       location: 'lookout',
       history: ['Waited at camp.', 'Moved from camp to crossroads.', 'Moved from crossroads to lookout.'],
     })
+    expect(getActionReason(state, { type: 'wait' })).toBe('No actions remain. End the Hero Phase when ready.')
     expect(submitAction(state, { type: 'wait' }, state.revision)).toBe(state)
+    expect(getEndPhaseReason(state)).toBeNull()
+
+    const complete = endHeroPhase(state, state.revision)
+    expect(complete).toMatchObject({
+      phase: 'complete',
+      actionsRemaining: 0,
+      revision: state.revision + 1,
+    })
+    expect(complete.history.at(-1)).toBe('Ended the sample Hero Phase.')
+    expect(endHeroPhase(complete, complete.revision)).toBe(complete)
+    expect(submitAction(complete, { type: 'wait' }, complete.revision)).toBe(complete)
+  })
+
+  it('allows ending early but rejects stale or resolving end commands', () => {
+    const start = createGame()
+    expect(endHeroPhase(start, -1)).toBe(start)
+
+    const resolving = submitAction(start, { type: 'wait' }, start.revision)
+    expect(getEndPhaseReason(resolving)).toBe('Finish the current action first.')
+    expect(endHeroPhase(resolving, resolving.revision)).toBe(resolving)
+
+    const ready = finishResolution(resolving, resolving.pending!.id)
+    expect(endHeroPhase(ready, start.revision)).toBe(ready)
+    const complete = endHeroPhase(ready, ready.revision)
+    expect(complete).toMatchObject({ phase: 'complete', actionsRemaining: 2 })
+    expect(complete.history).toEqual(['Waited at camp.', 'Ended the sample Hero Phase.'])
+    expect(getEndPhaseReason(complete)).toBe('The sample Hero Phase has already ended.')
+    expect(endHeroPhase(complete, ready.revision)).toBe(complete)
   })
 })

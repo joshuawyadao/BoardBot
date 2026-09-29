@@ -1,6 +1,6 @@
 # Roadmap
 
-**Planning baseline finalized September 28, 2026.** Milestone 0 is complete. Work on the first application milestone has begun with a synthetic interaction prototype; no Horrified game is playable yet. The [work plan](Work-Plan.md) records the agreed build sequence and the [game-data checklist](Game-Data-Checklist.md) tracks research dependencies.
+**Planning baseline finalized September 28, 2026; interaction direction updated September 29.** Milestone 0 is complete. Work on the first application milestone has begun with a synthetic interaction prototype; no Horrified game is playable yet. The [work plan](Work-Plan.md) records the agreed build sequence and the [game-data checklist](Game-Data-Checklist.md) tracks research dependencies.
 
 ## 0. Public project foundation - complete
 
@@ -10,7 +10,7 @@ MIT licensing, community policies, contribution templates, repository verificati
 
 Deliver a local React browser game for the M1 MacBook Pro, using one human-controlled hero against the Displacer Beast and Beholder. Use a simplified labeled map and generic markers. All five base heroes are selectable at completion; develop and validate them one at a time.
 
-**In progress:** A React sample-turn shell demonstrates hover/focus descriptions in a reserved help area, selecting highlighted destinations directly on the board, separate confirmation, action counts, a short resolution lock, and restart. A scrollable log keeps numbered sample turns and lets the reader jump to the latest entry. Its four-location map, explorer, Move/Wait actions, and three-action allowance are invented. Reloading resets the session. It does not satisfy the game, data, monster, offline acceptance, or save/resume criteria below.
+**In progress:** A React sample-turn shell demonstrates a floating action tray with eight stable card positions, descriptions in a reserved help area, direct movement to highlighted destinations, a separately confirmed invented Wait, action counts, an explicit End Hero Phase, a short resolution lock, and restart. Seven cards are unavailable previews with explanations, not game actions. The right-side Event log keeps numbered sample turns and moves below the board on narrow screens. Its four-location map, explorer, Move/Wait actions, and three-action allowance are invented. Reloading resets the session. It does not satisfy the game, data, monster, offline acceptance, or save/resume criteria below.
 
 Build in this order:
 
@@ -24,7 +24,8 @@ Acceptance criteria:
 
 - A documented local setup starts the app and completes games with each supported hero, including victory and defeat paths.
 - Legal actions, current phase, remaining actions, inventory, and outcomes are understandable.
-- Hover/focus descriptions, click-to-select, and bottom-button confirmation follow the agreed flow; selection itself is free and there is no undo command.
+- The floating tray keeps stable positions and shows action costs, availability, and specific reasons for invalid actions. Move is selected freely, then commits on clicking a highlighted legal destination. Consequential item or roll choices require review and confirmation; there is no undo command.
+- The Hero Phase ends only through an explicit command after the current resolution. Eligible free perks remain usable at zero paid actions until that boundary, subject to their own legality rules.
 - Invalid moves and repeated submissions leave state unchanged. Controls lock during resolution while required decision controls remain usable.
 - Monster phases preserve player choices required by the rules.
 - Save/resume restores state and pending choices without rerolling, redrawing, or replaying committed actions; failures are visible and recoverable.

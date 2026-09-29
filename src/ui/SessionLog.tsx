@@ -30,7 +30,7 @@ export function SessionLog({ entries }: { entries: readonly SessionEntry[] }) {
   return (
     <section className="history-panel" aria-labelledby="history-title">
       <div className="history-heading">
-        <div><p className="eyebrow">FIELD NOTES</p><h2 id="history-title">Session log</h2></div>
+        <div><p className="eyebrow">TURN RECORD</p><h2 id="history-title">Event log</h2></div>
         <span className="small-label">This session only · resets on reload</span>
       </div>
       <div className="history-viewport" ref={viewport} onScroll={trackScroll} role="log"
@@ -40,8 +40,8 @@ export function SessionLog({ entries }: { entries: readonly SessionEntry[] }) {
             <li key={entry.id} className="history-turn"><span>TURN {entry.turn}</span><p>{entry.message}</p></li>
           ) : (
             <li key={entry.id} className="history-message">
-              <span className="message-avatar" aria-hidden="true">E</span>
-              <div className="message-bubble"><span className="message-author">Practice explorer <span>· Turn {entry.turn}</span></span><p>{entry.message}</p></div>
+              <span className="message-avatar" aria-hidden="true">{entry.kind === 'phase' ? '→' : 'E'}</span>
+              <div className="message-bubble"><span className="message-author">{entry.kind === 'phase' ? 'Phase' : 'Practice explorer'} <span>· Turn {entry.turn}</span></span><p>{entry.message}</p></div>
             </li>
           ))}
         </ol>
