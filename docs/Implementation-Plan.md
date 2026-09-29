@@ -15,7 +15,7 @@ Apply the agreed floating action tray and right-side event log to the synthetic 
 [x] Update engine/session/browser coverage for explicit phase ending, immediate movement, unavailable actions, responsive geometry, stable help, and log reading position.
 [x] Update README, Product-Brief, Architecture, Work-Plan, Roadmap, and Verification to distinguish implemented behavior from the agreed future free-perk and monster requirements.
 [x] Run `npm run verify` and `npm run test:e2e`, inspect the browser, review the diff, and correct regressions.
-[ ] Save and push the branch, update existing PR #1, and check its CI/review/mergeability status without merging.
+[x] Save and push the branch, update existing PR #1, and check its CI/review/mergeability status without merging.
 
 ## Open questions
 - None. Destination selection executes movement. Other consequential choices retain confirmation. End Hero Phase is explicit even when no paid actions remain; future eligible perks remain available independently of the paid-action budget.
@@ -28,4 +28,7 @@ Apply the agreed floating action tray and right-side event log to the synthetic 
 - Desktop visual inspection confirmed that the tray clears all map locations and the event log occupies the right rail. The temporary viewport override was reset after inspection. Safari and a screen reader were not manually tested.
 - Brooks review found no actionable concerns. Rules, session orchestration, and UI remain separate; planned cards cannot dispatch gameplay commands.
 - Existing external Codex review requested on PR #1 previously timed out after repeated polling and is still unanswered. This remains a review blocker, not a passing review. No Codex feedback or reactions were available to handle.
+- Implementation saved and pushed as `e9391ee` — Add floating actions and explicit Hero Phase ending. [PR #1](https://github.com/joshuawyadao/BoardBot/pull/1) was updated to describe the complete branch scope and remains a draft.
+- [CI Verify](https://github.com/joshuawyadao/BoardBot/actions/runs/36606723257/job/109537528893) passed on `e9391ee`. GitHub reported the branch mergeable; the final review-thread read contained no threads. There were no CI fixes or merge conflicts to resolve. The final documentation checkpoint requires the normal CI rerun after push.
+- Completion state: implementation and local validation complete; PR not merge-ready because external Codex review has no response. Resume `pr-review-cycle` on PR #1 when review is available. No merge was performed.
 - This is a synthetic interaction prototype. Real heroes, monsters, items, perks, persistence, and Horrified legality remain future work dependent on verified game data.
