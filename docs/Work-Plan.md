@@ -13,7 +13,7 @@ This is the durable project baseline. Update it intentionally when agreed scope 
 - Out: Other monsters, promo heroes, Ravenloft, multiplayer, strategic bots controlling extra heroes, companion mode, cloud accounts/services, polished commercial artwork, and desktop packaging in the first milestone. This documentation update finalizes planning only and does not authorize starting application development.
 
 ## Action items
-[ ] Complete the component inventory and rules register in `docs/Game-Data-Checklist.md`; record sources and confidence, resolve required gaps, and keep incomplete content visibly unavailable.
+[ ] Encode the verified component packet described in `docs/Game-Data-Checklist.md` into a reviewed, versioned representation; resolve publication gates there and explicitly open rules cases in `docs/Rules-Reference.md`. Preserve sources, confidence, and accepted interpretation versions, and keep incomplete content visibly unavailable without reopening completed owner verification.
 [ ] Establish the React app and a rules engine independent of the interface, with explicit phases, legal commands, injected randomness, and synthetic test fixtures.
 [ ] Implement shared setup, movement, action budgets, items, citizens, perks, monster phases, and end conditions; reject invalid commands without changing state or spending resources.
 [ ] Deliver a complete internal playthrough with one validated hero and both selected monsters, including required choices during resolution; do not claim faithful gameplay while its data or rulings remain unverified.

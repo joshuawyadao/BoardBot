@@ -9,7 +9,7 @@ Address the two Codex documentation findings on PR #2, then verify and complete 
 ## Action items
 [x] Read the completed Codex review on `645bcc2` and inspect both affected documents.
 [x] Replace the stale validation instruction with the recorded post-push result below; keep this feedback task's external completion steps open until performed.
-[ ] Rewrite the first `docs/Work-Plan.md` action around encoding verified data and resolving open rules/publication gates in their canonical documents.
+[x] Rewrite the first `docs/Work-Plan.md` action around encoding verified data and resolving open rules/publication gates in their canonical documents.
 [ ] Run `./scripts/verify-repository.sh` and inspect the focused diff; no tests need changing because executable behavior is unchanged.
 [ ] Push verified fixes, acknowledge the addressed comments, and resolve their review threads.
 [ ] Check the resulting PR head's CI and review state, then merge PR #2 and delete the feature branch while retaining ignored evidence.
