@@ -1,8 +1,10 @@
 # Work plan
 
-**Status: finalized planning baseline, September 28, 2026. Application implementation has not started.**
+**Status: finalized planning baseline, September 28, 2026; research handoff updated September 30, 2026. No gameplay implementation is delivered by this documentation change.**
 
 Build a local React browser app for practicing the original Horrified: Dungeons & Dragons on an M1 MacBook Pro. Deliver rules-enforced, on-screen solo play first; reuse the verified rules foundation for a physical-game companion later. Missing component details and unresolved rulings are explicit dependencies, not permission to guess.
+
+Owner verification of the scoped components is complete. [Game-Data-Checklist.md](Game-Data-Checklist.md) records coverage and private evidence access; [Rules-Reference.md](Rules-Reference.md) records accepted interpretations and remaining gaps. Exact data packaging, publication provenance, unresolved response/result boundaries, and gameplay tests still gate faithful implementation. A consistency review across one to five Hero seats does not expand the first milestone.
 
 This is the durable project baseline. Update it intentionally when agreed scope or requirements change; do not replace it for routine feature tasks. The [roadmap](Roadmap.md) summarizes milestones. [Implementation-Plan.md](Implementation-Plan.md) is temporary task tracking and may be rewritten for each task.
 
@@ -35,8 +37,8 @@ A documented local setup on the M1 Mac can complete a game with either victory o
 
 ## Dependencies and later updates
 
-- Component reference photos/transcriptions: full cards and item quantities, hero tables, both sides of the Beholder reference, citizens, dice faces, and board/mat details. Track progress in the [game-data checklist](Game-Data-Checklist.md).
-- Edge-case rulings: keep publisher rules, reported developer correspondence, and unresolved interpretations distinct. Resolve each affected behavior before implementing it as an authoritative rule.
+- Component reference photos/transcriptions: scoped verification is complete and retained in the private local packet described by the [game-data checklist](Game-Data-Checklist.md). Do not restart photo collection; preserve the packet separately from Git and verify fields when creating the runtime representation.
+- Edge-case rulings: use the canonical [rules reference](Rules-Reference.md). Preserve the distinction between publisher rules, reported correspondence, accepted BoardBot interpretations, and still-open cases. Accepted interpretations enable explicit implementation choices; they do not become official rules.
 - Before publishing third-party content, document its source and publication rights. Private reference photos stay outside tracked files. The simplified UI can use original labels and generic markers while content review proceeds.
 - Routine build tools, dependency versions, storage mechanism/schema, and supported browser versions will be selected and pinned during implementation. These do not reopen the agreed product scope.
 - Stage two is a physical-game companion for setup, tracking, and quick sourced rules/edge-case lookup. Other monsters, devices, and optional desktop packaging follow later.

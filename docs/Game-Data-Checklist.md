@@ -1,55 +1,69 @@
 # Game data and rules verification
 
-**Status: open research dependencies for the finalized planning baseline, September 28, 2026.** This register covers the original Horrified: Dungeons & Dragons base game, all five base heroes, and the Displacer Beast/Beholder pair. It does not cover Ravenloft or promotional heroes.
+**Status: owner verification completed for the first-milestone components on September 29, 2026; research and working interpretations consolidated September 30, 2026.** This is evidence of component contents, not a tested rules engine or permission to publish game assets.
 
-## Source baseline
+Scope: original Horrified: Dungeons & Dragons, the five base Heroes, Beholder and Displacer Beast, and their shared board/cards/tokens. Red Dragon and Mimic-specific gameplay, promotional Heroes, and Ravenloft components are outside this verification scope.
 
-- [Ravensburger product page](https://www.ravensburger.us/en-US/products/games/board-games/horrified-dungeons-dragons--24754) links the [official 12-page instructions](https://product-files.ravensburger.cloud/manuals/704005.pdf). The instructions were downloaded and visually inspected during planning. They identify five base heroes and recommend the chosen monster pair; the store listing has inconsistent component counts, so do not use it as the component manifest.
-- The [BoardGameGeek clarification collection](https://boardgamegeek.com/thread/3582087/official-clarifications-dragon-mimic-beholder-rogu) reproduces answers attributed to developer Mike Mulvihill. Available indexed excerpts were inspected; direct retrieval was restricted. Treat this as secondhand correspondence pending corroboration, not publisher-hosted errata.
-- Owner-provided photos/transcriptions are pending. Record edition and component identifiers when received. Private source files stay outside tracked files; do not add the full rulebook or scans to this public repository automatically.
+## Read this before repeating research
 
-## Component coverage
+1. Use this register for physical coverage and evidence access.
+2. Use [Rules-Reference.md](Rules-Reference.md) for published findings, reported clarifications, accepted working interpretations, source links, and remaining questions. It is the canonical rules research memory; do not repeat source searches just because a temporary task plan has changed.
+3. Use the private local evidence packet for exact component fields. Its data has been confirmed by the owner; distinguish printed facts from interpretive decisions.
+4. Reopen research only for a documented gap, a conflicting observation, a different edition, or new authoritative evidence. No additional owner photos or readouts are currently requested.
 
-| Component | Current evidence | Needed before faithful gameplay |
+## Confirmed component coverage
+
+| Component | Confirmed coverage | Quantity / boundary |
 | --- | --- | --- |
-| Core rules | Setup, phases, actions, combat and end conditions are documented | Encode requirements and source-linked tests |
-| Five heroes | Bard, Cleric, Fighter, Rogue and Wizard tiles are illustrated | Readable full ability tables; confirm start locations, action limits and timing |
-| Beholder | Challenge described; reference card front illustrated | Readable front and reverse with every ray and symbol |
-| Displacer Beast | Challenge and placement exceptions described | Verify mat spaces, symbols, thresholds, and solo power resolution |
-| Board | Illustrated map and special movement rules | Transcribe and cross-check every edge, connector and numbered location |
-| 30 monster cards | Examples and processing rules | All events, draw counts, activation order/symbols, movement, dice counts and multiplicities |
-| 20 perk cards | Examples and play timing | Complete effects, restrictions and multiplicities |
-| 60 item tokens | Examples and attributes | Full names, types/colors, strengths, destinations and quantities |
-| 10 citizens | Standees illustrated | Verify each safe destination and relevant placement references |
-| Monster dice | Symbols described | Verify face counts/distribution for each die |
-| Lair tokens and relevant mats | Setup and examples present | Confirm any effects still relevant when Dragon and Mimic are excluded |
+| Perk cards | Effects and duplicate counts | 20 cards, 10 faces |
+| Item tokens | Names, colors, strengths, destinations, duplicates | 60 tokens, 30 types; two per type; 20 per color |
+| Monster cards | Gameplay events, Item draws, activation icon order, movement, dice counts, duplicates | 30 cards, 22 faces; descriptive lore excluded |
+| Citizens | Names and safe destinations; Monster-card placement references checked | 10 |
+| Base Hero tiles | Bard, Cleric, Fighter, Rogue, Wizard: starts, action counts, all ability outcomes | Five; four ordinary actions each before effects |
+| Monster dice | Each die's face distribution | Three dice; each has three HIT, one POW, two blank faces |
+| d20 | Values | One die, 1-20 |
+| Beholder | Mat and full eye-ray reference; original punctuation retained | Ten damage markers |
+| Displacer Beast | Mat symbols, power, grid, advance and defeat requirements | Targeting interpretation is separate |
+| Lair tokens | All faces and shared reverse; instructions checked | Four: Vault, Red Dragon's Hoard, two D&D-logo faces |
+| Tracking markers | Presence and identity | One Terror and one Frenzy marker |
+| Board | Twenty numbered locations/names, special spaces, starts, lairs, track, passage labels, 28 clear ordinary connections | Two potential additional city shortcuts remain interpretations |
 
-Availability is not the same as a completed transcription. Check symbols and visual tables against images; extracted PDF text can include duplicated or clipped artwork text and omit color/icon meaning.
+Perk multiplicities, retained as a factual cross-check: Durnan 2; Mordenkainen 2; Jarlaxle Baenre 1; Laeral Silverhand 2; Mystra 1; The Blackstaff 2; Drizzt Do'Urden 4; Skeemo Weirdbottle 2; Ott Steeltoes 2; Renaer Neverember 2. Total: 20.
 
-## Verification process
+The board photo supports the Hall of Heroes-to-Entry Well and Stairway-to-Entry Well corridors separately; it does not establish a direct Hall-to-Stairway connection. The two remaining city ambiguities are House of Wonder-to-Castle Waterdeep (3-4) and Trollskull Alley-to-Yawning Portal Exterior (5-7). Their chosen working routes and uncertainty live in the rules reference.
 
-For each entry, record its identifier, edition, source and page/component, transcribed data, duplicate count where relevant, review status, and associated tests. Use statuses such as missing, transcribed, cross-checked, or unresolved. Do not mark an entire deck verified from a handful of examples.
+This is not a full-box accessory inventory. No claim is made that every miniature/base was counted, that excluded monsters were verified, or that every rule interpretation is official.
 
-The first useful photo batch is the Beholder reference front/back, five hero tiles, and an overhead board view. Follow with readable batches of cards and tokens, retaining duplicates in the inventory; then citizens and all monster-die faces. Images need to be legible reference material, not polished app art.
+## Private local evidence packet
 
-## Edge-case register
+The working checkout contains an ignored `local-data/horrified-dnd/` packet:
 
-These are questions to resolve or cross-check, not asserted new rules:
+| File | Purpose |
+| --- | --- |
+| `verification-record.json` | Exact owner-confirmed component fields, full earlier research history, source locators, and audits through record version 6 |
+| `owner-board.jpg` | Owner board reference |
+| `owner-perks-and-beholder-reverse.jpg` | Owner Perk faces and reverse eye-ray reference |
+| `packet-manifest.json` | Capture date, record version, and SHA-256 fingerprints for the three files above |
 
-- Displacer Beast target selection and attack redirection with one hero.
-- Beholder temporary restrictions, skipped turns in solo play, and effects when a hero is temporarily off-board.
-- Cleric/Fighter effect ordering, repeated effects, duration and self-protection.
-- Wizard movement/location rolls and their interaction with rewards and global dice rules.
-- Rogue nearest-item selection when fewer items are available, bag draws, and discard selection.
-- Perks referring to other heroes in a one-hero session.
-- Tied routes/targets, depleted bag/decks, nested choices, and interruptions during resolution.
+The immutable imported record version is 6. Its SHA-256 at capture is `46ff404d179853f854dec0a8565139ec4455f8f60b7f41266cd4bbd16c97e853`. Older draft proposal/approval fields in that historical record are superseded by the accepted interpretations in `Rules-Reference.md`; never implement its earlier Perk-reshuffle proposal.
 
-Label conclusions as published rule, corroborated clarification, reported clarification, or explicit interpretation. Document conflicts and resolve affected behavior before calling it authoritative. If a choice cannot be settled from sources, obtain and record an explicit interpretation instead of silently filling the gap.
+The packet contains legacy absolute and temporary reference paths. Use the packet's own two photo files and source URLs; a legacy path does not imply the file still exists. Not every research image/PDF was archived. The structured confirmations remain available without those transient files.
 
-## Implications already identified
+**Git does not back up this packet.** A fresh clone or another checkout receives the public research notes, not the raw component fields/photos. The original persistent source packet is also retained outside this worktree on the owner's machine. Before removing a worktree, verify that separate copy or preserve the local packet to an owner-controlled backup. Managed worktree snapshots do not preserve needed ignored files automatically.
 
-The rules require more than a fixed action counter: perks and effects can change action availability, and some resolution decisions belong to the player. The interface must pause at required choices even within automated monster turns. The rules also distinguish hero and monster dice outcomes and the timing of a failed required card draw. Use these as targeted test categories rather than importing assumptions from other Horrified editions.
+To continue in another checkout, copy this private packet into the same ignored directory from an owner-controlled source and compare its manifest hashes and record version. Do not force-add it to Git. If unavailable, stop exact-data work at that dependency; do not fabricate a replacement deck or claim the public coverage table is a complete executable manifest.
 
-## Publication and implementation gates
+## Publication boundary
 
-Synthetic fixtures can support infrastructure work without pretending to be a real deck. Faithful complete-game acceptance is gated on the relevant manifest and rulings. Record publication rights separately from factual transcription; the public engine does not automatically grant permission to redistribute source images or game content. Retain the simplified map and original generic markers for the first interface.
+Tracked material here consists of original project research notes, factual verification metadata, source links, and BoardBot interpretation decisions. Full commercial rules/component text, photos, scans, and private machine paths remain outside public history. No publisher permission or endorsement is asserted. BoardBot's MIT license applies to its original work; it does not license the referenced game content. See [CONTRIBUTING.md](../CONTRIBUTING.md).
+
+Before packaging a public game-data manifest or redistributable assets, document provenance and publication rights for the proposed content. Physical ownership and accurate transcription do not satisfy that gate. A private reference packet is neither a public runtime dependency nor an implemented data importer.
+
+## Remaining implementation gates
+
+- Resolve the explicitly open rules boundaries in [Rules-Reference.md](Rules-Reference.md), notably Ott's out-of-range results and competing optional-response order, before implementing affected behavior.
+- Translate confirmed component data into a reviewed, versioned representation with suitable provenance. Check every board edge and deck multiplicity against the packet, not the coverage totals alone.
+- Record the accepted interpretation version in sessions/replays. Keep published findings, reported answers, and BoardBot choices distinguishable.
+- Add source-linked engine tests and actual complete-game acceptance checks. Today's repository tests validate tooling, not component data, game balance, or human/bot multiplayer.
+
+The [work plan](Work-Plan.md) still targets one human-controlled Hero first. The one-to-five-Hero consistency review in the rules reference preserves a later extension path without declaring multiplayer or strategic bots implemented.

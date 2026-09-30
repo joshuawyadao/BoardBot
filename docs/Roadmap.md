@@ -1,6 +1,6 @@
 # Roadmap
 
-**Planning baseline finalized September 28, 2026.** Milestone 0 is complete. Application milestones have not started. The [work plan](Work-Plan.md) records the agreed build sequence and the [game-data checklist](Game-Data-Checklist.md) tracks research dependencies.
+**Planning baseline finalized September 28, 2026; research updated September 30, 2026.** Milestone 0 is complete. This change delivers no playable milestone. The [work plan](Work-Plan.md) records the agreed build sequence. Scoped component verification is complete; the [game-data checklist](Game-Data-Checklist.md) and [rules reference](Rules-Reference.md) retain evidence, accepted interpretations, and the remaining implementation/publication dependencies.
 
 ## 0. Public project foundation - complete
 
@@ -12,7 +12,7 @@ Deliver a local React browser game for the M1 MacBook Pro, using one human-contr
 
 Build in this order:
 
-1. Verify required source data and register unresolved rulings; prepare synthetic fixtures where real data is pending.
+1. Preserve the verified source packet, encode suitable game data, and resolve the remaining rules/publication gates; use synthetic fixtures where public data is unavailable.
 2. Establish the app and shared rules/command boundaries.
 3. Complete a game with one hero and the selected monster pair.
 4. Add and validate the remaining heroes.

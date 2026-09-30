@@ -36,6 +36,10 @@ No gameplay tests exist yet. During implementation, add focused engine tests for
 
 Test that invalid actions preserve state and that repeated confirmation cannot spend twice, redraw, or reroll. Exercise effects that alter action availability and decisions within monster phases. Verify the selected pair and each base hero independently, then complete games through both victory and defeat paths.
 
+Use the accepted working interpretations and explicit gaps in [Rules-Reference.md](Rules-Reference.md) when writing those tests. Include exhausted Item and Perk supplies, repeated Displacer powers, Cleric self-rescue and effect expiry, Wizard destination 1, dice adjustment finalization, and the chosen board routes. Ott out-of-range results and competing optional responses need an explicit policy before assertions can encode expected behavior. No such gameplay tests were added by the research handoff.
+
+When multiplayer is implemented later, cover one, two, and five Hero seats with human/bot controllers, co-located and off-board targets, cross-seat Perks, resource ownership, and active-player versus attacked-Hero choices. Logical consistency of a rule across seat counts is not evidence of tested balance or an implemented multiplayer feature.
+
 Test local save/resume after completed actions and during required choices, preserving committed random outcomes. Include malformed/incompatible saves, storage failure, and interruption between commit and display. The previous valid session must survive failed loading or persistence.
 
 Browser acceptance should cover hover and keyboard-focus descriptions, click-to-select without execution, disabled Confirm for incomplete choices, locked controls during resolution, usable required-choice controls, and clear results. Validate the simplified map's graph independently of its appearance.
