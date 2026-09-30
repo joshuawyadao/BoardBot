@@ -1,6 +1,6 @@
 # Contributing to BoardBot
 
-BoardBot is at the repository-foundation stage. Read the [README](README.md), [product brief](docs/Product-Brief.md), and [roadmap](docs/Roadmap.md) before proposing a change.
+BoardBot has a synthetic interaction prototype, while the planned Horrified game remains unimplemented. Read the [README](README.md), [product brief](docs/Product-Brief.md), and [roadmap](docs/Roadmap.md) before proposing a change.
 
 ## Propose focused work
 
@@ -12,16 +12,16 @@ For a game request, describe the edition, player count, solo experience, and bot
 
 Use `docs/Implementation-Plan.md` for the current task only; future tasks may replace it. Keep lasting requirements in [Work-Plan.md](docs/Work-Plan.md) and milestones in [Roadmap.md](docs/Roadmap.md). When merging branches, preserve those durable documents and update them only for intentional changes to the project direction.
 
-1. Fork the repository if needed and create a descriptive branch from `main`.
+1. Fork the repository if needed and create a descriptive feature branch from `main`; repository rules require pull requests for changes to `main`.
 2. Keep each pull request focused on one user-visible outcome.
 3. Add or update tests for changed executable behavior and use synthetic examples.
 4. Update canonical documentation when setup, behavior, storage, game support, or architecture changes.
-5. Run `./scripts/verify-repository.sh` and any checks required by the changed component. See [verification](docs/Verification.md).
+5. Run `npm run verify` and `npm run test:e2e` for application changes, or `./scripts/verify-repository.sh` for repository-only changes. See [verification](docs/Verification.md).
 6. Use the PR template to describe the result, verification, content provenance, and remaining limits. Wait for CI and review before merging.
 
 ## Game rules and bots
 
-Keep rule validation separate from bot strategy and presentation. A bot may only receive information available to its seat; reject illegal actions through the same rules used for human moves. Record seeds, game/rule versions, and bot settings in future reproducible fixtures. Include relevant turn-order, scoring, terminal-state, and hidden-information cases when a game is implemented. See the proposed [architecture](docs/Architecture.md).
+Keep rule validation separate from bot strategy and presentation. The sample engine validates only invented Move and Wait actions; it does not implement Horrified rules. A future bot may only receive information available to its seat; reject illegal actions through the same rules used for human moves. Record seeds, game/rule versions, and bot settings in future reproducible fixtures. Include relevant turn-order, scoring, terminal-state, and hidden-information cases when a game is implemented. See the [architecture](docs/Architecture.md).
 
 ## Content and privacy
 

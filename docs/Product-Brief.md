@@ -2,7 +2,7 @@
 
 ## Purpose and status
 
-BoardBot's first experience is for practicing the original Horrified: Dungeons & Dragons, understanding its rules and edge cases, and completing solo games on a computer. The planning baseline is finalized as of September 28, 2026. Only repository tooling and documentation exist; no playable application or complete verified game dataset exists yet.
+BoardBot's first game experience is for practicing the original Horrified: Dungeons & Dragons, understanding its rules and edge cases, and completing solo games on a computer. The planning baseline was finalized September 28, 2026; the action layout and phase boundary were refined September 29. A local React interaction prototype offers an invented map and three-action sample turn. It exercises direct board movement, a separate confirmed Wait, an explicit phase end, a brief resolution lock, and an event log across sample turns. No Horrified gameplay or complete verified game dataset exists yet; the sample resets on reload.
 
 ## Agreed first milestone
 
@@ -15,13 +15,15 @@ BoardBot's first experience is for practicing the original Horrified: Dungeons &
 
 ## Action interaction
 
-The action panel shows remaining actions and the applicable action allowance, including temporary changes. Hover explains an action; keyboard focus provides the same information. Clicking selects an action without executing it. The player chooses any required destination, target, or items and confirms with a button at the bottom of the panel.
+The map is the main play surface. A floating action tray occupies reserved space inside its bottom border so it cannot cover map locations. The Event log sits at the right on wide screens and below the board on narrow screens. The tray keeps cards in stable positions, shows action costs and remaining/allowed actions, and explains hovered, focused, or tapped actions in a fixed area above the cards. Temporarily invalid actions remain visible and greyed out, with specific reasons. Legality must come from the rules engine and account for the selected monster and action, rather than applying a single universal proximity rule. The prototype has a fixed sample allowance of three and eight card positions: Move plus seven unavailable previews for Guide, Pick Up, Share, Advance, Defeat, Special Action, and Perks. Wait is a separate invented sample control. These previews do not imply verified hero abilities, monster challenges, inventory, or perk logic.
 
-The engine rechecks legality on confirmation. While an action resolves, ordinary selections and repeat submissions are disabled. If resolution needs a player decision, only the controls for that decision become available. The panel refreshes when resolution finishes. The player can change or cancel an unconfirmed selection; the initial design has no undo command.
+Selecting Move is free; clicking a highlighted destination executes the move after the engine rechecks legality. Consequential choices such as spending an item or rolling dice use a separate review and confirmation step. The sample Wait demonstrates that confirmation pattern. While an action resolves, ordinary selections and repeat submissions are disabled. If resolution needs a player decision, only the controls for that decision become available. The tray refreshes when resolution finishes. Uncommitted selections may be changed or cleared; the initial design has no undo command.
+
+The player explicitly ends the Hero Phase, including when no paid actions remain. Eligible free perks should remain available at zero actions until that boundary; their own timing and prerequisites still determine legality. The prototype demonstrates the explicit boundary and logs it once, but has no playable perks or Monster Phase.
 
 ## Continuity and learning
 
-Use a readable turn history and explanations of unavailable actions. Save after resolved actions and at recoverable pending choices. Resuming must preserve already-committed dice rolls and card draws rather than rerolling or duplicating an action. Save errors should be visible and preserve the last recoverable session. Detailed implementation and storage choices remain to be made within these requirements.
+The prototype has a scrollable, chat-style Event log that keeps numbered sample turns as new turns start. It follows new entries while the reader is at the bottom and provides Jump to latest after scrolling back. The log is only in memory and resets on reload. The game milestone requires saving after resolved actions and at recoverable pending choices. Resuming must preserve already-committed dice rolls and card draws rather than rerolling or duplicating an action. Save errors should be visible and preserve the last recoverable session. The prototype has no save or resume; detailed storage choices remain to be made within these requirements.
 
 ## Later experiences
 
