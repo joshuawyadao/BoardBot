@@ -5,7 +5,7 @@
 
 BoardBot is a project for playing board games solo against bots on your computer and trying out games, strategies, and rule variations through repeatable playtests.
 
-> **Status: interaction prototype.** A local React app demonstrates a synthetic sample turn. It is not a playable version of Horrified: Dungeons & Dragons: its rules, heroes, monsters, saves, and verified game data are still to come. The first game milestone targets the original Horrified: Dungeons & Dragons on an M1 MacBook Pro.
+> **Status: interaction prototype and verified component research.** A local React app demonstrates a synthetic sample turn; no Horrified: Dungeons & Dragons game is playable yet. The first game milestone targets an M1 MacBook Pro. Owner verification of the scoped components is complete. Encoding those components, implementing the game rules, and resolving the remaining rules and publication gates are still pending; the references below preserve that research.
 
 ## Try the sample turn
 
@@ -52,11 +52,12 @@ The first command typechecks, builds, runs sample engine and session tests, and 
 | [Roadmap](docs/Roadmap.md) | Milestones toward a first playable game |
 | [Verification](docs/Verification.md) | Local checks, CI, and future game acceptance checks |
 | [Work plan](docs/Work-Plan.md) | Finalized planning baseline, build order, and completion criteria |
-| [Game-data checklist](docs/Game-Data-Checklist.md) | Sources, missing component details, and unresolved rulings |
+| [Game-data checklist](docs/Game-Data-Checklist.md) | Confirmed component coverage, private evidence access, and publication gates |
+| [Rules reference](docs/Rules-Reference.md) | Durable sourced findings, accepted interpretations, open cases, and multiplayer boundaries |
 
 ## Public development and game content
 
-This repository makes BoardBot's development reviewable and open to contributions. It currently includes no third-party game rules text, artwork, card scans, or other game assets. Proposed game integrations must document the source and permission or license for any included content. The BoardBot code license does not grant rights to third-party games, trademarks, or assets. See the [contribution policy](CONTRIBUTING.md).
+This repository makes BoardBot's development reviewable and open to contributions. It includes original research summaries and interpretation decisions, not copied rulebooks, full component transcriptions, artwork, or card scans. Exact owner-confirmed data and photos are preserved in a private, ignored local packet; a GitHub clone does not contain that packet. See the [evidence and backup boundary](docs/Game-Data-Checklist.md). Proposed game integrations must document the source and permission or license for included third-party content. The BoardBot code license does not grant rights to third-party games, trademarks, or assets. See the [contribution policy](CONTRIBUTING.md).
 
 The planned app should keep sessions and bots local by default. Cloud services, telemetry, and account requirements would need an explicit product decision. Keep credentials, personal saves, private prototypes, logs, and unlicensed game assets out of public issues and commits. Report vulnerabilities through [SECURITY.md](SECURITY.md).
 

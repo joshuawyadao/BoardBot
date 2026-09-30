@@ -1,0 +1,90 @@
+# Horrified: Dungeons & Dragons rules reference
+
+**Status, September 30, 2026:** research and working interpretation for BoardBot's planned first milestone. The owner accepted the conventions below for implementation after reviewing their one-to-five-Hero consistency. The interpretation set is **`boardbot-dnd-2026-09-30-v1`**. These are **BoardBot interpretations**, not publisher rulings, implemented behavior, or playtested balance. A synthetic interaction prototype exists; no Horrified game is playable yet.
+
+This is an original summary and source index, not a replacement for the commercial instructions or physical components. It covers the original base game, the five base Heroes, Beholder, Displacer Beast, and shared rules. Red Dragon, Mimic, promotional Heroes, and Ravenloft gameplay are outside the milestone. See [Game-Data-Checklist.md](Game-Data-Checklist.md) for component coverage and remaining implementation gates; private owner evidence and complete component transcriptions remain outside this public repository.
+
+## How to use this reference
+
+Apply evidence in this order:
+
+1. **Published original-game rule:** the [Ravensburger D&D instructions](https://product-files.ravensburger.cloud/manuals/704005.pdf) and the owner's physically checked component wording. Specific text and eligibility take precedence over a general convention.
+2. **Reported developer clarification:** a public account of correspondence attributed to a developer. Useful, but not a publisher-hosted erratum or direct developer statement. Keep its attribution attached.
+3. **Accepted BoardBot interpretation:** an explicit choice where the first two grades leave a gap. Preserve the choice in the rule-set version and tests so later evidence can replace it deliberately.
+4. **Analogy or community discussion:** evidence about possible intent, never a rule for this edition by itself. Mechanics differ across Horrified editions, including monster-power timing.
+
+The owner's physical verification establishes printed content and counts. It does not establish the meaning of ambiguous wording or grant publication rights for game text or images. Do not infer an edge, target, reward, or fallback silently from a photograph or another edition.
+
+## Published original-game rules that affect the engine
+
+| Topic | Working summary | Source |
+| --- | --- | --- |
+| Turn and phase | A Hero's turn comprises that Hero Phase and its following Monster Phase. Perks are free during a Hero Phase, including after ordinary actions, except where their printed timing differs. | [D&D pp. 5–6](https://product-files.ravensburger.cloud/manuals/704005.pdf#page=5) |
+| Saved Hero effects | Repeated Cleric and Fighter special effects accumulate for their **own** Monster Phase. Choose when to spend each, resolve each fully, and expire unused effects afterward. | [D&D p. 5](https://product-files.ravensburger.cloud/manuals/704005.pdf#page=5) |
+| Item refill | Refill the empty Haversack with all discarded Items, including when it empties during a multiple-Item draw. | [D&D p. 7](https://product-files.ravensburger.cloud/manuals/704005.pdf#page=7) |
+| Monster Phase order | Place Items, resolve the event, then resolve monster activations in printed icon order; finish one monster before the next. | [D&D pp. 7–8](https://product-files.ravensburger.cloud/manuals/704005.pdf#page=7) |
+| Monster movement | Use shortest legal paths toward the target. Apply the printed target priorities first; the active player chooses among specified equal routes or Hero ties. | [D&D pp. 8–9](https://product-files.ravensburger.cloud/manuals/704005.pdf#page=8) |
+| Dice | Resolve every POW before HITs, then check whether an attack target still shares the monster's location. A crossed-out Frenzy icon suppresses that activation, not an activation from a different matching icon. | [D&D pp. 8–9](https://product-files.ravensburger.cloud/manuals/704005.pdf#page=8) |
+| Exhausted Monster deck | Lose when a required Monster-card draw cannot be made. This printed loss condition must not be generalized to a different deck without support. | [D&D p. 9](https://product-files.ravensburger.cloud/manuals/704005.pdf#page=9) |
+
+These summaries omit setup tables, component faces, and scenario instructions. Read the linked instructions and verified component record when encoding a complete transition.
+
+## Reported D&D developer correspondence
+
+The following answers were [posted by wkover as correspondence with developer Mike Mulvihill](https://boardgamegeek.com/thread/3582087/article/46656776#46656776), with [additional answers in a second thread](https://boardgamegeek.com/thread/3582213/article/46657856#46657856). The attribution is secondhand. Question numbers are retained to make each conclusion retrievable without another broad search.
+
+| Question | Reported answer and implementation consequence |
+| --- | --- |
+| First thread Q7 | Rogue sharing treats all Heroes as co-located. Eligibility concerns Hero seats, regardless of their controllers. |
+| Q8 | Rogue draws from the Haversack randomly; selections from the discard pile are chosen. |
+| Q10 | Discard yellow Items used when defeating the Beholder. |
+| Q11 | Paralyzing and Slowing effects naming the active player apply to that player even if another Hero was attacked. This answer does not correct Paralyzing Ray's punctuation. |
+| Q12 | A Move effect can escort Citizens; a Place effect cannot. |
+| Q13 | A printed special-action Perk reward does not duplicate the normal Perk from a qualifying Hero Phase roll. |
+| Q14–15 | Off-board Heroes are immune to attacks, and effects that require their location have no valid location to use. |
+| Q17 | Defeat clears the Hero's pending penalties. |
+| Q18 | A Wizard destination result of 20 earns the applicable Perk. This is a specific follow-up, not a claim that every d20 roll earns one. |
+| Second thread Q5 | Rogue takes up to two Items from **one** nearest occupied location; if that location holds only one, take one. |
+| Q6 | Distance includes legal teleportation circles and secret passages. |
+| Q7, added July 28, 2026 | Only the active player can discard for Trial of Valor. |
+
+## Accepted BoardBot interpretations for unsettled cases
+
+These decisions were accepted as working assumptions on September 30, 2026. Their confidence describes evidentiary support, not certainty about designer intent. When a convention conflicts with a newly found direct ruling, update the versioned interpretation and related tests before changing play behavior.
+
+| Case | BoardBot decision | Basis and remaining limit |
+| --- | --- | --- |
+| Remaining equal choices | After all explicit eligibility and priorities, the **active seat's controller** chooses among eligible Citizens, targets, routes, or Item locations. | Strong series analogy from [original Horrified p. 8](https://www.sutherlandshire.nsw.gov.au/__data/assets/pdf_file/0039/77889/Horrified-rulebook.pdf#page=8) and [American Monsters](https://product-files.ravensburger.cloud/manuals/664537.pdf); D&D does not spell out every category. |
+| Wizard result 1 | An initial special-action roll of 1 fails. A *follow-up destination* roll of 1 selects numbered location 1. | Medium confidence. The [D&D Wizard explanation](https://product-files.ravensburger.cloud/manuals/704005.pdf#page=6) and [publisher cross-game placement guide, p. 2](https://files.ravensburger.cloud/ravensburger/HORRIFIED_Games.pdf#page=2) support location 1; generic critical-failure wording leaves a competing reading. |
+| Displacer Beast POW | During each attack, resolve each POW in sequence on the updated board. Select the nearest eligible on-board Hero other than the current Hero recipient. When the current recipient is a Citizen, all on-board Heroes are eligible. A successful displacement replaces the recipient; if none is eligible, leave it unchanged. Apply the original rolled HITs **once** to the final recipient and make no extra attack roll. The next attack begins with ordinary targeting. | Low confidence for the full algorithm. A→B→A and a co-located alternative Hero are possible; a POW against the sole on-board Hero already targeted has no alternate Hero. [D&D p. 9](https://product-files.ravensburger.cloud/manuals/704005.pdf#page=9) supports resolving each POW, but the printed “on this turn” also permits a turn-persistent reading. [Community discussion](https://www.reddit.com/r/HorrifiedGame/comments/1t69m0f/horrified_dungeons_and_dragons_monster_attack/) does not settle repeated retargeting. |
+| Cleric self-rescue | A saved rescue effect may be spent when the Cleric is defeated. Suppress Terror and relocate her to her own location immediately before defeat, so she remains there. Defeat still occurred; do not erase unrelated defeat triggers. A later separate attack can defeat her again. | Medium confidence and disputed. The ability names a Hero; [community readings disagree](https://boardgamegeek.com/thread/3607104/) about self-inclusion and removal. |
+| Paralyzing Ray | Apply both the Item discard and the active player's next-turn **Move action** restriction. A failed discard does not waive that independent restriction. Other relocation remains governed by its own action or effect. | Medium textual inference from owner-confirmed punctuation and the printed contrast with Slowing Ray's “or.” [Reported Q11](https://boardgamegeek.com/thread/3582087/article/46656776#46656776) confirms *which player* is affected, not whether the comma should be changed. |
+| Skipped turn | A skipped turn omits both its Hero Phase and Monster Phase. | Supported by the [D&D turn definition, p. 5](https://product-files.ravensburger.cloud/manuals/704005.pdf#page=5); the [community discussion](https://boardgamegeek.com/thread/3754941/beholder-and-petrifaction-eye-skip-next-turn) is reasoning, not a reported designer answer. |
+| Blackstaff with one Hero | The Perk has no eligible other Hero to give Items. Do not invent a replacement effect or remove it from the deck. | Strong literal reading; [solo discussion](https://boardgamegeek.com/thread/3579771/the-blackstaff-perk-for-solo-play) proposes house alternatives but identifies no published exception. |
+| Empty Perk deck | Do not automatically reshuffle Perk discards. If the draw pile is empty, gain no Perk and continue independent effects. | Provisional balance policy. Automatic recycling permits a deterministic Fighter/Jarlaxle loop: a guaranteed 20 costs one Fighter action, grants two actions and a Perk, then redraws the sole recycled Jarlaxle. This **replaces** our earlier reshuffle proposal; neither outcome is a published rule. |
+| Empty Item supply | Apply the printed discard refill first. If bag and discard are both empty, take only available Items and continue independent effects; Rogue can take one available discarded Item when fewer than two exist. Never reclaim held, board, or committed Items, fabricate a destination, or treat a partial benefit as payment of a required cost. | Practical inference from [D&D p. 7](https://product-files.ravensburger.cloud/manuals/704005.pdf#page=7) and reported Rogue Q5. An already spent action or cost is not refunded. |
+| d20 adjustments | Resolve each d20 event after its permitted adjustments, then grant the qualifying reward once. Jarlaxle must precede the next roll. Skeemo's second result must be accepted: under this conservative policy, neither another reroll nor an Ott adjustment follows Skeemo. A newly gained Perk cannot reopen the completed event. | Medium confidence as a sequencing convention. Wizard activation and destination are separate rolls/events. Skeemo's printed restriction supports closure; whether Ott may still change its second result is not explicitly settled. Repeated saved Cleric Monster-dice effects are independently consumable and do not imply repeated Skeemo uses. |
+| Move “away” | For the initial monster scope, each step must increase shortest legal-path distance from the source, counting legal special connections. The active seat chooses among qualifying steps; stop when none exists. | Low confidence algorithm, an inverse of the [D&D toward rule](https://product-files.ravensburger.cloud/manuals/704005.pdf#page=8). It rejects an equal-distance intermediate step even if a later step could finish farther away. Red Dragon cases need their own decision. |
+| Two possible city shortcuts | Use the supported routes **3–2–4** and **5–4–7**; do not add direct 3–4 or 5–7 edges yet. | Low confidence map convention, not a verified adjacency ruling. The owner board image and bounded online search did not settle whether shared road junctions count as passing through the middle location. |
+
+No automatic reroll, substitute target, fallback draw, or resource refund should be inferred beyond these cases. The accepted interpretations still need executable cases and actual playtesting.
+
+## One to five Hero seats
+
+Count occupied **Hero seats**, not human participants. One human with four bot-controlled Heroes uses five-Hero setup and turns; one occupied Hero seat is true solo. Each seat has its own Hero Phase and following Monster Phase. Do not consolidate everyone into one shared Monster Phase.
+
+Track at least the active Hero, effect owner, Perk owner, and attacked Hero separately. Active-player tie choices belong to the active seat's controller. A different Hero's entitled response remains with that Hero's controller even during another seat's turn. Saved Cleric/Fighter effects can protect a different Hero attacked during their owner's Monster Phase, then expire at that phase's end. An eligible bot Hero counts for Displacer targeting, Blackstaff, Rogue sharing, and shared supplies just as a human-controlled Hero does. No controller may spend another seat's resources merely because play is cooperative.
+
+The proposed supply, reroll, Wizard, ray, graph, and movement conventions apply at every supported player count. Their balance has not been tested at one, two, or five seats. The session runner must pause for all permitted responses and serialize them once; automation speed must not establish priority. A general order for *competing optional responses* is still a design gate.
+
+## Remaining gates and source boundaries
+
+- **Ott outside the printed range:** No source in this research established how a modified d20 result outside 1–20 maps to a numbered destination or result table. Choose and version a policy before implementing that combination; do not silently clamp or wrap.
+- **Competing optional responses:** Define who is offered a choice first, when the window closes, and how human/bot responses are serialized. Preserve printed timing and ownership.
+- **Displacer and away movement:** The full retargeting algorithm, “on this turn” duration, Citizen-origin recipient, and away dead ends are explicit low-confidence conventions. Add focused multi-Hero cases and revise if direct evidence appears.
+- **Board graph:** The two possible direct city shortcuts remain unverified. The conservative routes are a working graph choice, not a claim that the physical board excludes the edges.
+- **Other monsters:** Red Dragon, Mimic, and Ravenloft-specific mechanics require separate verification before support.
+- **Ravenloft comparison:** The revised manual was [located as a publisher upload](https://boardgamegeek.com/filepage/325152/en-instructions-v2) but its complete text was not accessible in this research pass. The [public errata index](https://boardgamegeek.com/thread/3749059/official-revisions-and-errata-twig-blights-sorcere) and [reported Ravensburger clarifications](https://boardgamegeek.com/thread/3749000/official-clarifications-dark-gifts-gulthias-tree) were read. They support respecting explicit penalties, eligible targets, and exception timing, but they do not adjudicate these original-game gaps.
+- **Evidence and rights:** The private verification record (version 6, September 30, 2026) contains physical confirmations and source details. Keep its personal paths, photos, scans, and full component text out of public commits until publication rights are documented. The public [game-data checklist](Game-Data-Checklist.md) describes the intended manifest process; it is not an executable manifest today.
+
+For cross-edition precedent, use the [original Horrified instructions](https://www.sutherlandshire.nsw.gov.au/__data/assets/pdf_file/0039/77889/Horrified-rulebook.pdf), [American Monsters instructions](https://product-files.ravensburger.cloud/manuals/664537.pdf), [Greek Monsters instructions](https://gamers-hq.de/media/pdf/51/fa/ea/Horrified-Greek-Monsters-German-Instructions.pdf), and [publisher combining guide](https://files.ravensburger.cloud/ravensburger/HORRIFIED_Games.pdf) only as analogies. A [reported World of Monsters no-valid-target answer](https://boardgamegeek.com/thread/3369105/article/44869507#44869507) is useful precedent for an effect fizzling, but does not decide the Displacer Beast's text. The [older community FAQ](https://boardgamegeek.com/thread/2571060/faq-for-horrified-rules-living-document) and [World clarification collection](https://boardgamegeek.com/thread/3369373/collected-rules-clarifications) mix authority levels and should be traced to their underlying claims before use.

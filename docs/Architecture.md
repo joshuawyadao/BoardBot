@@ -45,3 +45,9 @@ Reject malformed or incompatible saves without replacing the current session. In
 Bundle required runtime code and authorized assets locally. Gameplay must not depend on external fonts, remote images, cloud AI, or network APIs. Verify disconnected operation after initial setup with the local server running. Hosted offline caching and installable desktop packaging are later delivery choices, not capabilities already provided.
 
 Keep UI and persistence adapters separate from rules so the companion and other devices can reuse the same verified behavior. Future strategic bots should receive only the information allowed to their seat; they must use the same legal-command boundary.
+
+## Rules knowledge and future Hero seats
+
+Use [Rules-Reference.md](Rules-Reference.md) as the canonical interpretation/evidence register and [Game-Data-Checklist.md](Game-Data-Checklist.md) for component coverage and private reference access. A historical raw record can contain superseded proposals; source confidence and the selected interpretation version must remain explicit in any future runtime data and replay format.
+
+The one-to-five-Hero review is a compatibility requirement, not implemented multiplayer. Keep Hero-seat identity separate from its human/bot controller, the active seat, the attacked Hero, and an effect or resource owner. Controllers must receive their permitted decisions, including during another seat's turn. Competing optional-response order remains an explicit design dependency; do not let network or bot response speed determine precedence. These constraints preserve the existing first milestone and require no general bot framework now.
