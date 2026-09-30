@@ -1,6 +1,6 @@
 # Horrified: Dungeons & Dragons rules reference
 
-**Status, September 30, 2026:** research and working interpretation for BoardBot's planned first milestone. The owner accepted the conventions below for implementation after reviewing their one-to-five-Hero consistency. The interpretation set is **`boardbot-dnd-2026-09-30-v1`**. These are **BoardBot interpretations**, not publisher rulings, implemented behavior, or playtested balance. No playable app exists yet.
+**Status, September 30, 2026:** research and working interpretation for BoardBot's planned first milestone. The owner accepted the conventions below for implementation after reviewing their one-to-five-Hero consistency. The interpretation set is **`boardbot-dnd-2026-09-30-v1`**. These are **BoardBot interpretations**, not publisher rulings, implemented behavior, or playtested balance. A synthetic interaction prototype exists; no Horrified game is playable yet.
 
 This is an original summary and source index, not a replacement for the commercial instructions or physical components. It covers the original base game, the five base Heroes, Beholder, Displacer Beast, and shared rules. Red Dragon, Mimic, promotional Heroes, and Ravenloft gameplay are outside the milestone. See [Game-Data-Checklist.md](Game-Data-Checklist.md) for component coverage and remaining implementation gates; private owner evidence and complete component transcriptions remain outside this public repository.
 

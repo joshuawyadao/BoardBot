@@ -64,6 +64,6 @@ Before packaging a public game-data manifest or redistributable assets, document
 - Resolve the explicitly open rules boundaries in [Rules-Reference.md](Rules-Reference.md), notably Ott's out-of-range results and competing optional-response order, before implementing affected behavior.
 - Translate confirmed component data into a reviewed, versioned representation with suitable provenance. Check every board edge and deck multiplicity against the packet, not the coverage totals alone.
 - Record the accepted interpretation version in sessions/replays. Keep published findings, reported answers, and BoardBot choices distinguishable.
-- Add source-linked engine tests and actual complete-game acceptance checks. Today's repository tests validate tooling, not component data, game balance, or human/bot multiplayer.
+- Add source-linked engine tests and actual complete-game acceptance checks. Repository hygiene checks and synthetic engine/browser tests validate tooling and the invented sample turn, not Horrified component data, game balance, or human/bot multiplayer.
 
 The [work plan](Work-Plan.md) still targets one human-controlled Hero first. The one-to-five-Hero consistency review in the rules reference preserves a later extension path without declaring multiplayer or strategic bots implemented.

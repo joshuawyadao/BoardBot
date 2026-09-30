@@ -50,3 +50,10 @@ DerivedData/
 *.db
 *.log
 *.tmp
+
+# Browser test artifacts
+/playwright-report/
+/test-results/
+
+# Local review history
+/.brooks-lint-history.json
