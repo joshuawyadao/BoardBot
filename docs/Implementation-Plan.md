@@ -1,26 +1,24 @@
 # Plan
 
-Save the completed component verification and rules research as durable project knowledge, with traceable evidence and explicit working interpretations. Publish original research notes through a reviewed PR while preserving full private references locally.
+Address the two Codex documentation findings on PR #2, then verify and complete the owner-authorized merge and feature-branch cleanup. Preserve the durable rules reference and private evidence packet.
 
 ## Scope
-- In: Update the component register, add a canonical rules/reference source ledger, record one-to-five-Hero compatibility, preserve an ignored local evidence packet, reconcile project status, and open/review a PR.
-- Out: Gameplay implementation, changes to the first solo milestone, new rule inventions, publication of source photos or full component transcriptions, and merging the PR.
+- In: Correct the durable work-plan action, record validation against an identified commit, resolve addressed review threads, and complete PR #2.
+- Out: Gameplay implementation, new rule decisions, publication of private evidence, and changes to the first solo milestone.
 
 ## Action items
-[x] Inspect canonical docs, private verification record version 6, branch state, content policy, and repository checks.
-[x] Save a local evidence packet and verify its identity/ignore status; describe recovery and Git backup limits.
-[x] Replace stale pending-photo entries in `docs/Game-Data-Checklist.md` with verified coverage and remaining implementation/publication gates.
-[x] Add `docs/Rules-Reference.md` with original research summaries, accepted provisional interpretations, unresolved cases, multiplayer boundaries, and a source ledger.
-[x] Update README, Work-Plan, Roadmap, Architecture, and Verification to point to the canonical knowledge without expanding implementation scope.
-[x] Audit completeness, evidence grades, interpretation boundaries, private-content exclusion, and local links; run `./scripts/verify-repository.sh`.
-[x] Commit and push task-owned documentation, create a draft PR, request Codex review, run Brooks review, and handle actionable findings and CI failures.
-[x] Confirm final review/check/mergeability state, retain an unmerged PR, and report exact persistence and readiness limits.
+[x] Read the completed Codex review on `645bcc2` and inspect both affected documents.
+[x] Replace the stale validation instruction with the recorded post-push result below; keep this feedback task's external completion steps open until performed.
+[ ] Rewrite the first `docs/Work-Plan.md` action around encoding verified data and resolving open rules/publication gates in their canonical documents.
+[ ] Run `./scripts/verify-repository.sh` and inspect the focused diff; no tests need changing because executable behavior is unchanged.
+[ ] Push verified fixes, acknowledge the addressed comments, and resolve their review threads.
+[ ] Check the resulting PR head's CI and review state, then merge PR #2 and delete the feature branch while retaining ignored evidence.
 
-No new tests are planned: this task changes documentation only. Existing repository checks and five tooling tests are applicable; gameplay and multiplayer claims require later engine tests.
+## Recorded validation
 
-Validation: repository file/link checks, all five existing tooling tests, and Git whitespace checks passed. The private packet hashes and component counts match; Git excludes every raw packet file. No test files changed because no executable behavior changed.
+The earlier research handoff was checked **after** its final push on commit `645bcc2`: [CI Verify run 36755648759](https://github.com/joshuawyadao/BoardBot/actions/runs/36755648759) passed, GitHub reported `MERGEABLE` / `CLEAN`, and the tracked working tree was clean. Local repository checks and all five tooling tests passed. Those results apply to that commit, not automatically to subsequent fixes.
 
-PR status: draft PR #2 is open. Codex review was requested through the PR review workflow but declined because the account reached its code-review usage limit. Local Brooks review found no actionable concerns. CI Verify passed and GitHub reported no conflicts; recheck both after the final documentation push. This is a review blocker, not a passing Codex review; keep the PR unmerged and not merge-ready until review can be rerun.
+The code-review quota blocked the first request. Following the owner's reset, Codex completed its review of `645bcc2` on September 30, 2026 and raised two documentation findings. The feedback task above is a new checkpoint; it does not claim its post-push checks or merge have happened. Record later external results with their commit in PR #2 rather than pre-marking completion in the commit being checked.
 
 ## Open questions
-- None blocking this documentation PR. Unresolved game behavior will be recorded as an implementation dependency, not silently resolved. The existing content policy keeps raw component text and photos outside public Git history.
+- None. The owner explicitly authorized fixing feedback, resolving addressed threads, merging, and deleting the feature branch. Private reference data remains ignored and separately preserved.
