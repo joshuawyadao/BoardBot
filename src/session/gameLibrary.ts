@@ -32,6 +32,7 @@ const HERO_NAMES: Record<string, string> = {
 
 export interface LibraryGame {
   id: string;
+  version: string;
   hero: string;
   turn: number;
   phase: string;
@@ -41,6 +42,7 @@ export interface LibraryGame {
 }
 export interface GameLibrary {
   list(): Promise<LibraryGame[]>;
+  deleteGame(id: string, expectedVersion: string): Promise<void>;
   getData(): Promise<GameData | null>;
   setData(data: GameData): Promise<void>;
   game(id: string): LocalSaveStore;
@@ -161,8 +163,17 @@ function metadata(id: string, record: GameRecord): LibraryGame {
       if (typeof state.phase === 'string') phase = state.phase;
     }
   } catch { /* A damaged game remains visible for recovery. */ }
-  return { id, hero, turn, phase, savedAt: usable?.savedAt ?? 0,
+  return { id, version: recordVersion(record), hero, turn, phase, savedAt: usable?.savedAt ?? 0,
     hasPrevious: record.previous !== null, ...(current && 'damaged' in current ? { damaged: true } : {}) };
+}
+
+/** Treat this comparison value as opaque; it covers both recovery slots. */
+function recordVersion(record: GameRecord): string {
+  return JSON.stringify([record.current?.token ?? null, record.previous?.token ?? null]);
+}
+
+function validGameId(id: string): boolean {
+  return typeof id === 'string' && !!id && id.length <= 128;
 }
 
 async function compactLegacy(slot: StoredSave | null): Promise<{ slot: Slot | null; data: GameData | null }> {
@@ -287,6 +298,9 @@ export async function openGameLibrary(): Promise<GameLibrary> {
     const current = tx.objectStore(GAMES).get(id);
     current.onsuccess = () => {
       try {
+        if (current.result === undefined && expectedToken !== null) {
+          throw new Error('This game was deleted in another tab. Export a backup to keep your unsaved progress, then reload to return to saved games.');
+        }
         const record = checkedRecord(current.result, id);
         const active = record.current;
         const activeToken = active?.token ?? null;
@@ -316,6 +330,27 @@ export async function openGameLibrary(): Promise<GameLibrary> {
     return result;
   }
 
+  async function deleteGame(id: string, expectedVersion: string): Promise<void> {
+    if (!validGameId(id)) throw new Error('Invalid game ID.');
+    if (typeof expectedVersion !== 'string' || !expectedVersion) throw new Error('Invalid saved game version.');
+    const tx = begin(GAMES, 'readwrite');
+    let failure: unknown = null;
+    const done = transactionDone(tx, () => failure);
+    const games = tx.objectStore(GAMES), current = games.get(id);
+    current.onsuccess = () => {
+      try {
+        if (current.result === undefined || recordVersion(checkedRecord(current.result, id)) !== expectedVersion) {
+          throw new Error('This saved game changed or was removed in another tab. Refresh your saved games before deleting it.');
+        }
+        games.delete(id);
+      } catch (error) {
+        failure = error;
+        try { tx.abort(); } catch { /* Transaction already failed. */ }
+      }
+    };
+    await done;
+  }
+
   return {
     list: async () => {
       const tx = begin(GAMES, 'readonly'), done = transactionDone(tx);
@@ -331,6 +366,7 @@ export async function openGameLibrary(): Promise<GameLibrary> {
       }
       return games.sort((left, right) => right.savedAt - left.savedAt || left.id.localeCompare(right.id));
     },
+    deleteGame,
     getData: async () => {
       const tx = begin([SETTINGS, DATA], 'readonly'), done = transactionDone(tx);
       const ref = await requestValue(tx.objectStore(SETTINGS).get(DEFAULT_DATA));
@@ -356,7 +392,7 @@ export async function openGameLibrary(): Promise<GameLibrary> {
       await done;
     },
     game: id => {
-      if (typeof id !== 'string' || !id || id.length > 128) throw new Error('Invalid game ID.');
+      if (!validGameId(id)) throw new Error('Invalid game ID.');
       let adapterClosed = false;
       const check = () => { if (adapterClosed) throw new Error('This game store is closed.'); };
       return {

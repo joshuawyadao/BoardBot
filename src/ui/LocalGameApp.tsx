@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { GameData } from '../data/gameData';
 import { createFighterGame, getActionReason, getFighterView } from '../engine/horrifiedGame';
@@ -16,6 +16,34 @@ const HEROES = ['Fighter', 'Bard', 'Cleric', 'Rogue', 'Wizard'];
 const message = (error: unknown) => error instanceof Error ? error.message : 'The local game could not be saved or loaded.';
 const heroId = (name: string) => `hero-${name.toLowerCase()}`;
 type PreparedGame = { id: string; loaded: SavedGame };
+
+function DeleteGameDialog({ game, busy, error, onCancel, onConfirm }: {
+  game: LibraryGame;
+  busy: boolean;
+  error: string | null;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  useLayoutEffect(() => {
+    const dialog = dialogRef.current!;
+    dialog.showModal();
+    cancelRef.current?.focus();
+    return () => dialog.close();
+  }, []);
+  return <dialog className="library-dialog" ref={dialogRef} aria-labelledby="delete-game-title" aria-describedby="delete-game-description"
+    onCancel={event => { event.preventDefault(); if (!busy) onCancel(); }}>
+    <h2 id="delete-game-title">Delete this {game.hero} game?</h2>
+    <p className="library-delete-summary">Turn {game.turn}{game.savedAt ? ` · Saved ${new Date(game.savedAt).toLocaleString()}` : ' · Earlier local save'}</p>
+    <p id="delete-game-description">This permanently removes this game and its previous recovery save from Saved games. Other games, base game components, and exported backups are kept.</p>
+    {error && <p className="library-error" role="alert">{error} Cancel to review the saved-game list before trying again.</p>}
+    <div className="library-actions">
+      <button className="quiet-button" ref={cancelRef} disabled={busy} onClick={onCancel}>Cancel</button>
+      <button className="confirm-button library-delete-confirm" disabled={busy} onClick={onConfirm}>{busy ? 'Deleting…' : 'Delete game'}</button>
+    </div>
+  </dialog>;
+}
 
 async function preparedData(signal: AbortSignal): Promise<GameData | null> {
   const response = await fetch('/__boardbot/local-game-data', {
@@ -44,6 +72,11 @@ export function LocalGameApp({ sample }: { sample: ReactNode }) {
   const [dataNotice, setDataNotice] = useState<string | null>(null);
   const [seed, setSeed] = useState('');
   const [hero, setHero] = useState('Fighter');
+  const [deleteTarget, setDeleteTarget] = useState<LibraryGame | null>(null);
+  const [deleteNotice, setDeleteNotice] = useState<string | null>(null);
+  const savedHeading = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => { if (deleteNotice) savedHeading.current?.focus(); }, [deleteNotice]);
 
   useEffect(() => {
     let disposed = false;
@@ -92,7 +125,7 @@ export function LocalGameApp({ sample }: { sample: ReactNode }) {
 
   function chooseNewGame(base = data) {
     if (!base) return;
-    setCandidate(null); setError(null); setSeed('');
+    setCandidate(null); setError(null); setDeleteNotice(null); setSeed('');
     setHero(HEROES.find(name => base.heroes.some(entry => entry.id === heroId(name))) ?? 'Fighter');
     setScreen('setup');
   }
@@ -165,6 +198,22 @@ export function LocalGameApp({ sample }: { sample: ReactNode }) {
     });
   }
 
+  async function deleteSavedGame() {
+    const target = deleteTarget;
+    if (!target) return;
+    await run(async () => {
+      try { await library.current!.deleteGame(target.id, target.version); }
+      catch (caught) {
+        // Refresh stale rows without silently approving deletion of a changed save.
+        try { setGames(await library.current!.list()); } catch { /* Keep the original deletion error. */ }
+        throw caught;
+      }
+      setGames(current => current.filter(game => game.id !== target.id));
+      setDeleteTarget(null);
+      setDeleteNotice(`${target.hero} saved game deleted.`);
+    });
+  }
+
   function exportBackup() {
     try {
       const contents = session.current!.exportBackup();
@@ -177,7 +226,7 @@ export function LocalGameApp({ sample }: { sample: ReactNode }) {
   if (active) {
     const needsSave = session.current!.needsSave;
     const saveControls = <div className="save-status" role="status" aria-live="polite">
-      <span>{busy ? 'Saving…' : needsSave ? 'Saving failed. Play is paused; your last saved game is safe.' : 'Saved on this device · resumes after reload'}</span>
+      <span>{busy ? 'Saving…' : needsSave ? 'Saving failed. Play is paused; export a backup to keep this result.' : 'Saved on this device · resumes after reload'}</span>
       <button className="quiet-button" onClick={exportBackup} disabled={busy}>Export backup</button>
       {needsSave && !busy && <><button className="confirm-button" onClick={() => void retry()}>Retry saving</button>
         <button className="quiet-button" onClick={() => void resume(activeId!)}>Discard unsaved action and load latest save</button></>}
@@ -197,7 +246,8 @@ export function LocalGameApp({ sample }: { sample: ReactNode }) {
       <h1>{screen === 'setup' ? 'Choose your Hero' : 'Your next adventure'}</h1>
       <p>{screen === 'setup' ? 'The board, Items, Perks, and Monsters will be set up for your Hero when you start.' : 'Start a new game or return to an adventure in progress.'}</p>
     </div>
-    {error && <p className="library-error" role="alert">{error}</p>}
+    {error && !deleteTarget && <p className="library-error" role="alert">{error}</p>}
+    {screen === 'home' && deleteNotice && <p className="library-notice" role="status">{deleteNotice}</p>}
     {!ready && <p role="status">{error ? 'Local storage is unavailable. Reload to try again.' : 'Loading your base game and saved games…'}</p>}
     {dataNotice && <p className="library-notice" role="status">{dataNotice}</p>}
     {candidate ? <section className="library-card" aria-label="New game ready"><h2>Your game is ready to save</h2>
@@ -219,12 +269,13 @@ export function LocalGameApp({ sample }: { sample: ReactNode }) {
       <div><h2>New game</h2><p>{data ? 'Base game components and rules are ready. Choose a Hero to begin.' : ready ? 'Import the prepared base game once. It will be ready here for future games.' : 'Preparing your local game library…'}</p></div>
       <button className="confirm-button" disabled={!ready || busy || !data} onClick={() => chooseNewGame()}>New game</button>
     </section>}
-    {screen === 'home' && <section className="saved-games-list" aria-label="Saved games"><h2>Saved games <span>{games.length}</span></h2>
+    {screen === 'home' && <section className="saved-games-list" aria-label="Saved games"><h2 ref={savedHeading} tabIndex={-1}>Saved games <span>{games.length}</span></h2>
       {!games.length && ready && <p className="library-empty">Your adventures will appear here as you play. Progress saves automatically.</p>}
       {games.map(game => <article className="library-card saved-game-card" key={game.id} data-game-id={game.id} aria-label={`${game.hero} saved game`}>
         <div className="saved-game-summary"><h3>{game.hero}</h3><p>{game.damaged ? 'Needs recovery' : `Turn ${game.turn} · ${game.phase === 'hero' ? 'Hero Phase' : game.phase === 'monster' ? 'Monster Phase' : game.phase === 'won' ? 'Victory' : game.phase === 'lost' ? 'Defeat' : game.phase}`}</p>
           <small>{game.savedAt ? `Saved ${new Date(game.savedAt).toLocaleString()}` : 'Imported from your earlier local save'}</small></div>
-        <button className="confirm-button" disabled={busy} onClick={() => void resume(game.id)}>Resume saved game</button>
+        <div className="saved-game-actions"><button className="confirm-button" disabled={busy} onClick={() => void resume(game.id)}>Resume saved game</button>
+          <button className="quiet-button library-delete-button" disabled={busy} onClick={() => { setDeleteTarget(game); setDeleteNotice(null); setError(null); }}>Delete</button></div>
         {game.hasPrevious && <details><summary>Recovery options</summary><p>The previous save may be one action behind. Recovering it replaces only this game’s current save.</p>
           <button className="quiet-button" disabled={busy} onClick={() => void resume(game.id, true)}>Recover previous save</button></details>}
       </article>)}
@@ -239,5 +290,7 @@ export function LocalGameApp({ sample }: { sample: ReactNode }) {
         onChange={event => { void loadFile(event.currentTarget.files?.[0], true); event.currentTarget.value = ''; }} />
     </div></details>
     <footer className="library-footer"><p>Components and progress stay on this device.</p><button className="quiet-button" disabled={busy} onClick={() => { setScreen('sample'); setCandidate(null); setError(null); }}>Try sample table</button></footer>
+    {deleteTarget && <DeleteGameDialog game={deleteTarget} busy={busy} error={error}
+      onCancel={() => { setDeleteTarget(null); setError(null); }} onConfirm={() => void deleteSavedGame()} />}
   </main>;
 }

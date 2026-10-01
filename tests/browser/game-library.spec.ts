@@ -17,7 +17,8 @@ async function start(page: Page, hero: string) {
   await page.getByLabel('Hero', { exact: true }).selectOption(hero);
   await page.getByLabel('Seed (optional, for a repeatable setup)').fill('17');
   await page.getByRole('button', { name: 'Start game', exact: true }).click();
-  await expect(page.getByText(`Local ${hero} game`)).toBeVisible();
+  await expect(page.getByRole('heading', { name: `Horrified ${hero} table`, exact: true })).toBeAttached();
+  await expect(page.getByText('Local game in progress.')).toBeVisible();
 }
 
 test('prepared base game starts after Hero selection and preserves independent adventures', async ({ page }) => {
@@ -149,4 +150,114 @@ test('the earlier single save appears automatically and seeds New Game without a
   await page.getByRole('button', { name: 'Resume saved game' }).click();
   await expect(page.getByText('Local Cleric game')).toBeVisible();
   expect(await records(page)).toEqual([{ id: 'legacy', payload: original }]);
+});
+
+test('saved games require confirmation to delete and keep other adventures and cached components', async ({ page }) => {
+  await page.route('**/__boardbot/local-game-data', route => route.fulfill({ json: heroFixture() }));
+  await page.goto('/');
+  await start(page, 'Fighter');
+  await page.getByRole('button', { name: 'Move Connected location' }).click();
+  await page.getByRole('button', { name: /Room 1/ }).click();
+  await page.getByRole('button', { name: 'Saved games', exact: true }).click();
+  await start(page, 'Wizard');
+  await page.getByRole('button', { name: 'Saved games', exact: true }).click();
+  const before = await records(page);
+  const kept = before.find(game => JSON.parse(game.payload).state.hero.definitionId === 'hero-wizard')!;
+  const fighter = page.getByRole('article', { name: 'Fighter saved game', exact: true });
+  const remove = fighter.getByRole('button', { name: 'Delete', exact: true });
+  await remove.click();
+  const confirmation = page.getByRole('dialog', { name: 'Delete this Fighter game?' });
+  await expect(confirmation).toContainText('previous recovery save');
+  await expect(confirmation.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(confirmation).toBeHidden();
+  await expect(remove).toBeFocused();
+  expect(await records(page)).toEqual(before);
+  await remove.click();
+  await page.keyboard.press('Enter');
+  await expect(confirmation).toBeHidden();
+  expect(await records(page)).toEqual(before);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await remove.click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await expect(confirmation.getByRole('button', { name: 'Delete game', exact: true })).toBeInViewport();
+  await confirmation.getByRole('button', { name: 'Delete game', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(confirmation).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Saved games 1', exact: true })).toBeFocused();
+  await expect(page.getByRole('status')).toContainText('Fighter saved game deleted.');
+  expect(await records(page)).toEqual([kept]);
+  await page.unroute('**/__boardbot/local-game-data');
+  await page.reload();
+  await expect(page.getByRole('article')).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'New game', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: 'Resume saved game' }).click();
+  await expect(page.getByRole('heading', { name: 'Horrified Wizard table', exact: true })).toBeAttached();
+  await expect(page.getByText('Local game in progress.')).toBeVisible();
+  expect(await records(page)).toEqual([kept]);
+  await page.getByRole('button', { name: 'Saved games', exact: true }).click();
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Delete game', exact: true }).click();
+  await expect(page.getByText('Your adventures will appear here as you play.', { exact: false })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('article')).toHaveCount(0);
+  await start(page, 'Bard');
+  expect(await records(page)).toHaveLength(1);
+});
+
+test('failed deletion keeps the saved game and shows a retryable error', async ({ page }) => {
+  await page.route('**/__boardbot/local-game-data', route => route.fulfill({ json: heroFixture() }));
+  await page.goto('/');
+  await start(page, 'Rogue');
+  await page.getByRole('button', { name: 'Saved games', exact: true }).click();
+  const before = await records(page);
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await page.evaluate(() => {
+    const original = IDBObjectStore.prototype.delete;
+    IDBObjectStore.prototype.delete = function (key) {
+      if (this.name === 'games') {
+        IDBObjectStore.prototype.delete = original;
+        this.transaction.abort();
+        throw new Error('Simulated delete failure');
+      }
+      return original.call(this, key);
+    };
+  });
+  const confirmation = page.getByRole('dialog');
+  await confirmation.getByRole('button', { name: 'Delete game', exact: true }).click();
+  await expect(confirmation.getByRole('alert')).toContainText('Simulated delete failure');
+  expect(await records(page)).toEqual(before);
+  await expect(confirmation.getByRole('button', { name: 'Delete game', exact: true })).toBeEnabled();
+  await confirmation.getByRole('button', { name: 'Delete game', exact: true }).click();
+  await expect(confirmation).toBeHidden();
+  expect(await records(page)).toEqual([]);
+});
+
+test('a stale deletion cannot remove newer progress and an open tab cannot recreate a deleted game', async ({ page, context }) => {
+  await page.route('**/__boardbot/local-game-data', route => route.fulfill({ json: heroFixture() }));
+  await page.goto('/');
+  await start(page, 'Fighter');
+  await page.getByRole('button', { name: 'Saved games', exact: true }).click();
+  const other = await context.newPage();
+  await other.goto('/');
+  await other.getByRole('button', { name: 'Resume saved game' }).click();
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await other.getByRole('button', { name: 'Move Connected location' }).click();
+  await other.getByRole('button', { name: /Room 1/ }).click();
+  await expect(other.locator('.h-tray .action-budget')).toContainText('3 / 4');
+  const latest = await records(page);
+  const confirmation = page.getByRole('dialog');
+  await confirmation.getByRole('button', { name: 'Delete game', exact: true }).click();
+  await expect(confirmation.getByRole('alert')).toContainText('changed or was removed in another tab');
+  expect(await records(page)).toEqual(latest);
+  await confirmation.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  await confirmation.getByRole('button', { name: 'Delete game', exact: true }).click();
+  await expect(confirmation).toBeHidden();
+  await other.getByRole('button', { name: 'Move Connected location' }).click();
+  await other.getByRole('button', { name: /Room 2/ }).click();
+  await expect(other.getByRole('alert')).toContainText('deleted in another tab');
+  await expect(other.getByRole('button', { name: 'Retry saving', exact: true })).toBeVisible();
+  expect(await records(page)).toEqual([]);
+  await other.close();
 });

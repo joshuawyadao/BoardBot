@@ -8,11 +8,17 @@ Add a Delete option to each saved adventure, with an explicit confirmation namin
 
 ## Action items
 [x] Inspect the saved-game library, home-screen controls, persistence contracts, and existing browser tests.
-[ ] Checkpoint this resolved plan on the current feature branch.
-[ ] Add `LibraryGame.version` and `GameLibrary.deleteGame(id, expectedVersion)` with an atomic comparison of both save-slot tokens before deleting only that game's record.
-[ ] Add a Delete control and keyboard-accessible confirmation to each saved game, including cancellation, busy handling, and clear failure feedback.
-[ ] Cover cancel/confirm, surviving games and shared components, removal of recovery saves, storage failure, stale deletion/writers, and legacy migration persistence using isolated synthetic tests.
-[ ] Update README, Local-Saves, Architecture, and Verification; run focused tests, npm run verify, and npm run test:e2e, then commit and push task-owned changes.
+[x] Checkpoint this resolved plan on the current feature branch (`4f5796c`).
+[x] Add `LibraryGame.version` and `GameLibrary.deleteGame(id, expectedVersion)` with an atomic comparison of both save-slot tokens before deleting only that game's record.
+[x] Add a Delete control and keyboard-accessible confirmation to each saved game, including cancellation, busy handling, and clear failure feedback.
+[x] Cover cancel/confirm, surviving games and shared components, removal of recovery saves, storage failure, stale deletion/writers, and legacy migration persistence using isolated synthetic tests.
+[x] Update README, Local-Saves, Architecture, and Verification; run focused tests, npm run verify, and npm run test:e2e before the final branch save.
+
+## Validation and save
+- `npm run verify`: build/typecheck, 101 unit tests in 18 files, and five repository tests passed.
+- `npm run test:e2e`: all 62 Chromium browser tests passed. Seven new cases cover storage and the end-to-end deletion flow.
+- Isolated synthetic screenshots at 1440×900 and 390×844 show an accessible confirmation without horizontal overflow or runtime errors; development did not delete real user saves.
+- Final save target: `codex/identify-remaining-boardbot-work`. Private data and screenshots remain outside Git.
 
 ## Open questions
 - None. Deletion removes the selected adventure and its previous recovery save after confirmation. Existing exported backups and shared base game components remain available.

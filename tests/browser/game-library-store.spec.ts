@@ -338,3 +338,141 @@ test('a failed data-cache update aborts without changing the default version', a
   expect(result.defaultVersion).toBe('boardbot-dnd-2026-09-30-v3');
   expect(result.failedVersion).toBeUndefined();
 });
+
+test('deleting one saved game removes both slots while retaining other games and shared data', async ({ page }) => {
+  await page.goto(adapterPage);
+  const result = await page.evaluate(async data => {
+    const { openGameLibrary } = await import('/src/session/gameLibrary.ts' as string);
+    const { createFighterGame } = await import('/src/engine/horrifiedGame.ts' as string);
+    const { encodeGameSave } = await import('/src/session/gameSave.ts' as string);
+    const library = await openGameLibrary();
+    await library.setData(data);
+    const game = await createFighterGame(data, 71), payload = encodeGameSave(data, game);
+    const doomed = library.game('doomed'), kept = library.game('kept');
+    const first = await doomed.write(payload, null);
+    await doomed.write(payload, first.token);
+    const keptSave = await kept.write(payload, null);
+    const before = await library.list();
+    const doomedVersion = before.find((entry: { id: string }) => entry.id === 'doomed')!.version;
+    await library.deleteGame('doomed', doomedVersion);
+    const after = await library.list();
+    const deletedSlots = await doomed.read(), keptSlots = await kept.read();
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('boardbot-game-library', 1);
+      request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
+    });
+    const tx = db.transaction(['games', 'data', 'settings'], 'readonly');
+    const get = (store: string, key: string) => new Promise<unknown>((resolve, reject) => {
+      const request = tx.objectStore(store).get(key);
+      request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
+    });
+    const rawDoomed = await get('games', 'doomed'), rawKept = await get('games', 'kept');
+    const defaultRef = await get('settings', 'default-data') as string;
+    const sharedData = await get('data', defaultRef);
+    db.close(); library.close();
+    return { before, after, deletedSlots, keptSlots, keptSave, rawDoomed, rawKept, sharedData, data };
+  }, fighterFixture());
+  expect(result.before.find((game: { id: string }) => game.id === 'doomed')).toMatchObject({ hasPrevious: true });
+  expect(result.after.map((game: { id: string }) => game.id)).toEqual(['kept']);
+  expect(result.deletedSlots).toEqual({ current: null, previous: null });
+  expect(result.keptSlots.current).toEqual(result.keptSave);
+  expect(result.rawDoomed).toBeUndefined();
+  expect(result.rawKept).toBeTruthy();
+  expect(result.sharedData).toEqual(result.data);
+});
+
+test('stale deletes and a writer loaded before deletion cannot remove or recreate a game', async ({ page }) => {
+  await page.goto(adapterPage);
+  const result = await page.evaluate(async data => {
+    const { openGameLibrary } = await import('/src/session/gameLibrary.ts' as string);
+    const { createFighterGame } = await import('/src/engine/horrifiedGame.ts' as string);
+    const { encodeGameSave } = await import('/src/session/gameSave.ts' as string);
+    const one = await openGameLibrary(), two = await openGameLibrary();
+    const game = await createFighterGame(data, 73), payload = encodeGameSave(data, game);
+    const store = one.game('shared');
+    const first = await store.write(payload, null);
+    const oldVersion = (await one.list())[0].version;
+    const second = await store.write(payload, first.token);
+    let staleDelete = '';
+    try { await two.deleteGame('shared', oldVersion); } catch (error) { staleDelete = String(error); }
+    const stillSaved = await store.read();
+    const newVersion = (await one.list())[0].version;
+    await two.deleteGame('shared', newVersion);
+    let repeatDelete = '', staleWriter = '';
+    try { await one.deleteGame('shared', newVersion); } catch (error) { repeatDelete = String(error); }
+    try { await store.write(payload, second.token); } catch (error) { staleWriter = String(error); }
+    const after = await one.list();
+    one.close(); two.close();
+    return { oldVersion, newVersion, staleDelete, stillSaved, second, repeatDelete, staleWriter, after };
+  }, fighterFixture());
+  expect(result.oldVersion).not.toBe(result.newVersion);
+  expect(result.staleDelete).toMatch(/changed or was removed in another tab/i);
+  expect(result.stillSaved.current).toEqual(result.second);
+  expect(result.repeatDelete).toMatch(/changed or was removed in another tab/i);
+  expect(result.staleWriter).toMatch(/deleted in another tab/i);
+  expect(result.after).toEqual([]);
+});
+
+test('a failed delete aborts and leaves the saved game unchanged', async ({ page }) => {
+  await page.goto(adapterPage);
+  const result = await page.evaluate(async data => {
+    const { openGameLibrary } = await import('/src/session/gameLibrary.ts' as string);
+    const { createFighterGame } = await import('/src/engine/horrifiedGame.ts' as string);
+    const { encodeGameSave } = await import('/src/session/gameSave.ts' as string);
+    const library = await openGameLibrary(), game = await createFighterGame(data, 79);
+    const store = library.game('retain');
+    const original = await store.write(encodeGameSave(data, game), null);
+    const before = await library.list();
+    const originalDelete = IDBObjectStore.prototype.delete;
+    IDBObjectStore.prototype.delete = function (key) {
+      if (this.name === 'games' && key === 'retain') throw new Error('Simulated delete failure');
+      return originalDelete.call(this, key);
+    };
+    let failure = '';
+    try { await library.deleteGame('retain', before[0].version); }
+    catch (error) { failure = String(error); }
+    finally { IDBObjectStore.prototype.delete = originalDelete; }
+    const after = await library.list(), slots = await store.read();
+    library.close();
+    return { failure, before, after, original, slots };
+  }, fighterFixture());
+  expect(result.failure).toMatch(/Simulated delete failure/);
+  expect(result.after).toEqual(result.before);
+  expect(result.slots.current).toEqual(result.original);
+});
+
+test('a migrated legacy game stays deleted after reopening and damaged records can be deleted', async ({ page }) => {
+  await page.goto(adapterPage);
+  const result = await page.evaluate(async data => {
+    const { openLocalSaveStore } = await import('/src/session/localSaveStore.ts' as string);
+    const { openGameLibrary } = await import('/src/session/gameLibrary.ts' as string);
+    const { createFighterGame } = await import('/src/engine/horrifiedGame.ts' as string);
+    const { encodeGameSave } = await import('/src/session/gameSave.ts' as string);
+    const game = await createFighterGame(data, 83), payload = encodeGameSave(data, game);
+    const old = await openLocalSaveStore();
+    await old.write(payload, null); old.close();
+    const library = await openGameLibrary();
+    const migrated = (await library.list()).find((entry: { id: string }) => entry.id === 'legacy')!;
+    await library.deleteGame('legacy', migrated.version);
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('boardbot-game-library', 1);
+      request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction('games', 'readwrite');
+      tx.objectStore('games').put({ broken: 'comparable record' }, 'damaged');
+      tx.oncomplete = () => resolve(); tx.onabort = () => reject(tx.error);
+    });
+    db.close();
+    const damaged = (await library.list()).find((entry: { id: string }) => entry.id === 'damaged')!;
+    await library.deleteGame('damaged', damaged.version);
+    library.close();
+    const reopened = await openGameLibrary();
+    const remaining = await reopened.list();
+    reopened.close();
+    return { migrated, damaged, remaining };
+  }, fighterFixture());
+  expect(result.migrated.id).toBe('legacy');
+  expect(result.damaged).toMatchObject({ id: 'damaged', damaged: true });
+  expect(result.remaining).toEqual([]);
+});
