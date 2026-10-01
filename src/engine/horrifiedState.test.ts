@@ -76,7 +76,8 @@ describe('solo setup and private state (official rules pp. 4, 7; verified setup 
     await expect(createHorrifiedGame(data, 0)).rejects.toThrow(/Verified monster setup/);
     data.interpretationVersion = 'unsupported';
     await expect(createHorrifiedGame(data, 0)).rejects.toThrow(/Unsupported rules/);
-    await expect(createHorrifiedGame(setupFixture(), 0, 'hero-wizard')).rejects.toThrow(/Only the Fighter/);
+    await expect(createHorrifiedGame(setupFixture(), 0, 'hero-unsupported')).rejects.toThrow(/Unsupported Hero/);
+    await expect(createHorrifiedGame(setupFixture(), 0, 'hero-wizard')).rejects.toThrow(/selected Hero is missing/);
     const short = setupFixture(); short.items = short.items.slice(0, 5);
     await expect(createHorrifiedGame(short, 0)).rejects.toThrow(/twelve Items/);
     const invalid = setupFixture(); invalid.board.soloLabelAt = 7;

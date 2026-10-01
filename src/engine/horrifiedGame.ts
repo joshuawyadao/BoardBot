@@ -5,6 +5,7 @@ import { createHorrifiedGame, drawBoardItems, gainPerk, logEntry, projectGame, S
 import type { MonsterId } from './horrifiedState';
 import type { ChoiceOption, EngineContext, FighterGame, GameCommand, HeroAction, Task } from './horrifiedRuntime';
 import { resolveMonsterTask } from './monsterResolution.ts';
+import { resolveOtherHeroTask } from './heroResolution.ts';
 
 const monsterIds: MonsterId[] = ['beholder', 'displacerBeast'];
 // Bind a caller's reference to the exact validated snapshot used at initialization.
@@ -22,11 +23,12 @@ const cellFits = (data: GameData, state: FighterGame, item: string, cell: string
   return !!spot && !!strength && (strength >= 4 || strength === spot.values.length);
 };
 
-export async function createFighterGame(data: GameData, seed: number): Promise<FighterGame> {
+export async function createFighterGame(data: GameData, seed: number, heroId = 'hero-fighter'): Promise<FighterGame> {
   const snapshot = structuredClone(data);
-  const base = await createHorrifiedGame(snapshot, seed);
+  const base = await createHorrifiedGame(snapshot, seed, heroId);
   registeredData.set(data, { identity: base.dataIdentity, serialized: JSON.stringify(snapshot) });
   return { ...base, taskSerial: 0, queue: [], pending: null, roll: null, attack: null, currentCard: null,
+    damageOutcomes: {},
     noMoveThisTurn: false, commandIds: [], commands: [], rolls: [] };
 }
 
@@ -201,20 +203,41 @@ function resolveCoreTask(task: Task, ctx: EngineContext): boolean {
       else ctx.discardItems(selected);
       finish(ctx, task); return true;
     case 'damage': {
-      if ((task.amount ?? 0) <= 0 || !ctx.location(task.entity!)) { finish(ctx, task); return true; }
-      if (task.entity !== 'hero') { state.citizens[task.entity!] = { location: null, status: 'defeated' }; ctx.log(`${ctx.name(task.entity!)} defeated.`); ctx.changeTerror(1); finish(ctx, task); return true; }
+      if ((task.amount ?? 0) <= 0 || !ctx.location(task.entity!)) {
+        if (task.damageId !== undefined) state.damageOutcomes[task.damageId] = 'skipped';
+        finish(ctx, task); return true;
+      }
+      if (task.entity !== 'hero') {
+        if (task.damageId !== undefined) state.damageOutcomes[task.damageId] = 'defeated';
+        state.citizens[task.entity!] = { location: null, status: 'defeated' };
+        ctx.log(`${ctx.name(task.entity!)} defeated.`); ctx.changeTerror(1); finish(ctx, task); return true;
+      }
       const options = [{ id: 'defeat', label: 'Accept defeat and keep your Items' }];
       if (state.hero.items.length >= task.amount!) options.unshift({ id: 'defend', label: `Discard ${task.amount} Item${task.amount === 1 ? '' : 's'} to defend` });
       ctx.ask(task.reason ?? `Defend against ${task.amount} Hit${task.amount === 1 ? '' : 's'}.`, options, 1, 1, { ...task, kind: 'damage:choice' }); return true;
     }
     case 'damage:choice': {
+      if (task.damageId !== undefined) state.damageOutcomes[task.damageId] = selected[0] === 'defend' ? 'survived' : 'defeated';
       if (selected[0] === 'defend') ctx.prepend({ kind: 'discard', amount: task.amount, reason: 'Choose the Items used to defend.', after: task.after });
-      else { state.hero.location = null; state.hero.penalties = { noMove: false, fewerActions: 0, skipTurn: false }; ctx.log('Hero defeated; return at the start of the next turn.'); ctx.changeTerror(1); finish(ctx, task); }
+      else if (state.phase === 'monster' && state.hero.effects.clericRescue > 0 && state.hero.definitionId === 'hero-cleric' && state.hero.location) {
+        ctx.ask('Use saved Cleric rescue after this defeat?', [{ id: 'rescue', label: 'Prevent Terror and remain at the Cleric location' }, { id: 'decline', label: 'Accept normal defeat' }], 1, 1,
+          { kind: 'cleric:rescue', after: task.after });
+      } else { state.hero.location = null; state.hero.penalties = { noMove: false, fewerActions: 0, skipTurn: false }; ctx.log('Hero defeated; return at the start of the next turn.'); ctx.changeTerror(1); finish(ctx, task); }
       return true;
+    }
+    case 'cleric:rescue': {
+      if (selected[0] === 'rescue') {
+        state.hero.effects.clericRescue--;
+        state.hero.penalties = { noMove: false, fewerActions: 0, skipTurn: false };
+        ctx.log('Cleric rescue prevented Terror from this defeat.');
+      }
+      else { state.hero.location = null; state.hero.penalties = { noMove: false, fewerActions: 0, skipTurn: false }; ctx.log('Hero defeated; return at the start of the next turn.'); ctx.changeTerror(1); }
+      finish(ctx, task); return true;
     }
     case 'turn:start': {
       if (state.currentCard) { state.monsterDiscard.push(state.currentCard); state.currentCard = null; }
-      state.attack = null; state.hero.effects = { ignoreHits: 0, skipMonsterCard: false, skipMonsterPhase: false, automatic20: false };
+      state.attack = null; state.hero.effects = { ignoreHits: 0, skipMonsterCard: false, skipMonsterPhase: false, automatic20: false,
+        clericRerollOne: 0, clericRerollAll: 0, clericRescue: 0, clericOneDieAttacks: 0 };
       state.turn++;
       if (state.hero.penalties.skipTurn) { state.hero.penalties = { noMove: false, fewerActions: 0, skipTurn: false }; ctx.log('The next Hero and Monster Phases are skipped.', 'phase'); state.turn++; }
       if (state.hero.location === null) state.hero.location = data.board.hospital;
@@ -434,7 +457,11 @@ function applyAction(ctx: EngineContext, action: HeroAction) {
       else ctx.rollD20('Displacer strike', { kind: 'displacer:strike' });
       break;
     case 'reveal': ctx.discardItems(action.items); state.lairs[state.hero.location!].revealed = true; ctx.log('Revealed the Lair here.'); break;
-    case 'special': ctx.rollD20('Fighter special action', { kind: 'fighter:result' }); break;
+    case 'special': {
+      const hero = state.hero.definitionId.slice('hero-'.length);
+      ctx.rollD20(`${hero[0].toUpperCase()}${hero.slice(1)} special action`, { kind: `${hero}:result` });
+      break;
+    }
   }
 }
 
@@ -454,7 +481,7 @@ export function dispatchGame(data: GameData, state: FighterGame, command: GameCo
   while (next.queue.length && !next.pending && next.phase !== 'won' && next.phase !== 'lost') {
     if (++steps > 2000) throw new Error('Game resolution exceeded its bounded task count.');
     const task = next.queue.shift()!;
-    if (!resolveCoreTask(task, ctx) && !resolveHeroTask(task, ctx) && !resolveMonsterTask(task, ctx)) throw new Error(`Unsupported resolution task: ${task.kind}`);
+    if (!resolveCoreTask(task, ctx) && !resolveHeroTask(task, ctx) && !resolveOtherHeroTask(task, ctx) && !resolveMonsterTask(task, ctx)) throw new Error(`Unsupported resolution task: ${task.kind}`);
   }
   next.revision++; next.commandIds.push(command.id); next.commands.push(structuredClone(command));
   return { state: next, error: null };

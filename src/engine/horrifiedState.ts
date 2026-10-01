@@ -27,7 +27,8 @@ export interface HorrifiedState {
   hero: {
     seatId: typeof SOLO_SEAT; definitionId: string; location: string | null;
     items: string[]; perks: string[]; actions: number; allowance: number;
-    effects: { ignoreHits: number; skipMonsterCard: boolean; skipMonsterPhase: boolean; automatic20: boolean };
+    effects: { ignoreHits: number; skipMonsterCard: boolean; skipMonsterPhase: boolean; automatic20: boolean;
+      clericRerollOne: number; clericRerollAll: number; clericRescue: number; clericOneDieAttacks: number };
     penalties: { noMove: boolean; fewerActions: number; skipTurn: boolean };
   };
   monsters: Record<MonsterId, { location: string | null; defeated: boolean }>;
@@ -104,7 +105,7 @@ export async function createHorrifiedGame(input: unknown, seed: number, heroId =
   const data = structuredClone(validateGameData(input));
   if (data.interpretationVersion !== RULESET_VERSION) throw new Error('Unsupported rules interpretation. Prepare the current game data.');
   if (!data.setup || !data.capabilities.setupVerified) throw new Error('Verified monster setup is required.');
-  if (heroId !== 'hero-fighter') throw new Error('Only the Fighter is enabled in this implementation stage.');
+  if (!['hero-bard', 'hero-cleric', 'hero-fighter', 'hero-rogue', 'hero-wizard'].includes(heroId)) throw new Error('Unsupported Hero.');
   const hero = data.heroes.find(candidate => candidate.id === heroId);
   if (!hero) throw new Error('The selected Hero is missing from the data.');
   if (!Number.isSafeInteger(data.board.soloLabelAt) || data.board.soloLabelAt < 0 || data.board.soloLabelAt >= data.board.terrorTrack.length - 1) {
@@ -131,7 +132,8 @@ export async function createHorrifiedGame(input: unknown, seed: number, heroId =
     schemaVersion: SESSION_SCHEMA_VERSION, rulesVersion: RULESET_VERSION, dataIdentity: await dataIdentity(data),
     seed, random, revision: 0, turn: 1, phase: 'hero', endReason: null, terror: data.board.soloLabelAt, frenzy,
     hero: { seatId: SOLO_SEAT, definitionId: hero.id, location: hero.start, items: [], perks: [], actions: hero.actions, allowance: hero.actions,
-      effects: { ignoreHits: 0, skipMonsterCard: false, skipMonsterPhase: false, automatic20: false },
+      effects: { ignoreHits: 0, skipMonsterCard: false, skipMonsterPhase: false, automatic20: false,
+        clericRerollOne: 0, clericRerollAll: 0, clericRescue: 0, clericOneDieAttacks: 0 },
       penalties: { noMove: false, fewerActions: 0, skipTurn: false } },
     monsters: { beholder: { location: data.setup.beholderLocation, defeated: false }, displacerBeast: { location: data.setup.displacerLocation, defeated: false } },
     damagedEyes: [], displacement: {},

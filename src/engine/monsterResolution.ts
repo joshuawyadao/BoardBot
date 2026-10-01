@@ -108,19 +108,25 @@ function scheduleEvent(ctx: EngineContext, printedId: number): void {
   }
 }
 
-function rollAttackDice(ctx: EngineContext, count: number): { hits: number; powers: number } {
+type DieFace = 'hit' | 'power' | 'blank';
+
+function rollAttackDie(ctx: EngineContext): DieFace {
   const faces = ctx.data.dice.monsterDice.faceCounts;
   const hit = faces.hit_starburst ?? 0, power = faces.power_exclamation ?? 0, blank = faces.blank ?? 0;
   const total = hit + power + blank;
   if (total !== ctx.data.dice.monsterDice.facesPerDie || total === 0) throw new Error('Invalid Monster die distribution.');
-  let hits = 0, powers = 0;
-  for (let index = 0; index < count; index++) {
-    const draw = nextInt(ctx.state.random, total);
-    ctx.state.random = draw.state;
-    if (draw.value < hit) hits++;
-    else if (draw.value < hit + power) powers++;
-  }
-  return { hits, powers };
+  const draw = nextInt(ctx.state.random, total);
+  ctx.state.random = draw.state;
+  return draw.value < hit ? 'hit' : draw.value < hit + power ? 'power' : 'blank';
+}
+
+function rollAttackDice(ctx: EngineContext, count: number): DieFace[] {
+  return Array.from({ length: count }, () => rollAttackDie(ctx));
+}
+
+function updateAttackCounts(attack: NonNullable<EngineContext['state']['attack']>): void {
+  attack.hits = attack.faces.filter(face => face === 'hit').length;
+  attack.powers = attack.faces.filter(face => face === 'power').length;
 }
 
 function finishAttack(ctx: EngineContext): void {
@@ -206,10 +212,43 @@ export function resolveMonsterTask(task: Task, ctx: EngineContext): boolean {
       const preferred = atLocation.includes(HERO) ? [HERO] : atLocation;
       const selected = chooseOne(ctx, task, 'Choose who the Monster attacks', preferred);
       if (!selected) break;
-      const roll = rollAttackDice(ctx, task.dice ?? 0);
-      state.attack = { id: ++state.taskSerial, monster, target: selected, hits: roll.hits, powers: roll.powers, cancelled: false };
-      ctx.log(`${ctx.name(monster)} rolled ${roll.powers} power and ${roll.hits} hit results.`, 'roll');
-      ctx.prepend({ kind: 'monster:attack-power', attackId: state.attack.id });
+      const count = state.hero.definitionId === 'hero-cleric' && state.hero.effects.clericOneDieAttacks > 0 ? Math.min(1, task.dice ?? 0) : task.dice ?? 0;
+      const faces = rollAttackDice(ctx, count);
+      state.attack = { id: ++state.taskSerial, monster, target: selected, hits: 0, powers: 0, cancelled: false, faces };
+      updateAttackCounts(state.attack);
+      ctx.log(`${ctx.name(monster)} rolled ${state.attack.powers} power and ${state.attack.hits} hit results.`, 'roll');
+      ctx.prepend({ kind: 'monster:attack-reroll', attackId: state.attack.id });
+      break;
+    }
+    case 'monster:attack-reroll': {
+      const attack = state.attack;
+      if (!attack || attack.id !== task.attackId) break;
+      const rerollable = attack.faces.flatMap((face, index) => face === 'blank' ? [] : [index]);
+      const effects = state.hero.effects;
+      if (state.hero.definitionId !== 'hero-cleric' || !rerollable.length || effects.clericRerollOne + effects.clericRerollAll === 0) {
+        ctx.prepend({ kind: 'monster:attack-power', attackId: attack.id }); break;
+      }
+      if (!task.selected) {
+        const options: ChoiceOption[] = [{ id: 'pass', label: 'Keep these dice' }];
+        if (effects.clericRerollOne) options.push(...rerollable.map(index => ({ id: `one:${index}`, label: `Reroll die ${index + 1} (${attack.faces[index]})` })));
+        if (effects.clericRerollAll) options.push({ id: 'all', label: 'Reroll every Hit or Power die' });
+        ctx.ask('Use a saved Cleric reroll before resolving Powers and Hits?', options, 1, 1, task);
+        break;
+      }
+      const selection = task.selected[0];
+      if (selection === 'pass') { ctx.prepend({ kind: 'monster:attack-power', attackId: attack.id }); break; }
+      if (selection === 'all' && effects.clericRerollAll > 0) {
+        effects.clericRerollAll--;
+        for (const index of rerollable) attack.faces[index] = rollAttackDie(ctx);
+      } else if (selection.startsWith('one:') && effects.clericRerollOne > 0) {
+        const index = Number(selection.slice(4));
+        if (!rerollable.includes(index)) throw new Error('Invalid Cleric die selection.');
+        effects.clericRerollOne--;
+        attack.faces[index] = rollAttackDie(ctx);
+      } else throw new Error('Invalid Cleric reroll selection.');
+      updateAttackCounts(attack);
+      ctx.log(`Cleric reroll left ${attack.powers} power and ${attack.hits} hit results.`, 'roll');
+      ctx.prepend({ kind: 'monster:attack-reroll', attackId: attack.id });
       break;
     }
     case 'monster:attack-power': {
@@ -387,13 +426,23 @@ export function resolveMonsterTask(task: Task, ctx: EngineContext): boolean {
       const location = state.monsters[task.monster].location;
       if (!location) break;
       const victims = locatedCharacters(ctx).filter(entity => ctx.location(entity) === location);
-      ctx.prepend(...victims.flatMap(entity => [{ kind: 'damage', entity, amount: 1, reason: 'Monster event' }, { kind: 'monster:event-303-survivor', entity, source: location }]));
+      ctx.prepend(...victims.flatMap(entity => {
+        const damageId = ++state.taskSerial;
+        return [{ kind: 'damage', entity, amount: 1, reason: 'Monster event', damageId },
+          { kind: 'monster:event-303-survivor', entity, source: location, damageId }];
+      }));
       break;
     }
     case 'monster:event-303-survivor': {
-      if (!task.entity || !ctx.location(task.entity)) break;
+      const outcome = task.damageId === undefined ? undefined : state.damageOutcomes[task.damageId];
+      if (outcome !== 'survived' || !task.entity || ctx.location(task.entity) !== task.source) {
+        if (task.damageId !== undefined) delete state.damageOutcomes[task.damageId];
+        break;
+      }
       const options = adjacentLocations(ctx.data.board, ctx.location(task.entity)!, task.entity === HERO ? 'hero' : 'guide');
       const selected = chooseOne(ctx, task, 'Choose a survivor destination', options);
+      if (!selected && options.length) break;
+      if (task.damageId !== undefined) delete state.damageOutcomes[task.damageId];
       if (selected) ctx.place(task.entity, selected);
       break;
     }

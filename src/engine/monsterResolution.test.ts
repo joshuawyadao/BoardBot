@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { GameData } from '../data/gameData';
 import type { FighterGame, EngineContext, Task, PendingChoice } from './horrifiedRuntime';
-import { createRandomState } from './gamePrimitives';
+import { createRandomState, nextInt } from './gamePrimitives';
 import { resolveMonsterTask } from './monsterResolution';
 
 function fixture() {
@@ -91,11 +91,45 @@ describe('monster phase resolver with synthetic data', () => {
     state.queue = [];
     resolveMonsterTask({ kind: 'monster:attack-start', monster: 'beholder', dice: 2 }, ctx);
     expect(state.attack).toMatchObject({ target: 'hero', hits: 1, powers: 1 });
-    const startPower = state.queue.shift()!;
-    resolveMonsterTask(startPower, ctx);
+    expect(state.queue.shift()).toMatchObject({ kind: 'monster:attack-reroll' });
+    resolveMonsterTask({ kind: 'monster:attack-reroll', attackId: state.attack!.id }, ctx);
+    resolveMonsterTask(state.queue.shift()!, ctx);
     expect(calls.rolls).toEqual([{ kind: 'monster:beholder-ray', attackId: state.attack!.id }]);
     expect(state.attack!.powers).toBe(0);
     expect(state.queue).toEqual([]);
+  });
+
+  it('offers accumulated Cleric rerolls before POW and HIT resolution and caps saved one-die attacks', () => {
+    const { ctx, state, calls } = fixture();
+    state.hero.definitionId = 'hero-cleric';
+    state.hero.effects.clericRerollOne = 2;
+    state.hero.effects.clericRerollAll = 1;
+    state.hero.effects.clericOneDieAttacks = 1;
+    state.monsters.beholder.location = 'b';
+    resolveMonsterTask({ kind: 'monster:attack-start', monster: 'beholder', dice: 2 }, ctx);
+    expect(state.attack?.faces).toHaveLength(1);
+    expect(state.queue.shift()).toMatchObject({ kind: 'monster:attack-reroll' });
+
+    state.attack = { id: 2, monster: 'beholder', target: 'hero', hits: 2, powers: 0, cancelled: false, faces: ['hit', 'hit'] };
+    resolveMonsterTask({ kind: 'monster:attack-reroll', attackId: 2 }, ctx);
+    expect(calls.asks.at(-1)?.options.map(option => option.id)).toEqual(['pass', 'one:0', 'one:1', 'all']);
+    let powerSeed = 0;
+    while (nextInt(createRandomState(powerSeed), 2).value !== 1) powerSeed++;
+    state.random = createRandomState(powerSeed);
+    resolveMonsterTask({ kind: 'monster:attack-reroll', attackId: 2, selected: ['one:0'] }, ctx);
+    expect(state.hero.effects.clericRerollOne).toBe(1);
+    expect(state.attack).toMatchObject({ faces: ['power', 'hit'], powers: 1, hits: 1 });
+    state.queue = [];
+    resolveMonsterTask({ kind: 'monster:attack-reroll', attackId: 2, selected: ['pass'] }, ctx);
+    resolveMonsterTask(state.queue.shift()!, ctx);
+    expect(calls.rolls.at(-1)).toMatchObject({ kind: 'monster:beholder-ray', attackId: 2 });
+    expect(state.attack?.hits).toBe(1);
+    expect(state.hero.effects.clericRerollAll).toBe(1);
+
+    state.attack = { id: 3, monster: 'beholder', target: 'hero', hits: 1, powers: 1, cancelled: false, faces: ['hit', 'power'] };
+    resolveMonsterTask({ kind: 'monster:attack-reroll', attackId: 3, selected: ['all'] }, ctx);
+    expect(state.hero.effects.clericRerollAll).toBe(0);
+    expect(state.attack?.faces).toHaveLength(2);
   });
 
   it('offers both matching Monsters in player-chosen order and suppresses only the crossed Frenzy icon', () => {
@@ -117,14 +151,14 @@ describe('monster phase resolver with synthetic data', () => {
 
   it('lets a lucky ray cancel accompanying hits and filters Charm candidates', () => {
     const { ctx, state, calls } = fixture();
-    state.attack = { id: 1, monster: 'beholder', target: 'hero', hits: 2, powers: 0, cancelled: false };
+    state.attack = { id: 1, monster: 'beholder', target: 'hero', hits: 2, powers: 0, cancelled: false, faces: [] };
     resolveMonsterTask({ kind: 'monster:ray-effect', attackId: 1, result: 1 }, ctx);
     expect(state.attack.cancelled).toBe(true);
     resolveMonsterTask({ kind: 'monster:attack-power', attackId: 1 }, ctx);
     expect(state.attack).toBeNull();
     expect(state.queue).toEqual([]);
 
-    state.attack = { id: 2, monster: 'beholder', target: 'hero', hits: 0, powers: 0, cancelled: false };
+    state.attack = { id: 2, monster: 'beholder', target: 'hero', hits: 0, powers: 0, cancelled: false, faces: [] };
     state.citizens.other = { location: null, status: 'waiting' };
     resolveMonsterTask({ kind: 'monster:ray-effect', attackId: 2, result: 2 }, ctx);
     expect(calls.asks.at(-1)?.options.map(option => option.id)).toEqual(['visitor', 'other']);
@@ -137,7 +171,7 @@ describe('monster phase resolver with synthetic data', () => {
     data.monsters.beholder.eyestalks = [{ min: 2, max: 3, name: 'Synthetic eye' }];
     state.damagedEyes = [2];
     state.hero.items = ['item-a'];
-    state.attack = { id: 3, monster: 'beholder', target: 'hero', hits: 0, powers: 0, cancelled: false };
+    state.attack = { id: 3, monster: 'beholder', target: 'hero', hits: 0, powers: 0, cancelled: false, faces: [] };
     resolveMonsterTask({ kind: 'monster:beholder-ray', attackId: 3, result: 3 }, ctx);
     expect(state.queue.map(task => task.kind)).toEqual(['discard', 'monster:attack-power']);
     state.queue = [];
@@ -151,7 +185,7 @@ describe('monster phase resolver with synthetic data', () => {
     const { ctx, state } = fixture();
     state.hero.location = null;
     state.hero.items = ['item-a'];
-    state.attack = { id: 4, monster: 'beholder', target: 'visitor', hits: 0, powers: 0, cancelled: false };
+    state.attack = { id: 4, monster: 'beholder', target: 'visitor', hits: 0, powers: 0, cancelled: false, faces: [] };
     state.damagedEyes = [2];
     ctx.data.monsters.beholder.eyestalks = [{ min: 2, max: 3, name: 'Synthetic eye' }];
     resolveMonsterTask({ kind: 'monster:beholder-ray', attackId: 4, result: 3 }, ctx);
@@ -166,7 +200,7 @@ describe('monster phase resolver with synthetic data', () => {
     const { ctx, state, data } = fixture();
     data.board.edges[1].kind = 'teleport';
     state.citizens.visitor = { location: 'b', status: 'board' };
-    state.attack = { id: 5, monster: 'beholder', target: 'hero', hits: 0, powers: 0, cancelled: false };
+    state.attack = { id: 5, monster: 'beholder', target: 'hero', hits: 0, powers: 0, cancelled: false, faces: [] };
     resolveMonsterTask({ kind: 'monster:ray-effect', attackId: 5, result: 6 }, ctx);
     expect(state.queue.map(task => [task.kind, task.entity, task.target])).toEqual([
       ['monster:fear', 'hero', 'b'], ['monster:fear', 'visitor', 'b'],

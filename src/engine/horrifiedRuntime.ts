@@ -23,6 +23,7 @@ export interface Task {
   reason?: string;
   mode?: 'move' | 'place';
   attackId?: number;
+  damageId?: number;
   symbol?: string;
   index?: number;
   dice?: number;
@@ -38,6 +39,7 @@ export interface PendingRoll {
 }
 export interface AttackState {
   id: number; monster: MonsterId; target: string; hits: number; powers: number; cancelled: boolean;
+  faces: ('hit' | 'power' | 'blank')[];
 }
 export interface FighterGame extends HorrifiedState {
   taskSerial: number;
@@ -45,6 +47,7 @@ export interface FighterGame extends HorrifiedState {
   pending: PendingChoice | null;
   roll: PendingRoll | null;
   attack: AttackState | null;
+  damageOutcomes: Record<number, 'survived' | 'defeated' | 'skipped'>;
   currentCard: string | null;
   noMoveThisTurn: boolean;
   commandIds: string[];
