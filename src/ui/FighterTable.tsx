@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { GameData } from '../data/gameData';
 import type { GameView } from '../engine/horrifiedGame';
 import type { HeroAction } from '../engine/horrifiedRuntime';
@@ -8,6 +8,11 @@ import { SessionLog } from './SessionLog';
 import { GameBoard } from './GameBoard';
 import { RollResult, SpecialActionGuide } from './RollResult';
 import './tableWorkspace.css';
+
+type InfoPanel = 'inventory' | 'monsters' | 'log' | 'result' | 'help';
+type ContextPanel = 'choice' | 'action' | 'setup';
+type PanelId = InfoPanel | ContextPanel;
+type Side = 'left' | 'right';
 
 type TrayId = 'move' | 'guide' | 'pick-up' | 'share' | 'advance' | 'defeat' | 'special' | 'perks';
 type ActionReason = (action: HeroAction) => string | null;
@@ -40,19 +45,21 @@ function toggle(values: string[], value: string): string[] {
   return values.includes(value) ? values.filter(entry => entry !== value) : [...values, value];
 }
 
-function PendingChoicePanel({ pending, busy, onAction, visible }: {
+function PendingChoicePanel({ pending, busy, onAction, visible, focusRequest }: {
   pending: NonNullable<GameView['pending']>;
   visible: boolean;
+  focusRequest: number;
   busy: boolean;
   onAction: Props['onAction'];
 }) {
   const [selected, setSelected] = useState<string[]>([]);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  useEffect(() => { if (visible) headingRef.current?.focus({ preventScroll: true }); }, [visible]);
+  useEffect(() => { if (visible) headingRef.current?.focus({ preventScroll: true }); }, [visible, focusRequest]);
   const valid = selected.length >= pending.min && selected.length <= pending.max;
   return <section className="h-pending" aria-labelledby="pending-title">
-    <p className="eyebrow">REQUIRED GAME CHOICE</p>
+    <div className="h-choice-scroll">
     <h2 id="pending-title" ref={headingRef} tabIndex={-1}>{pending.title}</h2>
+    {pending.description && <p className="h-choice-description">{pending.description}</p>}
     <p>Choose {pending.min === pending.max ? pending.min : `${pending.min}–${pending.max}`} option{pending.max === 1 ? '' : 's'} to continue.</p>
     <div className="h-choice-options"><fieldset disabled={busy}>
       <legend className="sr-only">{pending.title}</legend>
@@ -65,6 +72,7 @@ function PendingChoicePanel({ pending, busy, onAction, visible }: {
         <span>{option.label}</span>
       </label>)}
     </fieldset></div>
+    </div>
     <button className="confirm-button" disabled={busy || !valid} onClick={() => onAction({ kind: 'choose', choiceId: pending.id, selected })}>Confirm choice</button>
   </section>;
 }
@@ -84,8 +92,10 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
   const [selectedAdvance, setSelectedAdvance] = useState<number | null>(null);
   const [selectedMonster, setSelectedMonster] = useState<'beholder' | 'displacerBeast'>('beholder');
   const [selectedPerk, setSelectedPerk] = useState<string | null>(null);
-  const [panel, setPanel] = useState<'inventory' | 'monsters' | 'log' | 'result' | 'help' | null>(null);
-  const [panelSide, setPanelSide] = useState<'left' | 'right'>('right');
+  const [panels, setPanels] = useState<{ open: InfoPanel[]; sides: Partial<Record<InfoPanel, Side>> }>({ open: [], sides: {} });
+  const [contextSide, setContextSide] = useState<Side>('right');
+  const [setupOpen, setSetupOpen] = useState(game.revision === 0);
+  const [choiceFocus, setChoiceFocus] = useState(0);
   const [feedbackStart, setFeedbackStart] = useState<number | null>(null);
   const mapButtons = useRef(new Map<string, HTMLButtonElement>());
   const locationName = (id: string | null | undefined) => data.board.locations.find(location => location.id === id)?.name ?? 'off board';
@@ -113,7 +123,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
     setInspected(id);
     if (selectionLocked || unavailable(id)) return;
     setSelected(id);
-    setPanel(null);
+    setSetupOpen(false);
     setEscorts([]);
     setPickedItems([]);
     setSpentItems([]);
@@ -131,7 +141,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
     setFeedbackStart(game.entries.length);
     onAction(action);
     setSelected(null);
-    if (action.kind !== 'move' && action.kind !== 'end-phase') setPanel('result');
+    if (action.kind !== 'move' && action.kind !== 'end-phase') showPanel('result');
   }
 
   const inspectionEvents = (id: TrayId) => ({
@@ -157,52 +167,54 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
 
   const previousChoice = useRef<string | null>(null);
   useEffect(() => {
-    if (pending) setPanel(null);
-    else if (previousChoice.current) setPanel('result');
+    if (!pending && previousChoice.current) showPanel('result');
     previousChoice.current = pending?.id ?? null;
   }, [pending?.id]);
-  const context = panel ?? (pending ? 'choice' : selected && (selected !== 'move' || companions.length > 0) ? 'action' : null);
-  const contextTitles = { choice: 'Your decision', action: 'Review action', inventory: 'Your Hero', monsters: 'Monsters & supplies', log: 'History', result: 'Action result', help: 'Table guide' };
+  const context: ContextPanel | null = pending ? 'choice'
+    : selected && (selected !== 'move' || companions.length > 0) ? 'action'
+    : setupOpen && game.revision === 0 ? 'setup' : null;
+  const panelTitles: Record<PanelId, string> = { choice: 'Required choice', action: 'Review action', setup: 'Board ready', inventory: 'Inventory', monsters: 'Monsters', log: 'Event log', result: 'Latest result', help: 'Table guide' };
   const recentStart = feedbackStart ?? Math.max(0, game.entries.length - 8);
   const recentEvents = game.entries.slice(recentStart);
   const awaitingSavedResult = busy && feedbackStart === game.entries.length;
-  function openPanel(next: typeof panel) { setSelected(null); setPanel(value => value === next ? null : next); }
-  function closePanel() { setSelected(null); setPanel(null); }
+  function showPanel(next: InfoPanel, toggleOpen = false) {
+    setPanels(current => {
+      if (current.open.includes(next)) return toggleOpen ? { ...current, open: current.open.filter(id => id !== next) } : current;
+      const left = current.open.filter(id => current.sides[id] === 'left').length;
+      const right = current.open.length - left;
+      return { open: [...current.open, next], sides: { ...current.sides, [next]: current.sides[next] ?? (right > left ? 'left' : 'right') } };
+    });
+  }
+  function openPanel(next: InfoPanel) { setSetupOpen(false); showPanel(next, true); }
+  function closePanel(id: PanelId) {
+    if (id === 'action') setSelected(null);
+    else if (id === 'setup') setSetupOpen(false);
+    else if (id !== 'choice') setPanels(current => ({ ...current, open: current.open.filter(panel => panel !== id) }));
+  }
+  function sideFor(id: PanelId): Side {
+    return id === 'choice' || id === 'action' || id === 'setup' ? contextSide : panels.sides[id] ?? 'right';
+  }
+  function movePanel(id: PanelId) {
+    if (id === 'choice' || id === 'action' || id === 'setup') setContextSide(side => side === 'left' ? 'right' : 'left');
+    else setPanels(current => ({ ...current, sides: { ...current.sides, [id]: current.sides[id] === 'left' ? 'right' : 'left' } }));
+  }
+  const visiblePanels: PanelId[] = [...(context ? [context] : []), ...panels.open];
+  const panelStyles: Partial<Record<PanelId, CSSProperties>> = {};
+  for (const side of ['left', 'right'] as const) {
+    const ids = visiblePanels.filter(id => sideFor(id) === side);
+    const weight = (id: PanelId) => id === 'choice' || id === 'action' ? 2 : 1;
+    const total = ids.reduce((sum, id) => sum + weight(id), 0);
+    let offset = 0;
+    ids.forEach((id, index) => {
+      const first = Math.round(offset / total * 60) + 1;
+      offset += weight(id);
+      panelStyles[id] = { gridColumn: side === 'left' ? 1 : 3, gridRow: `${first} / ${index === ids.length - 1 ? 61 : Math.round(offset / total * 60) + 1}` };
+    });
+  }
 
-  return <div className={`app-shell h-table h-workspace-table ${actionsCollapsed ? 'actions-collapsed' : ''}`}>
-    <header className="app-header">
-      <a className="brand" href="#main"><span className="brand-mark" aria-hidden="true">B</span>BoardBot</a>
-      <div className="header-tools"><span className="prototype-badge">Local {heroClass} game</span><button className="quiet-button" onClick={() => openPanel('help')} aria-expanded={context === 'help'}>How to play</button><button className="quiet-button" onClick={onReturnToGames} disabled={busy}>Saved games</button></div>
-    </header>
-    <main id="main">
-      <h1 className="sr-only">Horrified {heroClass} table</h1>
-      <div className="notice"><strong>Local game in progress.</strong>{saveControls}</div>
-      {error && <p className="h-error" role="alert">{error}</p>}
-      {terminal && <div className="h-end" role="status"><strong>{game.phase === 'won' ? 'Victory' : 'Defeat'}</strong><span>{game.endReason}</span></div>}
-      <section className={`h-workspace board-panel ${context ? 'has-panel' : ''} panel-${panelSide}`} aria-labelledby="h-board-title">
-        <div className="h-workspace-heading">
-          <div><p className="eyebrow">TURN {game.turn} · {game.phase.toUpperCase()} PHASE</p><h2 id="h-board-title">The city and dungeon</h2></div>
-          <div className="hero"><strong>{hero?.name ?? heroClass}</strong><span>At {locationName(at)}</span></div>
-          <div className="h-status"><span>Terror <strong>{game.terror}</strong></span><span>Frenzy <strong>{MONSTER_NAMES[game.frenzy]}</strong></span><span>Monster deck <strong>{game.monsterDeckCount}</strong></span></div>
-        </div>
-        <nav className="h-panel-nav" aria-label="Table panels">
-          <button onClick={() => openPanel('inventory')} aria-expanded={context === 'inventory'}>Inventory <span>{ownedItems.length} Items · {game.hero.perks.length} Perks</span></button>
-          <button onClick={() => openPanel('monsters')} aria-expanded={context === 'monsters'}>Monsters</button>
-          <button onClick={() => openPanel('log')} aria-expanded={context === 'log'}>Event log</button>
-          <button onClick={() => openPanel('result')} aria-expanded={context === 'result'}>Latest result</button>
-          {pending && <button className="h-choice-return" onClick={() => setPanel(null)} aria-expanded={context === 'choice'}>Required choice</button>}
-          {(game.currentRoll || game.rolls.length > 0) && <div className="h-roll-peek"><RollResult data={data} game={game} compact /></div>}
-        </nav>
-        <div className="h-play-area">
-          <div className="h-board-fit"><GameBoard data={data} game={game} moving={selected === 'move'} locked={selectionLocked} onMove={destination => commit(moveAction(destination))} buttonRefs={mapButtons} /></div>
-          <aside className="h-context-panel" hidden={!context} aria-label="Context panel">
-            <div className="h-context-heading"><h2>{context ? contextTitles[context] : 'Details'}</h2><div>
-              <button className="quiet-button" onClick={() => setPanelSide(side => side === 'right' ? 'left' : 'right')} aria-label={`Move panel to ${panelSide === 'right' ? 'left' : 'right'}`} title="Move this panel to the other side">⇄</button>
-              {context !== 'choice' && <button className="quiet-button" onClick={closePanel} aria-label="Close panel">×</button>}
-            </div></div>
-            <div className="h-context-body">
-              <div className="h-choice-panel" hidden={context !== 'choice'}>{pending && <><RollResult game={game} data={data} /><PendingChoicePanel key={pending.id} pending={pending} busy={busy} onAction={onAction} visible={context === 'choice'} /></>}</div>
-              <div className="h-action-panel" hidden={context !== 'action'}>            {selected && <div className="h-action-editor" aria-live="polite">
+  const panelContents: Record<PanelId, ReactNode> = {
+    choice: (<div className="h-choice-panel">{pending && <>{visiblePanels.length <= 2 && <RollResult game={game} data={data} compact={!game.currentRoll} />}<PendingChoicePanel key={pending.id} pending={pending} busy={busy} onAction={onAction} visible={context === 'choice'} focusRequest={choiceFocus} /></>}</div>),
+    action: (<div className="h-action-panel">            {selected && <div className="h-action-editor" aria-live="polite">
               {selected === 'move' && <div><h3>Move from {locationName(at)}</h3><p>Select a highlighted destination on the board. Movement commits when you choose it.</p>{companions.length > 0 && <fieldset disabled={selectionLocked}><legend>Escort Citizens</legend>{companions.map(([id]) => <label className="h-check-row" key={id}><input type="checkbox" checked={escorts.includes(id)} onChange={() => setEscorts(current => toggle(current, id))} />{data.citizens.find(citizen => citizen.id === id)?.name ?? 'Citizen'}</label>)}</fieldset>}</div>}
               {selected === 'guide' && <div><h3>Guide a Citizen</h3>{game.guideOptions.length ? <fieldset disabled={selectionLocked}><legend>Available destinations</legend>{game.guideOptions.map((option, index) => <label className="h-check-row" key={`${option.citizen}-${option.destination}`}><input type="radio" name="guide-option" checked={selectedGuide === index} onChange={() => setSelectedGuide(index)} />{data.citizens.find(citizen => citizen.id === option.citizen)?.name ?? 'Citizen'} → {locationName(option.destination)}</label>)}</fieldset> : <p>No eligible guidance at this location.</p>}</div>}
               {selected === 'pick-up' && <div><h3>Pick Up Items</h3>{boardItems.length ? <fieldset disabled={selectionLocked}><legend>At {locationName(at)}</legend>{boardItems.map(id => <label className="h-check-row" key={id}><input type="checkbox" checked={pickedItems.includes(id)} onChange={() => setPickedItems(current => toggle(current, id))} />{itemSummary(id)}</label>)}</fieldset> : <p>There are no Items here.</p>}</div>}
@@ -214,22 +226,61 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
               {selected && selected !== 'move' && selected !== 'share' && <p className="h-preview">{currentReason ?? (currentAction ? 'Review your selection, then confirm.' : 'Choose an option to continue.')}</p>}
             </div>}
             <p className="h-cost-review">{selected ? `${cards.find(card => card.id === selected)?.label} · ${cards.find(card => card.id === selected)?.cost}` : ''}</p><div className="tray-controls h-controls"><button className="clear-button" disabled={selectionLocked || !selected} onClick={() => setSelected(null)}>Clear selection</button><button className="confirm-button" disabled={!canConfirm} onClick={() => { if (currentAction) commit(currentAction); }}>{selected === 'special' ? 'Roll special action' : 'Confirm action'}</button></div>
-</div>
-              <div hidden={context !== 'inventory'}>          <section className="h-info-card"><h2>{heroClass} inventory</h2>{ownedItems.length ? <ul>{ownedItems.map(id => <li key={id}>{itemSummary(id)}</li>)}</ul> : <p>No Items held.</p>}<h3>Perks</h3>{game.hero.perks.length ? <ul>{game.hero.perks.map(id => <li key={id}>{game.visiblePerks[id]?.name ?? 'Perk'}</li>)}</ul> : <p>No Perks held.</p>}</section>
-          <details className="h-reveal"><summary>Reveal a Lair <span>1 action · choose Items</span></summary><div className="h-reveal-body"><div><strong>Reveal a Lair</strong><p>At a Lair location, choose Items to spend. Confirming commits the reveal.</p><fieldset disabled={selectionLocked}><legend>Items to spend</legend>{ownedItems.map(id => <label className="h-check-row" key={id}><input type="checkbox" checked={revealItems.includes(id)} onChange={() => setRevealItems(current => toggle(current, id))} />{itemSummary(id)}</label>)}</fieldset><p>{reasonFor(revealAction) ?? 'Ready to reveal this Lair.'}</p><button type="button" className="clear-button" disabled={selectionLocked || revealItems.length === 0} onClick={() => setRevealItems([])}>Clear reveal selection</button></div><button type="button" className="end-button" disabled={selectionLocked || !!reasonFor(revealAction)} title={reasonFor(revealAction) ?? undefined} onClick={() => { commit(revealAction); setRevealItems([]); }}>Confirm reveal</button></div></details></div>
-              <div hidden={context !== 'monsters'}>          <section className="h-info-card"><h2>Monster progress</h2><h3>Beholder</h3><p>{game.monsters.beholder.defeated ? 'Defeated' : `At ${locationName(game.monsters.beholder.location)}`}</p><p>{game.damagedEyes.length} of {data.monsters.beholder.eyestalks.length} eyestalks damaged</p><ol className="h-eyes">{data.monsters.beholder.eyestalks.map(eye => <li key={`${eye.min}-${eye.max}`} className={game.damagedEyes.includes(eye.min) ? 'done' : ''}>{eye.name} · {eye.min}–{eye.max}</li>)}</ol><h3>Displacer Beast</h3><p>{game.monsters.displacerBeast.defeated ? 'Defeated' : `At ${locationName(game.monsters.displacerBeast.location)}`}</p><div className="h-displacement-grid">{data.monsters.displacerBeast.advance.grid.flatMap((row, rowIndex) => row.map((cell, columnIndex) => {
+</div>),
+    inventory: (<div>          <section className="h-info-card"><h2>{heroClass} inventory</h2>{ownedItems.length ? <ul>{ownedItems.map(id => <li key={id}>{itemSummary(id)}</li>)}</ul> : <p>No Items held.</p>}<h3>Perks</h3>{game.hero.perks.length ? <ul>{game.hero.perks.map(id => <li key={id}><details className="h-inventory-perk"><summary>{game.visiblePerks[id]?.name ?? 'Perk'}</summary><p>{game.visiblePerks[id]?.effect ?? 'No description available.'}</p></details></li>)}</ul> : <p>No Perks held.</p>}</section>
+          <details className="h-reveal"><summary>Reveal a Lair <span>1 action · choose Items</span></summary><div className="h-reveal-body"><div><strong>Reveal a Lair</strong><p>At a Lair location, choose Items to spend. Confirming commits the reveal.</p><fieldset disabled={selectionLocked}><legend>Items to spend</legend>{ownedItems.map(id => <label className="h-check-row" key={id}><input type="checkbox" checked={revealItems.includes(id)} onChange={() => setRevealItems(current => toggle(current, id))} />{itemSummary(id)}</label>)}</fieldset><p>{reasonFor(revealAction) ?? 'Ready to reveal this Lair.'}</p><button type="button" className="clear-button" disabled={selectionLocked || revealItems.length === 0} onClick={() => setRevealItems([])}>Clear reveal selection</button></div><button type="button" className="end-button" disabled={selectionLocked || !!reasonFor(revealAction)} title={reasonFor(revealAction) ?? undefined} onClick={() => { commit(revealAction); setRevealItems([]); }}>Confirm reveal</button></div></details></div>),
+    monsters: (<div>          <section className="h-info-card"><h2>Monster progress</h2><h3>Beholder</h3><p>{game.monsters.beholder.defeated ? 'Defeated' : `At ${locationName(game.monsters.beholder.location)}`}</p><p>{game.damagedEyes.length} of {data.monsters.beholder.eyestalks.length} eyestalks damaged</p><ol className="h-eyes">{data.monsters.beholder.eyestalks.map(eye => <li key={`${eye.min}-${eye.max}`} className={game.damagedEyes.includes(eye.min) ? 'done' : ''}>{eye.name} · {eye.min}–{eye.max}</li>)}</ol><h3>Displacer Beast</h3><p>{game.monsters.displacerBeast.defeated ? 'Defeated' : `At ${locationName(game.monsters.displacerBeast.location)}`}</p><div className="h-displacement-grid">{data.monsters.displacerBeast.advance.grid.flatMap((row, rowIndex) => row.map((cell, columnIndex) => {
             const key = cellKey(rowIndex, columnIndex); const item = game.displacement[key];
             return <div key={key} className={item ? 'filled' : ''}><span>{cell.join(', ')}</span><small>{item ? itemName(item) : 'Open'}</small></div>;
           }))}</div></section>
           <section className="h-info-card"><h2>Public supplies</h2><p>Items discarded: {game.itemDiscard.length} · Perks discarded: {game.perkDiscard.length} · Monster cards discarded: {game.monsterDiscard.length}</p><p>Unrevealed Lairs: {Object.values(game.lairs).filter(lair => !lair.revealed).length}</p></section>
-</div>
-              <div hidden={context !== 'log'}><SessionLog entries={game.entries} label="Game history" className="h-history" visible={context === 'log'} /></div>
-              <section hidden={context !== 'result'} className="h-result-details" aria-label="Action result">
+</div>),
+    log: (<div><SessionLog entries={game.entries} label="Game history" className="h-history" visible={panels.open.includes('log')} /></div>),
+    result: (<section className="h-result-details" aria-label="Action result">
                 {awaitingSavedResult ? <p role="status">Saving your action…</p> : <><RollResult game={game} data={data} /><h3>{feedbackStart === null ? 'Recent events' : 'What happened'}</h3><ol>{recentEvents.map(entry => <li key={entry.id}>{entry.message}</li>)}</ol></>}
-              </section>
-              <section hidden={context !== 'help'} className="h-table-guide"><h3>Playing the {heroClass} table</h3><p>The whole board fits the table. Solid paths connect locations; dashed passages and matching teleport circles identify special routes. Select Move to highlight legal destinations.</p><p>Select another action to review its targets, costs, and roll ranges here. Confirming spends the action. Dice results stay visible beside the panel buttons; Latest result shows the details.</p><p>Inventory, Monsters, and Event log open only when requested. Close a panel to return to the full board, or move it to the other side with ⇄. Required choices open automatically and must be resolved before another action. You can inspect another panel and use Required choice to return.</p><p>Use Tab, Enter, and Space to operate controls. End Hero Phase forfeits unused actions; eligible free Perks remain available at zero actions until then.</p></section>
-            </div>
-          </aside>
+              </section>),
+    help: (<section className="h-table-guide"><h3>Playing the {heroClass} table</h3><p>The whole board fits the table. Solid paths connect locations; dashed passages and matching teleport circles identify special routes. Select Move to highlight legal destinations.</p><p>Select another action to review its targets, costs, and roll ranges here. Confirming spends the action. Dice results stay visible beside the panel buttons; Latest result shows the details.</p><p>Inventory, Monsters, Event log, and Latest result can stay open together. Toggle each independently, close it, or move it to the other side with ⇄. Opening information keeps your action selection. Required choices stay open until resolved; Required choice moves keyboard focus back to the decision. Expand a Perk in Inventory to read its effect.</p><p>Use Tab, Enter, and Space to operate controls. End Hero Phase forfeits unused actions; eligible free Perks remain available at zero actions until then.</p></section>),
+    setup: (<section className="h-setup-summary"><h3>Everything is set up</h3><p>Your Hero, both Monsters, the starting Items, and unrevealed Lairs are already placed. Inspect the board, then choose your first action.</p><ul>
+        <li><strong>{heroClass}</strong> · {locationName(at)}</li>
+        {(Object.keys(MONSTER_NAMES) as (keyof typeof MONSTER_NAMES)[]).map(id => <li key={id}><strong>{MONSTER_NAMES[id]}</strong> · {locationName(game.monsters[id].location)}</li>)}
+        <li><strong>{Object.values(game.boardItems).flat().length} Items</strong> on the board · {game.hero.perks.length} Perk in Inventory</li>
+        <li><strong>{Object.keys(game.lairs).length} Lairs</strong> ready to reveal</li>
+      </ul><p>Other Items, cards, and waiting Citizens remain in their supplies until needed.</p><button className="confirm-button" onClick={() => setSetupOpen(false)}>Ready to play</button></section>)
+  };
+
+  return <div className={`app-shell h-table h-workspace-table ${actionsCollapsed ? 'actions-collapsed' : ''}`}>
+    <header className="app-header">
+      <a className="brand" href="#main"><span className="brand-mark" aria-hidden="true">B</span>BoardBot</a>
+      <div className="header-tools"><span className="prototype-badge">Local {heroClass} game</span><button className="quiet-button" onClick={() => openPanel('help')} aria-expanded={panels.open.includes('help')}>How to play</button><button className="quiet-button" onClick={onReturnToGames} disabled={busy}>Saved games</button></div>
+    </header>
+    <main id="main">
+      <h1 className="sr-only">Horrified {heroClass} table</h1>
+      <div className="notice"><strong>Local game in progress.</strong>{saveControls}</div>
+      {error && <p className="h-error" role="alert">{error}</p>}
+      {terminal && <div className="h-end" role="status"><strong>{game.phase === 'won' ? 'Victory' : 'Defeat'}</strong><span>{game.endReason}</span></div>}
+      <section className={`h-workspace board-panel ${visiblePanels.some(id => sideFor(id) === 'left') ? 'has-left-panel' : ''} ${visiblePanels.some(id => sideFor(id) === 'right') ? 'has-right-panel' : ''}`} aria-labelledby="h-board-title">
+        <div className="h-workspace-heading">
+          <div><p className="eyebrow">TURN {game.turn} · {game.phase.toUpperCase()} PHASE</p><h2 id="h-board-title">The city and dungeon</h2></div>
+          <div className="hero"><strong>{hero?.name ?? heroClass}</strong><span>At {locationName(at)}</span></div>
+          <div className="h-status"><span>Terror <strong>{game.terror}</strong></span><span>Frenzy <strong>{MONSTER_NAMES[game.frenzy]}</strong></span><span>Monster deck <strong>{game.monsterDeckCount}</strong></span></div>
+        </div>
+        <nav className="h-panel-nav" aria-label="Table panels">
+          <button onClick={() => openPanel('inventory')} aria-expanded={panels.open.includes('inventory')}>Inventory <span>{ownedItems.length} Items · {game.hero.perks.length} Perks</span></button>
+          <button onClick={() => openPanel('monsters')} aria-expanded={panels.open.includes('monsters')}>Monsters</button>
+          <button onClick={() => openPanel('log')} aria-expanded={panels.open.includes('log')}>Event log</button>
+          <button onClick={() => openPanel('result')} aria-expanded={panels.open.includes('result')}>Latest result</button>
+          {pending && <button className="h-choice-return" onClick={() => setChoiceFocus(value => value + 1)} aria-expanded={context === 'choice'}>Required choice</button>}
+          {(game.currentRoll || game.rolls.length > 0) && <div className="h-roll-peek"><RollResult data={data} game={game} compact /></div>}
+        </nav>
+        <div className="h-play-area">
+          <div className="h-board-fit"><GameBoard data={data} game={game} moving={selected === 'move'} locked={selectionLocked} onMove={destination => commit(moveAction(destination))} buttonRefs={mapButtons} /></div>
+          {(Object.keys(panelContents) as PanelId[]).map(id => <aside key={id} data-panel={id} className={`h-context-panel h-panel-${id}`} hidden={!visiblePanels.includes(id)} style={panelStyles[id]} aria-label={`${panelTitles[id]} panel`}>
+            <div className="h-context-heading"><h2>{panelTitles[id]}</h2><div>
+              <button className="quiet-button" onClick={() => movePanel(id)} aria-label={`Move ${panelTitles[id]} panel to ${sideFor(id) === 'right' ? 'left' : 'right'}`} title="Move this panel to the other side">⇄</button>
+              {id !== 'choice' && <button className="quiet-button" onClick={() => closePanel(id)} aria-label={`Close ${panelTitles[id]}`}>×</button>}
+            </div></div>
+            <div className="h-context-body">{panelContents[id]}</div>
+          </aside>)}
         </div>
         <ActionTray className="h-tray" title={busy ? 'Resolving…' : pending ? 'Choice required' : terminal ? 'Game complete' : game.phase === 'monster' ? 'Monster Phase' : 'Your Hero Phase'}
           titleId="h-turn-title" busy={busy} collapsed={actionsCollapsed}

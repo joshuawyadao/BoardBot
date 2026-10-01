@@ -24,10 +24,11 @@ function layoutFixture(): GameData {
   return data;
 }
 
-async function load(page: Page, data: GameData, seed = 2) {
+async function load(page: Page, data: GameData, seed = 2, hero = 'Fighter') {
   await page.goto('/');
   await page.getByText('Import game data or backup').click();
   await page.locator('#game-data-file').setInputFiles({ name: 'synthetic-layout.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
+  await page.getByLabel('Hero', { exact: true }).selectOption(hero);
   await page.getByLabel('Seed (optional, for a repeatable setup)').fill(String(seed));
   await page.getByRole('button', { name: 'Start game', exact: true }).click();
   await expect(page.getByText('Local game in progress.')).toBeVisible();
@@ -59,14 +60,14 @@ test('all 29 locations fit desktop and smaller windows with panels on either sid
     expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(viewport.height);
     await page.getByRole('button', { name: /^Inventory/ }).click();
     await expectWholeBoard(page);
-    const right = await page.locator('.h-context-panel').boundingBox();
-    await page.getByRole('button', { name: 'Move panel to left' }).focus();
+    const right = await page.locator('[data-panel="inventory"]').boundingBox();
+    await page.getByRole('button', { name: 'Move Inventory panel to left' }).focus();
     await page.keyboard.press('Enter');
     await expectWholeBoard(page);
-    expect((await page.locator('.h-context-panel').boundingBox())!.x).toBeLessThan(right!.x);
-    await page.getByRole('button', { name: 'Move panel to right' }).click();
-    await page.getByRole('button', { name: 'Close panel' }).click();
-    await expect(page.locator('.h-context-panel')).toBeHidden();
+    expect((await page.locator('[data-panel="inventory"]').boundingBox())!.x).toBeLessThan(right!.x);
+    await page.getByRole('button', { name: 'Move Inventory panel to right' }).click();
+    await page.getByRole('button', { name: 'Close Inventory' }).click();
+    await expect(page.locator('[data-panel="inventory"]')).toBeHidden();
     await expectWholeBoard(page);
   }
   await page.setViewportSize({ width: 390, height: 844 });
@@ -108,11 +109,16 @@ test('special ranges and confirmation stay visible, then a saved response displa
   await expect(context.getByTestId('roll-status')).toHaveText('Awaiting response');
   const value = await context.getByTestId('roll-effective').innerText();
   await expect(page.getByRole('log')).toBeHidden();
+  await page.getByRole('radio', { name: 'Keep this result' }).check();
   await page.getByRole('button', { name: /^Inventory/ }).click();
   await expect(page.getByRole('heading', { name: 'Fighter inventory' })).toBeVisible();
   await page.getByRole('button', { name: 'Required choice', exact: true }).click();
   await expect(page.locator('.h-pending h2')).toBeFocused();
-  await expect(context.getByTestId('roll-effective')).toHaveText(value);
+  const summary = page.locator('.h-roll-peek');
+  await expect(summary.getByTestId('roll-effective')).toHaveText(value);
+  await expect(summary.getByTestId('roll-status')).toHaveText('Awaiting response');
+  await expect(summary).toBeInViewport();
+  await expect(page.getByRole('radio', { name: 'Keep this result' })).toBeChecked();
   await page.reload();
   await page.getByRole('button', { name: 'Resume saved game' }).click();
   await expect(context.getByTestId('roll-effective')).toHaveText(value);
@@ -122,4 +128,109 @@ test('special ranges and confirmation stay visible, then a saved response displa
   await page.getByRole('radio', { name: 'Keep this result' }).check();
   await page.getByRole('button', { name: 'Confirm choice', exact: true }).click();
   await expect(page.locator('.h-roll-peek [data-testid="roll-status"]')).toHaveText('Last roll');
+});
+
+
+test('four information panels stay open independently without hiding the board or clearing an action', async ({ page }) => {
+  const data = layoutFixture();
+  data.perks = data.perks.filter(perk => perk.id === 'perk-ott-steeltoes');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await load(page, data);
+  for (const name of [/^Inventory/, /^Monsters$/, /^Event log$/, /^Latest result$/]) {
+    await page.getByRole('button', { name }).click();
+  }
+  await expect(page.locator('.h-context-panel:visible')).toHaveCount(4);
+  await expectWholeBoard(page);
+  const inventory = page.locator('[data-panel="inventory"]');
+  const perk = inventory.locator('.h-inventory-perk');
+  await perk.locator('summary').click();
+  await expect(perk).toContainText(data.perks[0].effect);
+  const details = inventory.locator('.h-context-body');
+  await details.evaluate(element => { element.scrollTop = 12; });
+  const scroll = await details.evaluate(element => element.scrollTop);
+  await page.getByRole('button', { name: 'Move Inventory panel to left' }).click();
+  await expect(perk).toHaveAttribute('open', '');
+  expect(await details.evaluate(element => element.scrollTop)).toBe(scroll);
+  await page.getByRole('button', { name: 'Close Monsters', exact: true }).click();
+  await expect(page.locator('[data-panel="monsters"]')).toBeHidden();
+  await expect(inventory).toBeVisible();
+  await expect(page.locator('[data-panel="log"]')).toBeVisible();
+  await expect(page.locator('[data-panel="result"]')).toBeVisible();
+  await page.getByRole('button', { name: 'Monsters', exact: true }).click();
+  await page.getByRole('button', { name: 'Special Action Hero ability' }).click();
+  const roll = page.getByRole('button', { name: 'Roll special action', exact: true });
+  await expect(roll).toBeInViewport();
+  await page.getByRole('button', { name: 'Close Inventory', exact: true }).click();
+  await expect(roll).toBeEnabled();
+  await page.getByRole('button', { name: /^Inventory/ }).click();
+  await expect(perk).toHaveAttribute('open', '');
+  await expect(page.locator('.h-context-panel:visible')).toHaveCount(5);
+  await expectWholeBoard(page);
+  await roll.click();
+  await expect(page.locator('.h-pending')).toBeVisible();
+  await expect(page.locator('[data-panel="inventory"]')).toBeVisible();
+  await expect(page.locator('[data-panel="monsters"]')).toBeVisible();
+  await expect(page.locator('[data-panel="log"]')).toBeVisible();
+  await expect(page.locator('[data-panel="result"]')).toBeVisible();
+  await page.getByRole('radio', { name: 'Keep this result' }).check();
+  await expect(page.getByRole('button', { name: 'Confirm choice', exact: true })).toBeInViewport();
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await expect(page.locator('.h-location')).toHaveCount(29);
+});
+
+test('new games visibly contain setup pieces before the first action', async ({ page }) => {
+  const data = layoutFixture();
+  await load(page, data);
+  const setup = page.locator('[data-panel="setup"]');
+  await expect(setup).toContainText('12 Items');
+  await expect(setup).toContainText('Beholder');
+  await expect(setup).toContainText('Displacer Beast');
+  await expect(page.locator('.h-location .piece-beholder')).toHaveCount(1);
+  await expect(page.locator('.h-location .piece-displacer')).toHaveCount(1);
+  await expect(page.locator('.h-location .piece-hero')).toHaveCount(1);
+  await expect(page.locator('.h-location .piece-lair')).toHaveCount(data.board.lairLocations.length);
+  const items = await page.locator('.h-location .piece-item').allTextContents();
+  expect(items.reduce((sum, text) => sum + Number(text.slice(1)), 0)).toBe(12);
+  const revisionBefore = await page.evaluate(async () => {
+    const path = '/src/session/gameLibrary.ts';
+    const library = await (await import(path)).openGameLibrary();
+    const [game] = await library.list();
+    const save = (await library.game(game.id).read()).current!.payload;
+    library.close(); return JSON.parse(save).state.revision;
+  });
+  expect(revisionBefore).toBe(0);
+  await page.getByRole('button', { name: 'Ready to play', exact: true }).click();
+  await expect(setup).toBeHidden();
+  await expect(page.locator('.h-tray .action-budget')).toContainText('4 / 4');
+});
+
+test('Wizard destination 17 explains relocating a Monster already on the board and survives reload', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await load(page, heroFixture(), 105, 'Wizard');
+  await expect(page.getByRole('button', { name: /^Room 1\. Displacer Beast/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Special Action Hero ability' }).click();
+  await page.getByRole('button', { name: 'Roll special action' }).click();
+  for (const result of ['5', '17']) {
+    await expect(page.locator('.h-choice-panel [data-testid="roll-effective"]')).toHaveText(result);
+    await page.getByRole('radio', { name: 'Keep this result' }).check();
+    await page.getByRole('button', { name: 'Confirm choice', exact: true }).click();
+  }
+  const choice = page.locator('.h-pending');
+  await expect(choice).toContainText('Move an existing Monster to #17');
+  await expect(choice).toContainText('initial roll 5');
+  await expect(choice).toContainText('destination roll 17');
+  await expect(page.locator('.h-location.wizard-destination')).toHaveAttribute('aria-label', /Test room 17/);
+  await expect(page.locator('.h-location.wizard-destination')).toHaveAttribute('aria-disabled', 'true');
+  await page.reload();
+  await page.getByRole('button', { name: 'Resume saved game' }).click();
+  await expect(choice).toContainText('initial roll 5');
+  await page.setViewportSize({ width: 1024, height: 768 });
+  for (const name of [/^Inventory/, /^Monsters$/, /^Event log$/, /^Latest result$/]) await page.getByRole('button', { name }).click();
+  await expect(page.getByRole('button', { name: 'Confirm choice', exact: true })).toBeInViewport();
+  await page.getByRole('radio', { name: /Displacer Beast: move from #1 · Room 1 to #17 · Test room 17/ }).check();
+  await expect(page.getByRole('button', { name: 'Confirm choice', exact: true })).toBeInViewport();
+  await page.getByRole('button', { name: 'Confirm choice', exact: true }).click();
+  await expect(page.getByRole('button', { name: /^Test room 17\. Displacer Beast/ })).toBeVisible();
+  await expect(page.locator('.h-location .piece-displacer')).toHaveCount(1);
 });

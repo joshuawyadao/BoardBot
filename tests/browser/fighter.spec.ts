@@ -54,7 +54,6 @@ test('the Fighter log previews a new event while hidden and retains full history
   await expect(page.locator('.h-tray .action-budget')).toContainText('4 / 4');
   await page.getByRole('button', { name: 'Move Connected location' }).click();
   await page.getByRole('button', { name: /Room 1/ }).click();
-  await page.getByRole('button', { name: 'Event log', exact: true }).click();
   await expect(panel).toContainText('Room 1');
   await page.getByRole('button', { name: 'Show log' }).focus();
   await page.keyboard.press('Enter');
@@ -192,7 +191,7 @@ test('a whole synthetic game reaches defeat and locks actions after the last req
   expect(await log.evaluate(element => element.scrollHeight)).toBeGreaterThan(await log.evaluate(element => element.clientHeight));
   await log.evaluate(element => { element.scrollTop = 10; element.dispatchEvent(new Event('scroll')); });
   await expect(page.getByRole('button', { name: 'Jump to latest' })).toBeEnabled();
-  await page.getByRole('button', { name: 'Close panel' }).click();
+  await page.getByRole('button', { name: 'Close Event log' }).click();
   await page.getByRole('button', { name: 'Event log', exact: true }).click();
   await expect.poll(() => log.evaluate(element => element.scrollTop)).toBe(10);
   await expect(end).toBeDisabled();

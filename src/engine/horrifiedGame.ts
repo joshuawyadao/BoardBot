@@ -513,8 +513,37 @@ export function getFighterView(data: GameData, state: FighterGame) {
   const visibleItemIds = [...state.hero.items, ...Object.values(state.boardItems).flat(), ...state.itemDiscard, ...Object.values(state.displacement)];
   const visibleItems = Object.fromEntries(visibleItemIds.map(id => { const item = itemDefinition(data, state, id)!; return [id, { id, name: item.name, color: item.color, strength: item.strength }]; }));
   const visiblePerks = Object.fromEntries([...state.hero.perks, ...state.perkDiscard].map(id => { const perk = perkDefinition(data, state, id)!; return [id, { id, name: perk.name, effect: perk.effect }]; }));
+  const locationLabel = (id: string | null) => {
+    const place = data.board.locations.find(candidate => candidate.id === id);
+    return place ? `${place.number === undefined ? '' : `#${place.number} · `}${place.name}` : id ?? 'off the board';
+  };
+  const pending = state.pending ? {
+    id: state.pending.id, title: state.pending.title, options: structuredClone(state.pending.options),
+    min: state.pending.min, max: state.pending.max, description: null as string | null, destination: null as string | null,
+  } : null;
+  if (pending && state.pending?.resume.kind === 'wizard:place') {
+    const target = state.pending.resume.to;
+    if (target) {
+      const activation = state.rolls.at(-2);
+      const destinationRoll = state.rolls.at(-1);
+      const rollContext = activation?.reason === 'Wizard special action' && destinationRoll?.reason === 'Wizard destination'
+        ? `The initial roll ${activation.result.effectiveResult} moves a Monster; destination roll ${destinationRoll.result.effectiveResult} selected ${locationLabel(target)}. ` : '';
+      pending.title = `Move an existing Monster to ${locationLabel(target)}`;
+      pending.description = `${rollContext}Choose an existing Monster already on the board. It moves from its current location; the setup pieces are already placed.`;
+      pending.destination = target;
+      pending.options = pending.options.map(option => ({ ...option,
+        label: `${option.label}: move from ${locationLabel(state.monsters[option.id as MonsterId]?.location ?? null)} to ${locationLabel(target)}`,
+      }));
+    } else {
+      const result = state.rolls.at(-1);
+      const rollContext = result?.reason === 'Wizard special action' ? `Wizard special action result ${result.result.effectiveResult}. ` : '';
+      pending.title = 'Choose where the Wizard moves';
+      pending.description = `${rollContext}The Wizard is currently at ${locationLabel(state.hero.location)}. Choose one destination for the existing Hero piece.`;
+      pending.options = pending.options.map(option => ({ ...option, label: locationLabel(option.id) }));
+    }
+  }
   return { ...view, actions, moveDestinations: moves, guideOptions: guides, advanceOptions: advances, perkOptions: perks, visibleItems, visiblePerks,
-    pending: state.pending ? { id: state.pending.id, title: state.pending.title, options: structuredClone(state.pending.options), min: state.pending.min, max: state.pending.max } : null,
+    pending,
     currentRoll: state.roll ? { reason: state.roll.reason, result: structuredClone(state.roll.result), turn: state.turn } : null,
     rolls: structuredClone(state.rolls) };
 }
