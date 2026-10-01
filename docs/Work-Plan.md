@@ -26,6 +26,8 @@ The default sample still demonstrates the invented map and Move/Wait interaction
 
 ## Action and recovery contract
 
+- October 1 playtest feedback: favor map visibility with compact action buttons and an optional Hide/Show actions control. Keep phase status, remaining actions, and phase end available while collapsed; required choices stay visible separately. Hiding clears uncommitted selection without changing gameplay. Put optional Lair controls behind a disclosure.
+
 - Selecting, changing, or cancelling an uncommitted action has no gameplay cost. There is no undo command in the initial design.
 - Move executes when the player clicks a highlighted legal destination; consequential item or roll choices require review and Confirm. The engine rechecks legality at execution. Incomplete or illegal choices cannot be committed.
 - Once committed, block ordinary action selection and repeat submission until resolution ends. Enable only choices required by that resolution, including during monster phases.

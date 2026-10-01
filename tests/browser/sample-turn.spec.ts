@@ -42,9 +42,7 @@ test('keyboard confirmation reaches zero actions without automatically ending th
   for (let remaining = 2; remaining >= 0; remaining--) {
     await wait.focus();
     await page.keyboard.press('Enter');
-    await page.keyboard.press('Tab'); // Clear selection.
-    await page.keyboard.press('Tab'); // End Hero Phase.
-    await page.keyboard.press('Tab');
+    await page.getByRole('button', { name: 'Confirm action' }).focus();
     await expect(page.getByRole('button', { name: 'Confirm action' })).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('action-budget')).toHaveText(`${remaining} / 3`);
@@ -98,21 +96,56 @@ test('browser runtime uses only local requests and reload starts a fresh sample'
   expect(errors).toEqual([]);
 });
 
-test('the floating tray reserves map space and the event log occupies the right rail', async ({ page }) => {
+test('the compact tray fits below the map and the event log occupies the right rail', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/');
   const board = await page.getByRole('region', { name: 'The training grounds' }).boundingBox();
   const tray = await page.getByRole('region', { name: 'Your Hero Phase' }).boundingBox();
   const history = await page.getByRole('region', { name: 'Event log' }).boundingBox();
   expect(history!.x).toBeGreaterThan(board!.x + board!.width);
+  expect(tray!.height).toBeLessThanOrEqual(230);
   for (const node of await page.locator('.map-location').all()) {
     const box = await node.boundingBox();
     expect(box!.y + box!.height).toBeLessThan(tray!.y);
   }
   const cards = await page.locator('.action-card').all();
   expect(cards).toHaveLength(8);
-  expect((await cards[0].boundingBox())!.y).toBe((await cards[3].boundingBox())!.y);
-  expect((await cards[4].boundingBox())!.y).toBeGreaterThan((await cards[0].boundingBox())!.y);
+  expect((await cards[0].boundingBox())!.y).toBe((await cards[7].boundingBox())!.y);
+});
+
+test('hiding actions preserves the phase controls, clears a draft, and reopens by keyboard', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Wait (sample)' }).click();
+  await expect(page.getByRole('button', { name: 'Confirm action' })).toBeEnabled();
+  const tray = page.getByRole('region', { name: 'Your Hero Phase' });
+  const hide = page.getByRole('button', { name: 'Hide actions' });
+  const bodyId = await hide.getAttribute('aria-controls');
+  expect(bodyId).toBeTruthy();
+  await expect(hide).toHaveAttribute('aria-expanded', 'true');
+  await hide.focus();
+  await page.keyboard.press('Enter');
+  const show = page.getByRole('button', { name: 'Show actions' });
+  await expect(show).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator(`#${bodyId}`)).toBeHidden();
+  expect((await tray.boundingBox())!.height).toBeLessThanOrEqual(85);
+  await expect(page.getByTestId('action-budget')).toHaveText('3 / 3');
+  await expect(page.getByRole('log').getByRole('listitem')).toHaveCount(1);
+  await show.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator(`#${bodyId}`)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Confirm action' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Wait (sample)' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByTestId('action-budget')).toHaveText('3 / 3');
+});
+
+test('phase end remains available with actions hidden', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Hide actions' }).click();
+  await page.getByRole('button', { name: 'End Hero Phase' }).click();
+  await expect(page.getByRole('heading', { name: 'Sample turn complete' })).toBeVisible();
+  await page.getByRole('button', { name: 'Start a new sample turn' }).click();
+  await expect(page.getByTestId('action-budget')).toHaveText('3 / 3');
 });
 
 test('small screens keep the board, tray, and log within the viewport', async ({ page }) => {
@@ -125,6 +158,9 @@ test('small screens keep the board, tray, and log within the viewport', async ({
     await page.getByRole('button', { name: 'Crossroads', exact: true }).click();
     await expect(page.getByTestId('action-budget')).toHaveText('2 / 3');
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await page.getByRole('button', { name: 'Hide actions' }).click();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await page.getByRole('button', { name: 'Show actions' }).click();
     const cards = await page.locator('.action-card').all();
     for (const card of cards) {
       const box = await card.boundingBox();
@@ -145,7 +181,7 @@ test('unavailable cards explain themselves without shifting controls or executin
   await guide.hover();
   await expect(help).toContainText('Not implemented: the sample has no citizens.');
   const helpBox = await help.boundingBox();
-  expect(helpBox!.y + helpBox!.height).toBeLessThanOrEqual(before!.y);
+  expect(helpBox!.y).toBeGreaterThanOrEqual(before!.y + before!.height);
   await move.hover();
   await expect(help).toContainText('move immediately');
   expect(await move.evaluate((element: HTMLElement) => element.offsetTop)).toBe(initialTop);

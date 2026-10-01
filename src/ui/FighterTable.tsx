@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { GameData } from '../data/gameData';
 import type { GameView } from '../engine/horrifiedGame';
 import type { HeroAction } from '../engine/horrifiedRuntime';
+import { ActionTray } from './ActionTray';
 
 type TrayId = 'move' | 'guide' | 'pick-up' | 'share' | 'advance' | 'defeat' | 'special' | 'perks';
 type ActionReason = (action: HeroAction) => string | null;
@@ -77,6 +78,7 @@ function PendingChoicePanel({ pending, busy, onAction }: {
 }
 
 export function FighterTable({ data, game, onAction, reasonFor, busy, error, onReturnToSample }: Props) {
+  const [actionsCollapsed, setActionsCollapsed] = useState(false);
   const [selected, setSelected] = useState<TrayId | null>(null);
   const [inspected, setInspected] = useState<TrayId | null>(null);
   const [hovered, setHovered] = useState<TrayId | null>(null);
@@ -157,7 +159,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
   const canConfirm = !!currentAction && !currentReason && !selectionLocked;
   const hero = data.heroes.find(candidate => candidate.id === game.hero.definitionId);
 
-  return <div className="app-shell h-table">
+  return <div className={`app-shell h-table ${actionsCollapsed ? 'actions-collapsed' : ''}`}>
     <header className="app-header">
       <a className="brand" href="#main"><span className="brand-mark" aria-hidden="true">B</span>BoardBot<span className="brand-note">THE PRACTICE TABLE</span></a>
       <div className="header-tools"><span className="prototype-badge">Local Fighter game</span><button className="quiet-button" onClick={() => setShowHelp(value => !value)} aria-expanded={showHelp}>How to play <span aria-hidden="true">↗</span></button><button className="quiet-button" onClick={onReturnToSample} disabled={busy}>Sample table</button></div>
@@ -200,15 +202,18 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
             <div className="h-map-key"><span>— Ordinary</span><span>┄ Passage</span><span>┈ Teleport circles</span><span>● Fighter</span></div>
           </section>
           {pending && <PendingChoicePanel key={pending.id} pending={pending} busy={busy} onAction={onAction} />}
-          <section className="action-tray h-tray" aria-labelledby="h-turn-title" aria-busy={busy}>
-            <div className="tray-heading"><h2 id="h-turn-title">{busy ? 'Resolving…' : pending ? 'Choice required' : terminal ? 'Game complete' : game.phase === 'monster' ? 'Monster Phase' : 'Your Hero Phase'}</h2><div className="action-budget"><span>Actions remaining</span><strong>{game.hero.actions} <span>/ {game.hero.allowance}</span></strong></div></div>
-            <div className="action-help" role="note" aria-label="Action details"><strong>{inspectedCard?.label ?? 'Choose an action'}</strong><p>{inspectedCard?.description ?? 'Inspect a card, then choose a legal action. Move executes at its destination; consequential actions have confirmation.'}</p><p className="unavailable-reason">{inspectedCard ? unavailable(inspectedCard.id) ?? 'Available now.' : 'Perks remain available at zero actions when their timing allows.'}</p></div>
+          <ActionTray className="h-tray" title={busy ? 'Resolving…' : pending ? 'Choice required' : terminal ? 'Game complete' : game.phase === 'monster' ? 'Monster Phase' : 'Your Hero Phase'}
+            titleId="h-turn-title" busy={busy} collapsed={actionsCollapsed}
+            onToggle={() => { setActionsCollapsed(value => !value); setSelected(null); setInspected(null); setHovered(null); setFocused(null); }}
+            budget={<div className="action-budget"><span>Actions</span><strong>{game.hero.actions} <span>/ {game.hero.allowance}</span></strong></div>}
+            phaseControl={<button className="end-button" disabled={selectionLocked || !!reasonFor(endAction)} title={reasonFor(endAction) ?? undefined} onClick={() => commit(endAction)}>End Hero Phase</button>}>
             <div className="action-options">{cards.map(card => <div className="action-option" key={card.id}><button type="button" className={`action-card ${card.id === 'perks' ? 'free-action' : ''}`}
               aria-disabled={selectionLocked || !!unavailable(card.id)} aria-pressed={selected === card.id}
               {...inspectionEvents(card.id)} onClick={() => chooseCard(card.id)}>
               <span className="card-top"><span className="action-icon" aria-hidden="true">{card.icon}</span><span className="cost">{card.cost}</span></span><strong>{card.label}</strong><small>{card.caption}</small>
             </button></div>)}</div>
-            <div className="h-action-editor" aria-live="polite">
+            <div className="action-help" role="note" aria-label="Action details"><strong>{inspectedCard?.label ?? 'Choose an action'}</strong><p>{inspectedCard?.description ?? 'Inspect a card, then choose a legal action. Move executes at its destination; consequential actions have confirmation.'}</p><p className="unavailable-reason">{inspectedCard ? unavailable(inspectedCard.id) ?? 'Available now.' : 'Perks remain available at zero actions when their timing allows.'}</p></div>
+            {selected && <div className="h-action-editor" aria-live="polite">
               {selected === 'move' && <div><h3>Move from {locationName(at)}</h3><p>Select a highlighted destination on the board. Movement commits when you choose it.</p>{companions.length > 0 && <fieldset disabled={selectionLocked}><legend>Escort Citizens</legend>{companions.map(([id]) => <label className="h-check-row" key={id}><input type="checkbox" checked={escorts.includes(id)} onChange={() => setEscorts(current => toggle(current, id))} />{data.citizens.find(citizen => citizen.id === id)?.name ?? 'Citizen'}</label>)}</fieldset>}</div>}
               {selected === 'guide' && <div><h3>Guide a Citizen</h3>{game.guideOptions.length ? <fieldset disabled={selectionLocked}><legend>Available destinations</legend>{game.guideOptions.map((option, index) => <label className="h-check-row" key={`${option.citizen}-${option.destination}`}><input type="radio" name="guide-option" checked={selectedGuide === index} onChange={() => setSelectedGuide(index)} />{data.citizens.find(citizen => citizen.id === option.citizen)?.name ?? 'Citizen'} → {locationName(option.destination)}</label>)}</fieldset> : <p>No eligible guidance at this location.</p>}</div>}
               {selected === 'pick-up' && <div><h3>Pick Up Items</h3>{boardItems.length ? <fieldset disabled={selectionLocked}><legend>At {locationName(at)}</legend>{boardItems.map(id => <label className="h-check-row" key={id}><input type="checkbox" checked={pickedItems.includes(id)} onChange={() => setPickedItems(current => toggle(current, id))} />{itemSummary(id)}</label>)}</fieldset> : <p>There are no Items here.</p>}</div>}
@@ -218,10 +223,10 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
               {selected === 'special' && <div><h3>Fighter special action</h3><p>{hero?.specialAction ?? 'Fighter ability'}</p><p>{reasonFor(specialAction) ?? 'Confirm to roll and resolve this ability.'}</p></div>}
               {selected === 'perks' && <div><h3>Your Perks</h3>{game.perkOptions.length ? <fieldset disabled={selectionLocked}><legend>Owned cards</legend>{game.perkOptions.map(option => <label className="h-check-row" key={option.id}><input type="radio" name="perk-option" checked={selectedPerk === option.id} onChange={() => setSelectedPerk(option.id)} />{game.visiblePerks[option.id]?.name ?? 'Perk'}{option.reason ? ` · ${option.reason}` : ''}</label>)}</fieldset> : <p>No Perks in hand.</p>}{selectedPerkOption && <p>{game.visiblePerks[selectedPerkOption.id]?.effect}</p>}</div>}
               {selected && selected !== 'move' && selected !== 'share' && <p className="h-preview">{currentReason ?? (currentAction ? 'Review your selection, then confirm.' : 'Choose an option to continue.')}</p>}
-            </div>
-            <div className="tray-controls h-controls"><button className="clear-button" disabled={selectionLocked || !selected} onClick={() => setSelected(null)}>Clear selection</button><button className="end-button" disabled={selectionLocked || !!reasonFor(endAction)} title={reasonFor(endAction) ?? undefined} onClick={() => commit(endAction)}>End Hero Phase</button><button className="confirm-button" disabled={!canConfirm} onClick={() => { if (currentAction) commit(currentAction); }}>Confirm action</button></div>
-          </section>
-          <div className="h-reveal"><div><strong>Reveal a Lair</strong><p>At a Lair location, choose Items to spend. Confirming commits the reveal.</p><fieldset disabled={selectionLocked}><legend>Items to spend</legend>{ownedItems.map(id => <label className="h-check-row" key={id}><input type="checkbox" checked={revealItems.includes(id)} onChange={() => setRevealItems(current => toggle(current, id))} />{itemSummary(id)}</label>)}</fieldset><p>{reasonFor(revealAction) ?? 'Ready to reveal this Lair.'}</p><button type="button" className="clear-button" disabled={selectionLocked || revealItems.length === 0} onClick={() => setRevealItems([])}>Clear reveal selection</button></div><button type="button" className="end-button" disabled={selectionLocked || !!reasonFor(revealAction)} title={reasonFor(revealAction) ?? undefined} onClick={() => { commit(revealAction); setRevealItems([]); }}>Confirm reveal</button></div>
+            </div>}
+            <div className="tray-controls h-controls"><button className="clear-button" disabled={selectionLocked || !selected} onClick={() => setSelected(null)}>Clear selection</button><button className="confirm-button" disabled={!canConfirm} onClick={() => { if (currentAction) commit(currentAction); }}>Confirm action</button></div>
+          </ActionTray>
+          <details className="h-reveal"><summary>Reveal a Lair <span>1 action · choose Items</span></summary><div className="h-reveal-body"><div><strong>Reveal a Lair</strong><p>At a Lair location, choose Items to spend. Confirming commits the reveal.</p><fieldset disabled={selectionLocked}><legend>Items to spend</legend>{ownedItems.map(id => <label className="h-check-row" key={id}><input type="checkbox" checked={revealItems.includes(id)} onChange={() => setRevealItems(current => toggle(current, id))} />{itemSummary(id)}</label>)}</fieldset><p>{reasonFor(revealAction) ?? 'Ready to reveal this Lair.'}</p><button type="button" className="clear-button" disabled={selectionLocked || revealItems.length === 0} onClick={() => setRevealItems([])}>Clear reveal selection</button></div><button type="button" className="end-button" disabled={selectionLocked || !!reasonFor(revealAction)} title={reasonFor(revealAction) ?? undefined} onClick={() => { commit(revealAction); setRevealItems([]); }}>Confirm reveal</button></div></details>
         </div>
         <aside className="h-sidebar">
           <section className="h-info-card"><h2>Fighter inventory</h2>{ownedItems.length ? <ul>{ownedItems.map(id => <li key={id}>{itemSummary(id)}</li>)}</ul> : <p>No Items held.</p>}<h3>Perks</h3>{game.hero.perks.length ? <ul>{game.hero.perks.map(id => <li key={id}>{game.visiblePerks[id]?.name ?? 'Perk'}</li>)}</ul> : <p>No Perks held.</p>}</section>

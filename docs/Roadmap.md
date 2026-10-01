@@ -26,7 +26,7 @@ Acceptance criteria:
 
 - A documented local setup starts the app and completes games with each supported hero, including victory and defeat paths.
 - Legal actions, current phase, remaining actions, inventory, and outcomes are understandable.
-- The floating tray keeps stable positions and shows action costs, availability, and specific reasons for invalid actions. Move is selected freely, then commits on clicking a highlighted legal destination. Consequential item or roll choices require review and confirmation; there is no undo command.
+- The compact tray keeps stable action positions and shows costs, availability, and specific reasons for invalid actions. Hide/Show actions frees map space while retaining phase controls and required choices. Move is selected freely, then commits on clicking a highlighted legal destination. Consequential item or roll choices require review and confirmation; there is no undo command.
 - The Hero Phase ends only through an explicit command after the current resolution. Eligible free perks remain usable at zero paid actions until that boundary, subject to their own legality rules.
 - Invalid moves and repeated submissions leave state unchanged. Controls lock during resolution while required decision controls remain usable.
 - Monster phases preserve player choices required by the rules.

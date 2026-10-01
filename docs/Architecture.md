@@ -20,12 +20,14 @@ A command carries an ID, expected revision, seat, and action. The engine rejects
 
 `getFighterView` exposes observed resources, counts, choices, and legal controls without future draw order, RNG, hidden Lair faces, or continuation payloads. The React wrapper imports a local JSON file and keeps the data and internal state in memory. It locks submission synchronously and uses a short display-only busy interval after a command commits. `FighterTable` consumes the projection; decision policy remains in the engine. The private file is never copied into public assets or requested by a remote service. The default synthetic table remains independently usable.
 
+`src/ui/ActionTray.tsx` is shared presentation for the sample and Fighter tables. Its accessible disclosure hides only the action body; phase status, budget, and phase controls remain mounted. Each table owns the disclosure state and clears local draft selection on toggle without dispatching a command. Fighter required-choice controls remain outside this component. The disclosure preference is in memory and is not a saved game setting.
+
 ## Responsibilities
 
 | Component | Owns | Boundary |
 | --- | --- | --- |
 | Verified game data | Board graph, component definitions, quantities, source/version records | Incomplete entries cannot silently become supported gameplay |
-| Rules engine | State, legality, transitions, action costs, effects, end conditions | Independent of React, storage, and presentation; currently only a synthetic sample engine exists |
+| Rules engine | State, legality, transitions, action costs, effects, end conditions | Independent of React, storage, and presentation; sample and Fighter engines are separate |
 | Session runner | Turn/phase progression, commands, injected randomness, required choices, event history | Applies commands once through the rules engine; the current reducer/timer only handles the sample turn |
 | React interface | Simplified board, floating tray, Event log, descriptions, selections, confirmation where needed, outcomes | Never duplicates rule decisions as a separate authority |
 | Local persistence | Versioned snapshots, pending choices, committed random results, recovery | Loading validates data and never executes imported code |
@@ -37,14 +39,14 @@ Begin with small modules in one application. A general plugin system, remote bac
 
 The interaction progresses through selection or targeting, optional confirmation, resolution, any required follow-up choice, and an explicit phase boundary. These are conceptual states, not final code identifiers.
 
-- Selecting or cancelling has no game-state effect. In the prototype, Move highlights reachable board locations and clicking one commits the move immediately. Consequential choices such as item spending or dice rolls require complete review and confirmation. Hover, focus, or tap shows action details in a reserved area above the stable cards.
+- Selecting or cancelling has no game-state effect. In the prototype, Move highlights reachable board locations and clicking one commits the move immediately. Consequential choices such as item spending or dice rolls require complete review and confirmation. Hover, focus, or tap shows action details below the stable compact buttons. Hiding ordinary actions clears only local draft selection and leaves required choices visible.
 - An unavailable action stays in its tray position with a specific reason. The UI can preview legality, but only the engine authorizes a command. Monster challenge and defeat prerequisites must use verified monster-specific data. Eligible free perks do not depend on remaining paid actions and remain available until the explicit Hero Phase end, subject to their own timing rules.
 - The engine revalidates the submitted command, including phase and available resources. Invalid or duplicate commands must not spend an action, draw a card, roll again, or otherwise change state.
 - Ordinary action controls lock at submission, before animation or delayed processing. Required follow-up choices are distinct commands tied to the active resolution.
 - Monster phases follow the rules but can pause for player-controlled ties, defenses, effect ordering, or other decisions. Automation must not silently remove a choice granted by the rules.
 - A committed result is authoritative; animations only present it. Returning to ordinary selection requires completion of the current resolution and the correct game phase.
 - Action allowance can change through effects. Do not assume every successful interaction costs one action or every turn has the same budget.
-- End Hero Phase is an explicit, revision-guarded command, allowed early or at zero actions while ready and disallowed during resolution. Record that boundary once; subsequent Monster Phase behavior awaits the verified game engine.
+- End Hero Phase is an explicit, revision-guarded command, allowed early or at zero actions while ready and disallowed during resolution. Record that boundary once; the Fighter engine then resolves its Monster Phase and required choices.
 
 ## Randomness and recovery
 

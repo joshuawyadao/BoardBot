@@ -10,12 +10,14 @@ import { SessionLog } from './SessionLog';
 import { trayActions, waitAction } from './actionCatalog';
 import type { TrayActionId } from './actionCatalog';
 import { FighterTable } from './FighterTable';
+import { ActionTray } from './ActionTray';
 import './horrified.css';
 
 const nameOf = (id: LocationId) => locations.find(location => location.id === id)!.name;
 
 function SampleApp() {
   const { game, confirm, endHeroPhase, restart, entries, turnNumber } = useSampleSession();
+  const [actionsCollapsed, setActionsCollapsed] = useState(false);
   const [selectedType, setSelectedType] = useState<'move' | 'wait' | null>(null);
   const [inspectedAction, setInspectedAction] = useState<TrayActionId | null>(null);
   const [showHelp, setShowHelp] = useState(false);
@@ -62,7 +64,7 @@ function SampleApp() {
   });
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${actionsCollapsed ? 'actions-collapsed' : ''}`}>
       <header className="app-header">
         <a className="brand" href="#main"><span className="brand-mark" aria-hidden="true">B</span>BoardBot<span className="brand-note">THE PRACTICE TABLE</span></a>
         <div className="header-tools"><span className="prototype-badge">Interaction prototype</span><button className="quiet-button" aria-expanded={showHelp} aria-controls="table-guide" onClick={() => setShowHelp(!showHelp)}>How to play <span aria-hidden="true">↗</span></button></div>
@@ -102,13 +104,12 @@ function SampleApp() {
                   </button>;
                 })}
               </div>
-              <section className="action-tray" aria-labelledby="turn-title" aria-busy={game.phase === 'resolving'}>
-                <div className="tray-heading"><h2 id="turn-title" aria-live="polite">{phaseLabel}</h2><div className="action-budget"><span>Actions remaining</span><strong data-testid="action-budget">{game.actionsRemaining} <span>/ {game.actionAllowance}</span></strong></div></div>
-                <div className="action-help" role="note" aria-label="Action details">
-                  <strong>{described?.label ?? 'Choose an action'}</strong>
-                  <p>{described?.description ?? 'Move directly on the map, or try a confirmed Wait. Inspect a planned card to see what is still to come.'}</p>
-                  <p className="unavailable-reason">{describedId ? availabilityReason(describedId) ?? 'Available now.' : 'Planned cards stay in place as a preview of the full tray.'}</p>
-                </div>
+              <ActionTray title={phaseLabel} titleId="turn-title" busy={game.phase === 'resolving'} collapsed={actionsCollapsed}
+                onToggle={() => { setActionsCollapsed(value => !value); clearSelection(); setHoveredAction(null); setFocusedAction(null); }}
+                budget={<div className="action-budget"><span>Actions</span><strong data-testid="action-budget">{game.actionsRemaining} <span>/ {game.actionAllowance}</span></strong></div>}
+                phaseControl={game.phase === 'complete'
+                  ? <button className="confirm-button" onClick={() => { clearSelection(); restart(); }}>Start a new sample turn</button>
+                  : <button className="end-button" disabled={!!endReason} onClick={() => { if (!endReason) { clearSelection(); endHeroPhase(); } }}>End Hero Phase</button>}>
                 <div className="action-options">
                   {trayActions.map(action => <div className="action-option" key={action.id}>
                     <button className={`action-card ${action.id === 'perks' ? 'free-action' : ''}`} aria-disabled={locked || !!availabilityReason(action.id)} aria-pressed={selectedType === action.id}
@@ -119,19 +120,21 @@ function SampleApp() {
                     <p className="sr-only" id={`${action.id}-description`}>{action.description} {availabilityReason(action.id)}</p>
                   </div>)}
                 </div>
+                <div className="action-help" role="note" aria-label="Action details">
+                  <strong>{described?.label ?? 'Choose an action'}</strong>
+                  <p>{described?.description ?? 'Move directly on the map, or try a confirmed Wait. Inspect a planned card to see what is still to come.'}</p>
+                  <p className="unavailable-reason">{describedId ? availabilityReason(describedId) ?? 'Available now.' : 'Planned cards stay in place as a preview of the full tray.'}</p>
+                </div>
                 <div className="confirm-area">
-                  <p className="selection-summary" aria-live="polite">{game.phase === 'complete' ? 'Hero Phase ended. Start another sample turn when ready.' : game.phase === 'resolving' ? 'Showing your result. Please wait…' : game.actionsRemaining === 0 ? 'No paid actions remain. End Hero Phase when ready; perks are not implemented in this sample.' : selectedType === 'move' ? 'Click a highlighted location to move immediately.' : selectedType === 'wait' ? `Wait at ${nameOf(game.location)} · 1 sample action` : 'Select an action or end your Hero Phase.'}</p>
+                  {(selectedType || game.phase !== 'ready' || game.actionsRemaining === 0) && <p className="selection-summary" aria-live="polite">{game.phase === 'complete' ? 'Hero Phase ended. Start another sample turn when ready.' : game.phase === 'resolving' ? 'Showing your result. Please wait…' : game.actionsRemaining === 0 ? 'No paid actions remain. End Hero Phase when ready; perks are not implemented in this sample.' : selectedType === 'move' ? 'Click a highlighted location to move immediately.' : selectedType === 'wait' ? `Wait at ${nameOf(game.location)} · 1 sample action` : 'Select an action or end your Hero Phase.'}</p>}
                   <div className="tray-controls">
                     <button className="wait-button" aria-disabled={!!waitReason} aria-pressed={selectedType === 'wait'} aria-describedby="wait-description" {...inspectionEvents('wait')} onClick={() => selectAction('wait')}>Wait (sample) <span>1 action</span></button>
                     <p className="sr-only" id="wait-description">{waitAction.description} {waitReason}</p>
                     <button className="clear-button" disabled={locked || selectedType === null} onClick={clearSelection}>Clear selection</button>
-                    {game.phase === 'complete' ? <button className="confirm-button" onClick={() => { clearSelection(); restart(); }}>Start a new sample turn</button> : <>
-                      <button className="end-button" disabled={!!endReason} onClick={() => { if (!endReason) { clearSelection(); endHeroPhase(); } }}>End Hero Phase</button>
-                      <button className="confirm-button" disabled={selectedType !== 'wait' || !!waitReason} onClick={() => { if (selectedType === 'wait') commit({ type: 'wait' }); }}>{game.phase === 'resolving' ? 'Resolving…' : 'Confirm action'}</button>
-                    </>}
+                    {game.phase !== 'complete' && <button className="confirm-button" disabled={selectedType !== 'wait' || !!waitReason} onClick={() => { if (selectedType === 'wait') commit({ type: 'wait' }); }}>{game.phase === 'resolving' ? 'Resolving…' : 'Confirm action'}</button>}
                   </div>
                 </div>
-              </section>
+              </ActionTray>
             </div>
           </section>
           <SessionLog entries={entries} />

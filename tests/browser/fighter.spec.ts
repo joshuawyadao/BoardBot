@@ -1,13 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
 import { fighterFixture } from '../../src/engine/fixtures/fighterFixture';
 
-async function loadSyntheticFighter(page: Page, seed = 17) {
+async function loadSyntheticFighter(page: Page, seed = 17, data = fighterFixture()) {
   await page.goto('/');
   await page.getByText('Load prepared local game data').click();
   await page.getByLabel('Seed (optional, for a repeatable setup)').fill(String(seed));
   await page.locator('#game-data-file').setInputFiles({
     name: 'synthetic-game-data.json', mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(fighterFixture())),
+    buffer: Buffer.from(JSON.stringify(data)),
   });
   await expect(page.getByText('Local game in progress.')).toBeVisible();
 }
@@ -25,6 +25,61 @@ test('local import opens a Fighter table with visible map, resources, and no hid
   expect(text).not.toContain('monsterDeck:');
   expect(text).not.toContain('random:');
   expect(text).not.toContain('dataIdentity:');
+});
+
+test('compact Fighter actions collapse without spending resources and leave choices visible', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const data = fighterFixture();
+  for (let number = 5; number <= 12; number++) {
+    data.board.locations.push({ id: `extra-${number}`, number, kind: 'numbered', name: `Extra room ${number}` });
+    data.board.edges.push({ from: number === 5 ? 'd' : `extra-${number - 1}`, to: `extra-${number}`, kind: 'ordinary' });
+  }
+  await loadSyntheticFighter(page, 17, data);
+  const tray = page.getByRole('region', { name: 'Your Hero Phase' });
+  expect((await tray.boundingBox())!.height).toBeLessThanOrEqual(230);
+  const cards = await tray.locator('.action-card').all();
+  expect(cards).toHaveLength(8);
+  expect((await cards[0].boundingBox())!.y).toBe((await cards[7].boundingBox())!.y);
+  const map = page.locator('.h-map-scroll');
+  const expandedMapHeight = (await map.boundingBox())!.height;
+  await page.getByRole('button', { name: 'Special Action Hero ability' }).click();
+  await expect(page.getByRole('button', { name: 'Confirm action' })).toBeEnabled();
+  const hide = page.getByRole('button', { name: 'Hide actions' });
+  const bodyId = await hide.getAttribute('aria-controls');
+  expect(bodyId).toBeTruthy();
+  await hide.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator(`#${bodyId}`)).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Show actions' })).toHaveAttribute('aria-expanded', 'false');
+  expect((await tray.boundingBox())!.height).toBeLessThanOrEqual(85);
+  expect((await map.boundingBox())!.height).toBeGreaterThan(expandedMapHeight + 100);
+  await expect(page.locator('.h-tray .action-budget')).toContainText('4 / 4');
+  await expect(page.getByRole('log', { name: 'Game history' })).not.toContainText('rolled');
+  await page.getByRole('button', { name: 'Show actions' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator(`#${bodyId}`)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Confirm action' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Special Action Hero ability' })).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('a pending Fighter choice stays operable while actions are collapsed', async ({ page }) => {
+  // Seed 2 deals Ott's relevant roll response, so the special-action roll pauses for a choice.
+  await loadSyntheticFighter(page, 2);
+  await page.getByRole('button', { name: 'Special Action Hero ability' }).click();
+  await page.getByRole('button', { name: 'Confirm action' }).click();
+  const pending = page.locator('.h-pending');
+  await expect(pending).toBeVisible();
+  await expect(pending.locator('h2')).toBeFocused();
+  await page.getByRole('button', { name: 'Hide actions' }).click();
+  await expect(pending).toBeVisible();
+  const choiceBox = await pending.boundingBox();
+  const trayBox = await page.locator('.h-tray').boundingBox();
+  expect(choiceBox!.y + choiceBox!.height).toBeLessThan(trayBox!.y);
+  await expect(pending.getByRole('button', { name: 'Confirm choice' })).toBeDisabled();
+  await pending.locator('input').first().check();
+  await pending.getByRole('button', { name: 'Confirm choice' }).click();
+  await expect(page.getByRole('button', { name: 'Show actions' })).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.getByRole('log', { name: 'Game history' })).toContainText('final');
 });
 
 test('keyboard Move targets a destination and same-tick clicks commit once', async ({ page }) => {
@@ -94,4 +149,16 @@ test('a whole synthetic game reaches defeat and locks actions after the last req
   await expect(page.locator('.h-end')).toContainText('The Monster deck is empty when a draw is required.');
   await expect(end).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Special Action Hero ability' })).toHaveAttribute('aria-disabled', 'true');
+});
+
+test('narrow Fighter layout has no document overflow with actions shown or hidden', async ({ page }) => {
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    await loadSyntheticFighter(page);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await page.getByRole('button', { name: 'Hide actions' }).click();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await page.getByRole('button', { name: 'Show actions' }).click();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
 });
