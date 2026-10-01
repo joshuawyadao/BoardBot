@@ -65,3 +65,9 @@ The finalized [work plan](Work-Plan.md) and [roadmap](Roadmap.md) define milesto
 The October 1 layout refinement reduces the default tray height and adds an accessible Hide/Show actions disclosure to both tables. Browser regressions cover compact desktop geometry, collapse/reopen by keyboard, draft cancellation without gameplay changes, phase end while collapsed, required choices outside the disclosure, added map height, and narrow viewports. The normal command, confirmation, duplicate, and illegal-action checks remain in place. No rules or storage behavior changes.
 
 Final checks for this refinement passed under Node 26.10.0: build, 70 unit tests, five repository tests, and 17 Chromium browser tests. At a 1440×900 viewport the sample tray measures 220px expanded and 58px collapsed; the Fighter tray measures 223px and 58px. The larger synthetic map regression verifies over 100px of added visible height, and pending-choice geometry verifies separation from the collapsed tray. Render checks used synthetic data in isolated test browsers.
+
+## Compact Event log
+
+The subsequent October 1 refinement uses one Event log presentation for both tables. Browser coverage checks the 240px desktop column, 240px scroll-height cap, keyboard hide/show without resource changes, latest-event preview, retained complete history and reading position, and 390/320px layouts. The existing following-new-events and Jump to latest checks remain.
+
+Validation passed under Node 26.10.0: build, 70 unit tests, five repository tests, and all 19 Chromium browser tests. At 1440×900, initial log panels measured approximately 151px tall in the sample and 208px in the Fighter table; collapsed panels measured 91px and 107px. Longer history scrolls within the 240px body cap. Screenshots use synthetic data in isolated test browsers.

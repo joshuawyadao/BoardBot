@@ -103,6 +103,8 @@ test('the compact tray fits below the map and the event log occupies the right r
   const tray = await page.getByRole('region', { name: 'Your Hero Phase' }).boundingBox();
   const history = await page.getByRole('region', { name: 'Event log' }).boundingBox();
   expect(history!.x).toBeGreaterThan(board!.x + board!.width);
+  expect(history!.width).toBeLessThanOrEqual(240);
+  expect(history!.height).toBeLessThan(board!.height);
   expect(tray!.height).toBeLessThanOrEqual(230);
   for (const node of await page.locator('.map-location').all()) {
     const box = await node.boundingBox();
@@ -111,6 +113,31 @@ test('the compact tray fits below the map and the event log occupies the right r
   const cards = await page.locator('.action-card').all();
   expect(cards).toHaveLength(8);
   expect((await cards[0].boundingBox())!.y).toBe((await cards[7].boundingBox())!.y);
+});
+
+test('the Event log hides by keyboard, preserves history, and previews new events', async ({ page }) => {
+  await page.goto('/');
+  const panel = page.getByRole('region', { name: 'Event log' });
+  const log = page.getByRole('log', { name: 'Session history' });
+  const hide = page.getByRole('button', { name: 'Hide log' });
+  const bodyId = await hide.getAttribute('aria-controls');
+  expect(bodyId).toBeTruthy();
+  await expect(hide).toHaveAttribute('aria-expanded', 'true');
+  await hide.focus();
+  await page.keyboard.press('Enter');
+  const show = page.getByRole('button', { name: 'Show log' });
+  await expect(show).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator(`#${bodyId}`)).toBeHidden();
+  await expect(page.getByTestId('action-budget')).toHaveText('3 / 3');
+  await page.getByRole('button', { name: 'Move Connected location' }).click();
+  await page.getByRole('button', { name: 'Crossroads', exact: true }).click();
+  await expect(panel).toContainText('Moved from camp to crossroads.');
+  await expect(page.getByTestId('action-budget')).toHaveText('2 / 3');
+  await show.focus();
+  await page.keyboard.press('Enter');
+  await expect(log).toBeVisible();
+  await expect(log.getByRole('listitem')).toHaveCount(2);
+  await expect(log.getByText('Moved from camp to crossroads.')).toBeVisible();
 });
 
 test('hiding actions preserves the phase controls, clears a draft, and reopens by keyboard', async ({ page }) => {
@@ -161,6 +188,10 @@ test('small screens keep the board, tray, and log within the viewport', async ({
     await page.getByRole('button', { name: 'Hide actions' }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     await page.getByRole('button', { name: 'Show actions' }).click();
+    await page.getByRole('button', { name: 'Hide log' }).click();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await page.getByRole('button', { name: 'Show log' }).click();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     const cards = await page.locator('.action-card').all();
     for (const card of cards) {
       const box = await card.boundingBox();
@@ -219,6 +250,7 @@ test('session log preserves older reading position until jumping to latest', asy
     await page.getByRole('button', { name: 'Start a new sample turn' }).click();
   }
   expect(await log.evaluate(element => element.scrollHeight)).toBeGreaterThan(await log.evaluate(element => element.clientHeight));
+  expect((await log.boundingBox())!.height).toBeLessThanOrEqual(240);
   await expect.poll(() => log.evaluate(element => element.scrollHeight - element.clientHeight - element.scrollTop)).toBeLessThan(2);
   await log.focus();
   await page.keyboard.press('Home');
@@ -229,6 +261,14 @@ test('session log preserves older reading position until jumping to latest', asy
   await page.getByRole('button', { name: 'Wait (sample)' }).click();
   await page.getByRole('button', { name: 'Confirm action' }).click();
   await expect(log.getByRole('listitem')).toHaveCount(17);
+  expect(await log.evaluate(element => element.scrollTop)).toBe(previousPosition);
+  await page.clock.runFor(950);
+  await page.getByRole('button', { name: 'Hide log' }).click();
+  await page.getByRole('button', { name: 'Wait (sample)' }).click();
+  await page.getByRole('button', { name: 'Confirm action' }).click();
+  await expect(page.getByRole('region', { name: 'Event log' })).toContainText('Waited at camp.');
+  await page.getByRole('button', { name: 'Show log' }).click();
+  await expect(log.getByRole('listitem')).toHaveCount(18);
   expect(await log.evaluate(element => element.scrollTop)).toBe(previousPosition);
   await page.getByRole('button', { name: 'Jump to latest' }).click();
   await expect.poll(() => log.evaluate(element => element.scrollHeight - element.clientHeight - element.scrollTop)).toBeLessThan(2);

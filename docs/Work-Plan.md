@@ -26,6 +26,8 @@ The default sample still demonstrates the invented map and Move/Wait interaction
 
 ## Action and recovery contract
 
+- Keep the Event log secondary to the board: a narrow desktop column, short scrollable history, optional collapse with the latest event, and preserved reading position. The display choice never changes game state.
+
 - October 1 playtest feedback: favor map visibility with compact action buttons and an optional Hide/Show actions control. Keep phase status, remaining actions, and phase end available while collapsed; required choices stay visible separately. Hiding clears uncommitted selection without changing gameplay. Put optional Lair controls behind a disclosure.
 
 - Selecting, changing, or cancelling an uncommitted action has no gameplay cost. There is no undo command in the initial design.

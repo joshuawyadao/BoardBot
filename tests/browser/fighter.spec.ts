@@ -13,6 +13,7 @@ async function loadSyntheticFighter(page: Page, seed = 17, data = fighterFixture
 }
 
 test('local import opens a Fighter table with visible map, resources, and no hidden deck order', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
   await loadSyntheticFighter(page);
   await expect(page.getByRole('heading', { name: 'The city and dungeon' })).toBeVisible();
   await expect(page.locator('.h-location')).toHaveCount(4);
@@ -21,10 +22,39 @@ test('local import opens a Fighter table with visible map, resources, and no hid
   await expect(page.getByText('Monster progress')).toBeVisible();
   await expect(page.getByText('Fighter inventory')).toBeVisible();
   await expect(page.getByText('Perks discarded:')).toBeVisible();
+  const panel = page.getByRole('region', { name: 'Event log' });
+  const panelBox = await panel.boundingBox();
+  const boardBox = await page.getByRole('region', { name: 'The city and dungeon' }).boundingBox();
+  expect(panelBox!.width).toBeLessThanOrEqual(240);
+  expect(panelBox!.height).toBeLessThan(boardBox!.height);
+  await expect(page.getByRole('log', { name: 'Game history' })).toBeVisible();
   const text = await page.locator('.h-table').innerText();
   expect(text).not.toContain('monsterDeck:');
   expect(text).not.toContain('random:');
   expect(text).not.toContain('dataIdentity:');
+});
+
+test('the Fighter log previews a new event while hidden and retains full history', async ({ page }) => {
+  await loadSyntheticFighter(page);
+  const panel = page.getByRole('region', { name: 'Event log' });
+  const hide = page.getByRole('button', { name: 'Hide log' });
+  const bodyId = await hide.getAttribute('aria-controls');
+  expect(bodyId).toBeTruthy();
+  await hide.click();
+  await expect(page.locator(`#${bodyId}`)).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Show log' })).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('.h-tray .action-budget')).toContainText('4 / 4');
+  await page.getByRole('button', { name: 'Move Connected location' }).click();
+  await page.getByRole('button', { name: /Room 1/ }).click();
+  await expect(panel).toContainText('Room 1');
+  await page.getByRole('button', { name: 'Show log' }).focus();
+  await page.keyboard.press('Enter');
+  const log = page.getByRole('log', { name: 'Game history' });
+  await expect(log).toBeVisible();
+  await expect(log.getByRole('listitem')).toHaveCount(3);
+  await expect(log).toContainText('Used move.');
+  await expect(log).toContainText('Room 1');
+  await expect(page.locator('.h-tray .action-budget')).toContainText('3 / 4');
 });
 
 test('compact Fighter actions collapse without spending resources and leave choices visible', async ({ page }) => {
@@ -147,6 +177,9 @@ test('a whole synthetic game reaches defeat and locks actions after the last req
   }
   await expect(page.locator('.h-end')).toContainText('Defeat');
   await expect(page.locator('.h-end')).toContainText('The Monster deck is empty when a draw is required.');
+  const log = page.getByRole('log', { name: 'Game history' });
+  expect((await log.boundingBox())!.height).toBeLessThanOrEqual(240);
+  expect(await log.evaluate(element => element.scrollHeight)).toBeGreaterThan(await log.evaluate(element => element.clientHeight));
   await expect(end).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Special Action Hero ability' })).toHaveAttribute('aria-disabled', 'true');
 });
@@ -159,6 +192,10 @@ test('narrow Fighter layout has no document overflow with actions shown or hidde
     await page.getByRole('button', { name: 'Hide actions' }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     await page.getByRole('button', { name: 'Show actions' }).click();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await page.getByRole('button', { name: 'Hide log' }).click();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await page.getByRole('button', { name: 'Show log' }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
 });

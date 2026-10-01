@@ -3,6 +3,7 @@ import type { GameData } from '../data/gameData';
 import type { GameView } from '../engine/horrifiedGame';
 import type { HeroAction } from '../engine/horrifiedRuntime';
 import { ActionTray } from './ActionTray';
+import { SessionLog } from './SessionLog';
 
 type TrayId = 'move' | 'guide' | 'pick-up' | 'share' | 'advance' | 'defeat' | 'special' | 'perks';
 type ActionReason = (action: HeroAction) => string | null;
@@ -235,7 +236,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
             return <div key={key} className={item ? 'filled' : ''}><span>{cell.join(', ')}</span><small>{item ? itemName(item) : 'Open'}</small></div>;
           }))}</div></section>
           <section className="h-info-card"><h2>Public supplies</h2><p>Items discarded: {game.itemDiscard.length} · Perks discarded: {game.perkDiscard.length} · Monster cards discarded: {game.monsterDiscard.length}</p><p>Unrevealed Lairs: {Object.values(game.lairs).filter(lair => !lair.revealed).length}</p></section>
-          <section className="h-info-card h-history" aria-labelledby="h-event-title"><h2 id="h-event-title">Event log</h2><ol role="log" aria-label="Game history">{game.entries.map(entry => <li key={entry.id}><small>TURN {entry.turn} · {entry.kind.toUpperCase()}</small><p>{entry.message}</p></li>)}</ol></section>
+          <SessionLog entries={game.entries} label="Game history" className="h-history" />
         </aside>
       </div>
       <footer className="app-footer"><span>Built for a quieter kind of game night.</span><span>LOCAL PLAY · NO ACCOUNT · PRIVATE GAME DATA</span></footer>
