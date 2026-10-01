@@ -1,24 +1,21 @@
 # Plan
 
-Make the Event log less prominent so the board remains the focus. Use a narrower right column, a short scrollable history, and an accessible hide/show control that retains the latest event without changing gameplay. Continue the existing six-task milestone; remaining Heroes and recovery remain open in Work-Plan.md.
+Continue the six-task milestone after the approved layout checkpoint. Add reliable local recovery, implement the remaining base Heroes from the verified packet, and validate the resulting solo game while preserving the compact table and private-content boundary.
 
 ## Scope
-- In: Sample and Fighter Event log presentation, shared history behavior, compact right column, keyboard and scroll checks, documentation, commit and push on the current feature branch.
-- Out: Rules, game-state changes, persistence, Hero support, other board layout changes, private data publication, PR creation or merging.
+- In: Versioned saves, atomic local autosave before displaying committed results, resume and recovery, all five solo Heroes, focused rules and browser tests, disconnected-play checks, canonical docs, checkpoint commits and final branch push.
+- Out: Multiplayer, additional Monsters, public redistribution of private game data, accounts, cloud storage, deployment, PR creation, and merging.
 
 ## Action items
-[x] Inspect existing SessionLog, Fighter history, layout CSS, canonical interaction docs, and browser coverage.
-[x] Checkpoint the resolved plan before implementation.
-[x] Reuse a compact Event log in both tables, cap the scroll area at 240px, narrow the desktop right column to 240px, and add Hide/Show log with a latest-event preview while collapsed.
-[x] Preserve all entries, reading position, and following new events; toggling must not submit a command or alter a pending choice.
-[x] Extend browser tests for dimensions, keyboard collapse, latest-event updates, retained older history, and narrow viewports while preserving existing game/control checks.
-[x] Update README.md, Product-Brief.md, Architecture.md, Work-Plan.md, and Verification.md to record the presentation change.
-[x] Run npm run verify and npm run test:e2e under Node 26 and inspect synthetic renders.
-[ ] Commit and push using save-branch. Keep private data and generated files ignored.
+[x] Inspect the engine, command/replay boundary, existing tests, and README, Architecture, Work-Plan, Roadmap, Game-Data-Checklist, Rules-Reference, Game-Data-Format, and Verification.
+[ ] Checkpoint the resolved implementation plan on the existing feature branch.
+[ ] Implement a versioned save codec that reconstructs and validates saved state through deterministic command replay, binds the exact data snapshot, and rejects malformed or incompatible saves.
+[ ] Implement an IndexedDB adapter with atomic current/previous records and optimistic concurrency; retain the prior save when writes fail and reject a stale browser tab.
+[ ] Integrate autosave, resume, explicit replacement, backup export/import, and visible retry/recovery into the UI. Keep an unsaved committed result for retry and block further commands until it is durable.
+[ ] Implement and test Bard, Cleric, Rogue, and Wizard behavior from verified component fields and accepted interpretations; expose Hero selection only after the corresponding paths work.
+[ ] Cover completed actions, pending d20 and Monster choices, malformed saves, failed writes, interruption, duplicate submissions, stale tabs, Hero outcomes, complete games, and local-only disconnected play with synthetic public fixtures.
+[ ] Update README, AGENTS, Architecture, Product-Brief, Work-Plan, Roadmap, Game-Data-Format, and Verification to distinguish implemented behavior, automated evidence, human play acceptance, and publication gates.
+[ ] Run focused checks, npm run verify, and npm run test:e2e under Node 26; inspect synthetic desktop/mobile renders, checkpoint coherent slices, and push with save-branch.
 
 ## Open questions
-- None. Keep the compact history expanded initially, with optional collapse.
-
-## Execution notes
-- Plan checkpoint: `3981f7d`. Both tables now share the compact Event log; all entries and scroll behavior remain in presentation state.
-- Build, 70 unit tests, five repository tests, and all 19 Chromium browser tests passed under Node 26.10.0. Synthetic desktop screenshots confirm the quieter log and added board width; browser checks cover 390px and 320px layouts. Final commit and push are recorded in Git and the completion response.
+- None currently blocking. Use one saved game on this browser origin, with the previous successful save available for recovery. Store the imported private data locally with the session so reload does not require reimport; no upload occurs. Preserve the unsaved sample as a separate practice mode. Stop for user input if the Hero audit uncovers an unresolved rule.
