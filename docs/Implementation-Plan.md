@@ -1,30 +1,20 @@
 # Plan
 
-Load the prepared base game automatically and start a new game after Hero selection. Keep immutable component data separate from independent autosaved games, with a saved-games screen and compatibility for existing saves and backups.
+Support several information panels at once while keeping the whole board visible, and make setup pieces, Wizard relocation choices, and owned Perks easier to understand. Preserve the existing rules and save/replay compatibility; use only public projections and the private imported descriptions.
 
 ## Scope
-- In: Private local prepared-data loading and browser cache; New Game and Hero selection; multiple independent browser saves; shared versioned base data; migration of the current/previous save; recovery and backup compatibility; tests, docs, checkpoints, final push.
-- Out: Automatically written Mac-folder files (the user chose in-app saves), public game-content distribution, rule changes, additional Monsters, multiplayer, cloud storage, PR creation, merging.
+- In: Independent Inventory, Monsters, Event log, and Latest result panels; individual close/side controls; visible board occupants and initial setup summary; Castle Corkscrew visual placement in Waterdeep; Wizard choice explanations; Inventory Perk descriptions; focused tests, canonical docs, and final save/push.
+- Out: Changing verified setup quantities or rules without a reproduced defect; copied artwork or public component text; extra Monsters; multiplayer; save format changes; PR creation or merging.
 
 ## Action items
-[x] Inspect initialization, persistence, data validation, canonical docs, and existing recovery/browser tests; resolve browser records versus filesystem saves with the user.
-[x] Checkpoint the resolved plan on the existing feature branch.
-[x] Add a bounded same-origin local-server endpoint for the ignored prepared data, without including private content in public builds; validate and cache data in the browser.
-[x] Add a game library with immutable data versions and separate current/previous records per game; migrate old saves without deleting their source; preserve atomic writes and stale-writer protection.
-[x] Replace file-import-first setup with a New Game / Hero selection flow and saved-games list; retain advanced import/export and sample access, exact retry behavior, and explicit recovery.
-[x] Cover default/cached startup, missing or invalid prepared data, independent games, new-game cancellation, migration, backup import, pending results, write failure, and conflicting tabs.
-[x] Update README, Local-Saves, Game-Data-Format, Architecture, Product-Brief, Work-Plan, and Verification for the new startup and storage behavior.
-[x] Run focused tests, npm run verify, and npm run test:e2e; inspect isolated browser views, review publication boundaries, and prepare the completed work for final commit and push.
+[x] Inspect the table, projection, Wizard resolution, verified setup references, and browser tests; clarify that the confusing prompt concerned moving the Displacer Beast.
+[ ] Checkpoint the resolved plan on the current feature branch.
+[ ] Reproduce Wizard special-action versus destination rolls and verify all initial pieces are already placed; add projection-only explanations naming the existing piece and destination, with focused regression tests.
+[ ] Improve always-visible Hero/Monster/Item markers and move Castle Corkscrew into Waterdeep in the schematic without changing adjacency or data identities.
+[ ] Support independent information panels in side docks, keep actions and required choices usable, and preserve the board fit on desktop and stacked panels on narrow screens.
+[ ] Show owned Perk effects in Inventory and an automatic initial board-setup summary before the first action, without adding a game command or changing saved state.
+[ ] Extend browser coverage for simultaneous panels, close/reposition behavior, Perk inspection, initial piece visibility, Wizard relocation context, and pending-save recovery.
+[ ] Update README, Architecture, Product-Brief, Work-Plan, and Verification; run npm run verify and npm run test:e2e, inspect isolated visuals, then save and push the completed change.
 
 ## Open questions
-- None. The user chose separate autosaved games in the app with optional JSON backups. Prepared content remains private and local; a fresh public clone without that content exposes one-time import and the synthetic sample. Existing games stay pinned to their original data version.
-
-
-## Execution notes
-- Plan checkpoint: `0253efa` (Plan automatic base-game loading and separate saved games).
-- The user confirmed separate autosaved games in the app, with JSON backups; no automatic Mac-folder saves were added.
-- Shared validation was moved to `src/data/localGameData.ts` so the private server route has no engine/session dependency. The portable save format and gameplay rules remain unchanged.
-- `npm run verify` passed: build/typecheck, 97 unit tests, and five repository tests. `npm run test:e2e` passed all 52 Chromium tests.
-- Isolated actual-data startup selected Wizard and opened the full 29-location board without a file picker; desktop/narrow visual checks found no page overflow or runtime errors. The live user browser was not accessed.
-- README, Architecture, Local-Saves, Game-Data-Format, Product-Brief, Work-Plan, and Verification describe the implemented startup, independent saves, migration, and private-content boundary.
-- Private data, saves, screenshots, and generated artifacts remain excluded. Git history and the completion response record the final save and push; broader human play acceptance remains unfinished.
+- None blocking. The user confirmed the prompt concerned the Displacer Beast. Distinguish a rolled destination from a special-action result using the existing resolution, and relocate the existing Monster rather than inventing a new setup step. Dock panels independently while retaining the full board.
