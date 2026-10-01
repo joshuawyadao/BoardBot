@@ -9,7 +9,7 @@ Scope: original Horrified: Dungeons & Dragons, the five base Heroes, Beholder an
 1. Use this register for physical coverage and evidence access.
 2. Use [Rules-Reference.md](Rules-Reference.md) for published findings, reported clarifications, accepted working interpretations, source links, and remaining questions. It is the canonical rules research memory; do not repeat source searches just because a temporary task plan has changed.
 3. Use the private local evidence packet for exact component fields. Its data has been confirmed by the owner; distinguish printed facts from interpretive decisions.
-4. Reopen research only for a documented gap, a conflicting observation, a different edition, or new authoritative evidence. A focused readout of the two selected Monster mats' reverse-side setup instructions is pending after the implementation audit below; the completed component faces do not need to be checked again.
+4. Reopen research only for a documented gap, a conflicting observation, a different edition, or new authoritative evidence. The selected Monster setup gap was closed using a readable online photo of the printed mat, as recorded in Rules-Reference.md. No additional owner photo or readout is currently needed for those two Monsters.
 
 ## Confirmed component coverage
 
@@ -47,6 +47,8 @@ The working checkout contains an ignored `local-data/horrified-dnd/` packet:
 
 The immutable imported record version is 6. Its SHA-256 at capture is `46ff404d179853f854dec0a8565139ec4455f8f60b7f41266cd4bbd16c97e853`. Older draft proposal/approval fields in that historical record are superseded by the accepted interpretations in `Rules-Reference.md`; never implement its earlier Perk-reshuffle proposal.
 
+A separate ignored `setup-evidence/` directory holds `online-monster-setup.jpg` and `setup-supplement.json`, including the source URL, photo hash, readable Beholder/Displacer setup facts, and cross-references to the verified board. This supplement is online printed-component evidence, not owner-confirmed v6 content. Preserve it with the private packet when moving worktrees. The current preparation command does not import it yet.
+
 The packet contains legacy absolute and temporary reference paths. Use the packet's own two photo files and source URLs; a legacy path does not imply the file still exists. Not every research image/PDF was archived. The structured confirmations remain available without those transient files.
 
 **Git does not back up this packet.** A fresh clone or another checkout receives the public research notes, not the raw component fields/photos. The original persistent source packet is also retained outside this worktree on the owner's machine. Before removing a worktree, verify that separate copy or preserve the local packet to an owner-controlled backup. Managed worktree snapshots do not preserve needed ignored files automatically.
@@ -61,9 +63,9 @@ Before packaging a public game-data manifest or redistributable assets, document
 
 ## Remaining implementation gates
 
-- Confirm the selected Monster mats' reverse-side setup steps and initial positions. The stored gameplay faces and board start numbers do not establish that mapping. Preserve the completed verification above and request only this newly identified gap.
+- Integrate the separately sourced selected-Monster setup supplement. The printed setup photo establishes start markers 4 and 1; the owner-verified board supplies their locations. Preserve both source grades and the immutable v6 packet.
 - Integrate the tested v2 result and response helpers into the future rules engine, preserving the owner-approved policies in [Rules-Reference.md](Rules-Reference.md). Reopen only genuinely new gaps or conflicting evidence.
-- The [versioned private reference](Game-Data-Format.md) now validates the confirmed data, board connections, quantities, and provenance. Its component effects remain prose and setup is explicitly unverified; a successful conversion does not implement gameplay.
+- The [versioned private reference](Game-Data-Format.md) now validates the confirmed data, board connections, quantities, and provenance. Its component effects remain prose and its setup capability remains false until the new supplement is imported and validated; a successful conversion does not implement gameplay.
 - Record the accepted interpretation version in sessions/replays. Keep published findings, reported answers, and BoardBot choices distinguishable.
 - Add source-linked engine tests and actual complete-game acceptance checks. Repository hygiene checks and synthetic engine/browser tests validate tooling and the invented sample turn, not Horrified component data, game balance, or human/bot multiplayer.
 

@@ -18,7 +18,7 @@ The reference stays ignored and is not bundled by Vite or served by the sample a
 
 `src/data/gameData.ts` defines the format, validator, and conversion boundary. The schema version identifies the JSON shape. The interpretation version identifies BoardBot's accepted rules choices. Source-record version, fingerprint, and component pointers make fields traceable without carrying historical private machine paths into the normalized reference.
 
-The schema distinguishes owner-verified content from synthetic fixtures. Capability fields explicitly leave setup verification and a playable rules engine unavailable. Effect descriptions are reference prose, never executable code. A successful conversion verifies data consistency; it does not prove gameplay correctness, validate publication rights, or authenticate arbitrary JSON presented later by a user.
+The schema distinguishes owner-verified content from synthetic fixtures. Capability fields explicitly leave setup verification and a playable rules engine unavailable. A separate private setup supplement now records readable online printed evidence for the selected Monsters, but this command does not import or validate that supplement yet. Effect descriptions are reference prose, never executable code. A successful conversion verifies data consistency; it does not prove gameplay correctness, validate publication rights, or authenticate arbitrary JSON presented later by a user.
 
 ## Board and quantities
 
@@ -32,4 +32,4 @@ Keep quantities and destinations attached to item types and card faces. Expansio
 
 `src/engine/gamePrimitives.ts` provides deterministic random-state operations and graph traversal. Route ties remain available for player choice. These helpers do not authorize game actions or establish initial monster positions.
 
-The canonical [rules reference](Rules-Reference.md) records the remaining setup dependency and accepted conventions. Before gameplay integration, tests must cover every implemented effect, legal command, ownership boundary, and save/replay transition. See [Verification.md](Verification.md).
+The canonical [rules reference](Rules-Reference.md) records the recovered setup evidence and accepted conventions. Before gameplay integration, tests must cover every implemented effect, legal command, ownership boundary, and save/replay transition. See [Verification.md](Verification.md).
