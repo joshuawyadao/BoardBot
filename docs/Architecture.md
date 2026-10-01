@@ -1,6 +1,6 @@
 # Architecture direction
 
-This records the agreed boundaries for the first Horrified: Dungeons & Dragons game and the current synthetic interaction prototype. The React app runs locally with Vite and TypeScript. Node.js 24 and npm package versions are pinned for the prototype; game storage and supported browser versions for the finished milestone remain open.
+This records the agreed boundaries for the first Horrified: Dungeons & Dragons game and the current synthetic interaction prototype. The React app runs locally with Vite and TypeScript. The prototype targets Node.js 26 with matching Node 26 type definitions and pinned npm package versions; game storage and supported browser versions for the finished milestone remain open.
 
 ## Current prototype
 

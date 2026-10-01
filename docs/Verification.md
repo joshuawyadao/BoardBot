@@ -2,7 +2,9 @@
 
 ## Local command
 
-Requirements for the app checks: Git, Python 3.9 or newer, Node.js 24 with npm, and a POSIX shell on macOS or Linux (or WSL on Windows). The Playwright browser test also requires Chromium. No credentials are required.
+Requirements for the app checks: Git, Python 3.9 or newer, Node.js 26 with its bundled npm, and a POSIX shell on macOS or Linux (or WSL on Windows). The Playwright browser test also requires Chromium. No credentials are required.
+
+The supported Node major is recorded in `.nvmrc` and `package.json`. If using nvm, run `nvm install` and `nvm use` from the checkout, then confirm `node --version` reports `v26.x` before installing dependencies. When moving from Node 24, run `npm ci` again under Node 26 to refresh installed packages, including native tooling.
 
 From a checkout, run:
 
@@ -28,11 +30,11 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 - Git reports no whitespace errors in staged or unstaged diffs.
 - Sample-engine and session tests cover invalid and repeated actions, stale-command handling, explicit phase end at zero or with actions remaining, phase logging once, and numbered-turn continuity. Playwright tests cover direct destination execution, separately confirmed Wait, resolution locking, explicit phase end, stable help for unavailable cards, the floating tray and right-side Event log, local requests and reload reset, keyboard interaction, log scrolling, and narrow viewports.
 
-The repository verifier is a small hygiene check, not a complete Markdown parser or secret scanner. It does not validate external URLs, Markdown heading anchors, every credential format, content ownership, or gameplay. Review content before publishing it. The engine and browser tests validate only the synthetic sample, not Horrified rules, monsters, saves, or completed games. The prototype was exercised on a macOS 27 arm64 host with Node.js 24.19 and Chromium 153; target M1 hardware has not been separately validated.
+The repository verifier is a small hygiene check, not a complete Markdown parser or secret scanner. It does not validate external URLs, Markdown heading anchors, every credential format, content ownership, or gameplay. Review content before publishing it. The engine and browser tests validate only the synthetic sample, not Horrified rules, monsters, saves, or completed games. The prototype was initially exercised on a macOS 27 arm64 host with Node.js 24.19 and Chromium 153. On September 30, 2026, the Node 26 upgrade passed a clean install, build, eight engine/session tests, five repository tests, and eight Chromium tests on macOS 27.0.1 arm64 with Node.js 26.10.0, npm 11.19.1, and Chromium 153.0.8010.12. Target M1 hardware has not been separately validated.
 
 ## GitHub CI
 
-The `CI Verify` workflow runs repository checks, the locked npm install, build, engine tests, and Chromium interaction tests on pushes to `main`, pull requests, and manual dispatch. It uses pinned checkout and Node setup actions, read-only repository permissions, disabled persisted checkout credentials, a short timeout, and cancellation of superseded runs. Dependabot checks GitHub Actions and npm dependencies weekly. Repository rules require a pull request for `main`; direct pushes are blocked.
+The `CI Verify` workflow runs repository checks, the locked npm install, build, engine tests, and Chromium interaction tests on pushes to `main`, pull requests, and manual dispatch. It selects Node 26 from `.nvmrc` and uses pinned checkout and Node setup actions, read-only repository permissions, disabled persisted checkout credentials, a short timeout, and cancellation of superseded runs. Dependabot checks GitHub Actions and npm dependencies weekly; major `@types/node` updates are excluded so a future runtime upgrade can change `.nvmrc`, the package engine requirement, and types together. Minor and patch type updates remain enabled. Repository rules require a pull request for `main`; direct pushes are blocked.
 
 ## Acceptance checks for the planned solo game
 

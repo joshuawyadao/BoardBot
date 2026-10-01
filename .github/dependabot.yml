@@ -10,3 +10,7 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 3
+    ignore:
+      # Upgrade Node types with .nvmrc and package.json's runtime requirement.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
