@@ -8,7 +8,7 @@ Owner verification of the scoped components is complete. [Game-Data-Checklist.md
 
 This is the durable project baseline. Update it intentionally when agreed scope or requirements change; do not replace it for routine feature tasks. The [roadmap](Roadmap.md) summarizes milestones. [Implementation-Plan.md](Implementation-Plan.md) is temporary task tracking and may be rewritten for each task.
 
-The default sample still demonstrates the invented map and movement and explicit phase end. Importing prepared private JSON now opens the Fighter table, which implements the selected Monster pair, shared actions/resources, Perks, required choices, win/loss, and deterministic replay. It uses the stable action tray and engine-provided legality. The sample resets on reload. The solo table now supports all five base Heroes and persists locally before publishing committed outcomes. The owner approved the first playable layout; full-game feedback is the next human acceptance checkpoint.
+The default sample still demonstrates the invented map and movement and explicit phase end. Importing prepared private JSON now opens the Fighter table, which implements the selected Monster pair, shared actions/resources, Perks, required choices, win/loss, and deterministic replay. It uses the stable action tray and engine-provided legality. The sample resets on reload. The solo table now supports all five base Heroes and persists locally before publishing committed outcomes. The solo workspace now fits the full board, uses the physical regional arrangement, and shows action review/results in contextual panels. Full-game feedback remains the next human acceptance checkpoint.
 
 ## Scope
 - In: One human-controlled hero; all five base-game heroes selectable at milestone completion, validated individually; Displacer Beast and Beholder; a simplified labeled map with accurate connections; automated monster phases with required player choices; direct board movement and confirmation for consequential choices; local save/resume; offline gameplay after initial setup.
@@ -26,7 +26,8 @@ The default sample still demonstrates the invented map and movement and explicit
 
 ## Action and recovery contract
 
-- Keep the Event log secondary to the board: a narrow desktop column, short scrollable history, optional collapse with the latest event, and preserved reading position. The display choice never changes game state.
+- Keep the Event log secondary to the board: open solo history only on request, preserve reading position, and provide direct action/roll feedback without relying on history. The display choice never changes game state.
+- October 1 workspace feedback: fit the complete board without map scrolling; follow the physical regional layout; distinguish paths and special connections; make optional panels closable and movable between sides. Show action costs and confirmation clearly, with all Hero roll ranges before rolling and a visible saved result afterward. Required choices appear automatically and remain recoverable through a dedicated control.
 
 - October 1 action feedback: remove the invented Wait action. End Hero Phase forfeits unused actions; the next turn starts with its own allowance. Keep eligible free Perks available at zero actions until explicit phase end.
 - October 1 playtest feedback: favor map visibility with compact action buttons and an optional Hide/Show actions control. Keep phase status, remaining actions, and phase end available while collapsed; required choices stay visible separately. Hiding clears uncommitted selection without changing gameplay. Put optional Lair controls behind a disclosure.

@@ -38,7 +38,7 @@ test('restores the exact pending d20 response and exports a locally usable backu
   data.perks = data.perks.filter(perk => perk.id === 'perk-ott-steeltoes');
   await loadGame(page, data);
   await page.getByRole('button', { name: 'Special Action Hero ability' }).click();
-  await page.getByRole('button', { name: 'Confirm action', exact: true }).click();
+  await page.getByRole('button', { name: /^(Confirm action|Roll special action)$/ }).click();
   await expect(page.locator('.h-pending')).toBeVisible();
   const pending = await page.locator('.h-pending').innerText();
   const before = await savedPayload(page);

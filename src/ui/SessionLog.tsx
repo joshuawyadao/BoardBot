@@ -8,8 +8,8 @@ interface LogEntry {
 }
 
 /** Read-only presentation of observed events; collapsing never dispatches a command. */
-export function SessionLog({ entries, label = 'Session history', className = '' }: {
-  entries: readonly LogEntry[]; label?: string; className?: string;
+export function SessionLog({ entries, label = 'Session history', className = '', visible = true }: {
+  entries: readonly LogEntry[]; label?: string; className?: string; visible?: boolean;
 }) {
   const id = useId();
   const viewport = useRef<HTMLDivElement>(null);
@@ -20,13 +20,13 @@ export function SessionLog({ entries, label = 'Session history', className = '' 
 
   useLayoutEffect(() => {
     const element = viewport.current;
-    if (!element || collapsed) return;
+    if (!element || collapsed || !visible) return;
     element.scrollTop = followLatest.current ? element.scrollHeight : readingPosition.current;
-  }, [entries, collapsed]);
+  }, [entries, collapsed, visible]);
 
   function trackScroll() {
     const element = viewport.current;
-    if (!element || collapsed) return;
+    if (!element || collapsed || !visible) return;
     readingPosition.current = element.scrollTop;
     followLatest.current = element.scrollHeight - element.clientHeight - element.scrollTop < 24;
     setReadingHistory(!followLatest.current);

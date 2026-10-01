@@ -162,6 +162,29 @@ describe('Fighter commands (official rules pp. 5–10 and accepted v3 interpreta
     view.hero.items.push('fake'); expect(game.hero.items).toEqual([]);
   });
 
+  it('projects only public current-roll arithmetic while a response is pending, then retains the final roll', async () => {
+    const data = fighterFixture(); let game = await createFighterGame(data, 9);
+    holdPerks(game, ['perk-ott-steeltoes#1', 'perk-ott-steeltoes#2']); rollNext(game, 19);
+    game = act(data, game, { kind: 'special' });
+    const pendingView = getFighterView(data, game);
+    expect(pendingView.currentRoll).toEqual({ reason: 'Fighter special action', result: {
+      base: 19, modifiers: [], adjustedTotal: 19, effectiveResult: 19,
+    }, turn: game.turn });
+    expect(Object.keys(pendingView.currentRoll!)).toEqual(['reason', 'result', 'turn']);
+    expect(pendingView).not.toHaveProperty('roll');
+    (pendingView.currentRoll!.result.modifiers as number[]).push(8);
+    expect(game.roll!.result.modifiers).toEqual([]);
+
+    const modifier = game.pending!.options.find(option => option.id.includes('"delta":2'))!.id;
+    game = choose(data, game, [modifier]);
+    const modifiedView = getFighterView(data, game);
+    expect(modifiedView.currentRoll?.result).toEqual({ base: 19, modifiers: [2], adjustedTotal: 21, effectiveResult: 20 });
+    game = choose(data, game, ['pass']);
+    const finalView = getFighterView(data, game);
+    expect(finalView.currentRoll).toBeNull();
+    expect(finalView.rolls.at(-1)?.result).toEqual({ base: 19, modifiers: [2], adjustedTotal: 21, effectiveResult: 20 });
+  });
+
   it('rejects commands against changed or unbound game data', async () => {
     const data = fighterFixture(); const game = await createFighterGame(data, 3);
     const command = { id: 'different-data', revision: 0, actorSeatId: 'solo', action: { kind: 'end-phase' } as HeroAction };

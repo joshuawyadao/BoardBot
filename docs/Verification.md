@@ -87,3 +87,14 @@ The actual ignored private dataset also completed one command-driven defeat game
 The October 1 action refinement removes the invented Wait action from the sample engine and controls. Sample tests use legal moves to retain keyboard, duplicate-command, phase-boundary, and log coverage. Ending early clears the sample budget. Solo projection and save tests verify zero usable actions during the Monster Phase, rejection of ordinary actions while a required choice is pending, exact save restoration, and a fresh next-turn allowance without carryover. The browser regression exercises this through an early phase end, pending Monster choice, reload, and resume. Existing zero-action Perk coverage remains in place; the save format and replay state are unchanged.
 
 Validation passed under Node 26.10.0: build/typecheck, 88 unit tests across 13 files, five repository tests, and all 35 Chromium browser tests. Full human play acceptance remains open.
+
+
+## Fitted board and action feedback
+
+The subsequent October 1 workspace redesign replaces the solo table's scrollable fixed grid with a fitted SVG and original region-based schematic. The recognized 29-location layout uses the relative placement in the owner's verified board photo; synthetic boards retain a generic fallback. Public layout tests cover complete in-bounds, non-overlapping placement and routes around unrelated nodes. A local audit of the prepared private graph also found no ordinary or passage route crossing unrelated location buttons. Teleport lines appear only for a relevant selected Move; engine legality and adjacency are unchanged.
+
+Browser checks fit all 29 recognized positions at 1440×900, 1024×768, and 800×800, both with optional panels closed and on either side, without map or page scrolling. At 390px the entire board remains visible without horizontal/map scrolling; contextual panels stack below it and may require page scrolling. Tests cover panel repositioning by keyboard, close/reopen, history reading-position preservation, route highlights, visible confirmation below long descriptions, required-choice focus, and inspection of other panels while a choice remains pending.
+
+Every Hero's synthetic special-action test checks the imported roll-range table. Additional tests verify public pending arithmetic (including overflow), finalized outcomes, pre-roll review, visible roll feedback without the Event log, and exact pending-result restoration after reload. The projection exposes no response-window internals, hidden decks, or random state, and the save format is unchanged.
+
+Final checks passed under Node 26.10.0: build/typecheck, 94 unit tests across 15 files, five repository tests, and all 38 Chromium browser tests. Isolated visual checks used the actual local data at 1440×900, 1024×768, and 390×844; private screenshots remain outside Git. Full human play acceptance and the owner's assessment of the redesigned layout remain open.

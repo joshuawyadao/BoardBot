@@ -22,7 +22,9 @@ Open http://127.0.0.1:5173 in your browser. Choose Move in the compact tray, the
 
 ## Try the local solo game
 
-With the verified private packet present, run `npm run data:prepare`. Start the app, expand **Load prepared local game data**, and choose `local-data/horrified-dnd/game-data.json`. Choose a Hero before importing; an optional seed repeats setup. Use Pick Up to collect Items, Move to travel, and the challenge controls to advance and defeat the two Monsters. Use Hide actions for more map space; required game choices remain visible separately. Lair controls open only when requested. Ordinary actions stay locked while a required choice is pending. End the Hero Phase explicitly to forfeit unused actions and begin the Monster Phase; eligible Perks remain available at zero actions until you end the phase.
+With the verified private packet present, run `npm run data:prepare`. Start the app, expand **Load prepared local game data**, and choose `local-data/horrified-dnd/game-data.json`. Choose a Hero before importing; an optional seed repeats setup. Use Pick Up to collect Items, Move to travel, and the challenge controls to advance and defeat the two Monsters. The whole board fits the desktop table, arranged by the physical board’s regions. Inventory, Monsters, and Event log open on demand; move a panel left or right with ⇄ or close it for an unobstructed board. Hide actions leaves a slim phase-control strip. Lair controls are under Inventory. Required choices open automatically; if you inspect another panel, use Required choice to return. Ordinary actions stay locked while a required choice is pending. End the Hero Phase explicitly to forfeit unused actions and begin the Monster Phase; eligible Perks remain available at zero actions until you end the phase.
+
+Special Action opens the selected Hero’s roll ranges and effects before **Roll special action**. A persistent roll summary shows the value; **Latest result** shows its arithmetic, outcome, and recent events. Pending rolls are labeled **Awaiting response** until adjustments are finished.
 
 Each committed action and pending choice saves locally before its result appears. After reloading, choose **Resume saved game**. Returning to the sample keeps the saved game. **Export backup** downloads a private save; import it through the same setup panel. Starting another game requires an explicit replacement. Failed saves pause play and offer **Retry saving**, preserving the exact result. Recovery options can restore the previous save. See [local saves](docs/Local-Saves.md) for storage and recovery details.
 
@@ -32,7 +34,7 @@ Game data is stored with the save in this browser on this device. It is never up
 
 - Play the entire game on screen with one human-controlled hero, choosing from all five base-game heroes.
 - Face the Displacer Beast and Beholder, with rules-driven monster turns and required player choices.
-- Use a simplified labeled map with accurate connections and clearly indicated legal actions.
+- See the entire schematic board without map scrolling, with the physical board’s regional arrangement, clear ordinary and passage paths, and teleport links shown during a relevant Move.
 - Use a compact, collapsible action tray below the map, with stable positions and visible action costs. Phase status, the action count, and End Hero Phase stay available when collapsed. Temporarily illegal actions stay visible with a reason. Selecting Move highlights legal destinations, and clicking one executes it; consequential item or roll choices require confirmation. New actions stay locked while the current action resolves.
 - End the Hero Phase explicitly; reaching zero paid actions must not prevent eligible free perks before that boundary.
 - Save and resume locally, preserving committed dice/card outcomes and pending choices. Play without internet access after initial setup while the local development server is running.

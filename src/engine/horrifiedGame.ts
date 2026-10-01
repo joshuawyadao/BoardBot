@@ -515,6 +515,7 @@ export function getFighterView(data: GameData, state: FighterGame) {
   const visiblePerks = Object.fromEntries([...state.hero.perks, ...state.perkDiscard].map(id => { const perk = perkDefinition(data, state, id)!; return [id, { id, name: perk.name, effect: perk.effect }]; }));
   return { ...view, actions, moveDestinations: moves, guideOptions: guides, advanceOptions: advances, perkOptions: perks, visibleItems, visiblePerks,
     pending: state.pending ? { id: state.pending.id, title: state.pending.title, options: structuredClone(state.pending.options), min: state.pending.min, max: state.pending.max } : null,
+    currentRoll: state.roll ? { reason: state.roll.reason, result: structuredClone(state.roll.result), turn: state.turn } : null,
     rolls: structuredClone(state.rolls) };
 }
 export type GameView = ReturnType<typeof getFighterView>;
