@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { normalizeVerifiedRecord, validateGameData, type GameData } from "./gameData";
 
 const synthetic = (): GameData => ({
-  schemaVersion: 1,
+  schemaVersion: 2,
   contentKind: "synthetic",
   gameId: "invented-test-game",
   edition: "test",

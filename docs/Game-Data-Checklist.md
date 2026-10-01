@@ -47,7 +47,7 @@ The working checkout contains an ignored `local-data/horrified-dnd/` packet:
 
 The immutable imported record version is 6. Its SHA-256 at capture is `46ff404d179853f854dec0a8565139ec4455f8f60b7f41266cd4bbd16c97e853`. Older draft proposal/approval fields in that historical record are superseded by the accepted interpretations in `Rules-Reference.md`; never implement its earlier Perk-reshuffle proposal.
 
-A separate ignored `setup-evidence/` directory holds `online-monster-setup.jpg` and `setup-supplement.json`, including the source URL, photo hash, readable Beholder/Displacer setup facts, and cross-references to the verified board. This supplement is online printed-component evidence, not owner-confirmed v6 content. Preserve it with the private packet when moving worktrees. The current preparation command does not import it yet.
+A separate ignored `setup-evidence/` directory holds `online-monster-setup.jpg` and `setup-supplement.json`, including the source URL, photo hash, readable Beholder/Displacer setup facts, and cross-references to the verified board. This supplement is online printed-component evidence, not owner-confirmed v6 content. Preserve it with the private packet when moving worktrees. The preparation command now verifies and imports it into schema v2.
 
 The packet contains legacy absolute and temporary reference paths. Use the packet's own two photo files and source URLs; a legacy path does not imply the file still exists. Not every research image/PDF was archived. The structured confirmations remain available without those transient files.
 
@@ -63,9 +63,9 @@ Before packaging a public game-data manifest or redistributable assets, document
 
 ## Remaining implementation gates
 
-- Integrate the separately sourced selected-Monster setup supplement. The printed setup photo establishes start markers 4 and 1; the owner-verified board supplies their locations. Preserve both source grades and the immutable v6 packet.
+- Setup import and isolated solo initialization now have focused coverage. Preserve the distinct source grades and immutable v6 packet as the complete engine is built.
 - Integrate the tested v2 result and response helpers into the future rules engine, preserving the owner-approved policies in [Rules-Reference.md](Rules-Reference.md). Reopen only genuinely new gaps or conflicting evidence.
-- The [versioned private reference](Game-Data-Format.md) now validates the confirmed data, board connections, quantities, and provenance. Its component effects remain prose and its setup capability remains false until the new supplement is imported and validated; a successful conversion does not implement gameplay.
+- The [versioned private reference](Game-Data-Format.md) now validates the confirmed data, setup, board connections, quantities, and provenance. Component effects remain prose; a successful conversion does not implement gameplay. Charm Ray's Citizen pool, failed Displacer strikes, and multi-step escorts await owner interpretation before their effects are encoded.
 - Record the accepted interpretation version in sessions/replays. Keep published findings, reported answers, and BoardBot choices distinguishable.
 - Add source-linked engine tests and actual complete-game acceptance checks. Repository hygiene checks and synthetic engine/browser tests validate tooling and the invented sample turn, not Horrified component data, game balance, or human/bot multiplayer.
 

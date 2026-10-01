@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve, sep } from "node:path";
-import { normalizeVerifiedRecord } from "../src/data/gameData.ts";
+import { attachVerifiedSetup, normalizeVerifiedRecord } from "../src/data/gameData.ts";
 import { RULESET_VERSION } from "../src/engine/decisionPolicies.ts";
 
 const EXPECTED_RECORD_HASH = "46ff404d179853f854dec0a8565139ec4455f8f60b7f41266cd4bbd16c97e853";
@@ -36,7 +36,11 @@ export async function prepareGameData(packetDirectory: string) {
   const output = join(safeDirectory, "game-data.json");
   const recordBytes = await verifyPacket(safeDirectory);
   const source = JSON.parse(new TextDecoder().decode(recordBytes)) as unknown;
-  const normalized = normalizeVerifiedRecord(source, EXPECTED_RECORD_HASH, RULESET_VERSION);
+  const base = normalizeVerifiedRecord(source, EXPECTED_RECORD_HASH, RULESET_VERSION);
+  const setupDirectory = join(safeDirectory, "setup-evidence");
+  const supplement = JSON.parse(await readFile(join(setupDirectory, "setup-supplement.json"), "utf8")) as unknown;
+  const setupPhoto = await readFile(join(setupDirectory, "online-monster-setup.jpg"));
+  const normalized = attachVerifiedSetup(base, supplement, sha256(setupPhoto));
   const temporary = `${output}.${process.pid}.tmp`;
   try {
     await writeFile(temporary, `${JSON.stringify(normalized, null, 2)}\n`, { flag: "wx", mode: 0o600 });
@@ -49,7 +53,7 @@ export async function prepareGameData(packetDirectory: string) {
 
 async function main() {
   const normalized = await prepareGameData(packet);
-  process.stdout.write(`Verified private packet and wrote local game-data.json: ${normalized.board.locations.length} locations, ${normalized.board.edges.filter(edge => edge.kind === "ordinary").length} ordinary edges, ${normalized.items.reduce((total, item) => total + item.quantity, 0)} items, ${normalized.monsterCards.reduce((total, card) => total + card.quantity, 0)} monster cards, ${normalized.perks.reduce((total, perk) => total + perk.quantity, 0)} perks. Setup and prose effects remain unimplemented.\n`);
+  process.stdout.write(`Verified private packet and setup photo; wrote local game-data.json: ${normalized.board.locations.length} locations, ${normalized.board.edges.filter(edge => edge.kind === "ordinary").length} ordinary edges, ${normalized.items.reduce((total, item) => total + item.quantity, 0)} items, ${normalized.monsterCards.reduce((total, card) => total + card.quantity, 0)} monster cards, ${normalized.perks.reduce((total, perk) => total + perk.quantity, 0)} perks. Prose effects and gameplay remain unimplemented.\n`);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeVerifiedRecord, validateGameData, type GameData } from "./gameData";
+import { attachVerifiedSetup, normalizeVerifiedRecord, validateGameData, type GameData } from "./gameData";
 
 function generatedRecord() {
   const locations = Array.from({ length: 20 }, (_, index) => ({ number: index + 1, name: `Place ${index + 1}` }));
@@ -115,6 +115,29 @@ function generatedRecord() {
   return record;
 }
 
+const PHOTO_HASH = "b".repeat(64);
+const setupSupplement = (base: GameData) => {
+  const locationFor = (marker: number) => {
+    const id = base.board.monsterStarts.find(start => start.number === marker)!.location;
+    return { locationId: id, name: base.board.locations.find(location => location.id === id)!.name };
+  };
+  return {
+    supplementVersion: 1,
+    sourceKind: "photograph-of-printed-component",
+    sourceUrl: "https://example.com/synthetic-printed-mat.jpg",
+    sourceFile: "online-monster-setup.jpg",
+    sourceSha256: PHOTO_HASH,
+    ownerConfirmation: false,
+    baseRecordVersion: 6,
+    baseRecordSha256: base.provenance.recordSha256,
+    observedSetup: {
+      beholder: { boardStartMarker: 4, damageMarkersInSupply: 10, damageMarkerSymbol: "X", eyeRayReferenceBesideMat: true },
+      displacerBeast: { boardStartMarker: 1 },
+    },
+    boardCrossReference: { beholder: locationFor(4), displacerBeast: locationFor(1) },
+  };
+};
+
 describe("v6 normalization", () => {
   it("preserves verified multiplicities, location occurrences, and relative mat text", () => {
     const normalized = normalizeVerifiedRecord(generatedRecord(), "a".repeat(64), "synthetic-policy-v2");
@@ -156,5 +179,44 @@ describe("v6 normalization", () => {
       change(data);
       expect(() => validateGameData(data)).toThrow(error);
     }
+  });
+
+  it("attaches photographed setup through selected board markers", () => {
+    const base = normalizeVerifiedRecord(generatedRecord(), "a".repeat(64), "synthetic-policy-v2");
+    expect(base.setup).toBeUndefined();
+    expect(base.capabilities.setupVerified).toBe(false);
+    const ready = attachVerifiedSetup(base, setupSupplement(base), PHOTO_HASH);
+    expect(ready.schemaVersion).toBe(2);
+    expect(ready.capabilities.setupVerified).toBe(true);
+    expect(ready.capabilities.playableRulesEngine).toBe(false);
+    expect(ready.setup?.beholderLocation).toBe("location-4");
+    expect(ready.setup?.displacerLocation).toBe("location-1");
+    expect(ready.setup?.beholderDamageMarkers).toBe(10);
+    expect(ready.setup?.provenance.sourceKind).toBe("photograph-of-printed-component");
+    expect(base.setup).toBeUndefined();
+  });
+
+  it("rejects missing, mismatched, and tampered setup evidence", () => {
+    const base = normalizeVerifiedRecord(generatedRecord(), "a".repeat(64), "synthetic-policy-v2");
+    const supplement = setupSupplement(base);
+    expect(() => attachVerifiedSetup(base, {}, PHOTO_HASH)).toThrow(/Unsupported setup supplement version/);
+    expect(() => attachVerifiedSetup(base, supplement, "c".repeat(64))).toThrow(/photo hash mismatch/);
+    supplement.observedSetup.beholder.boardStartMarker = 1;
+    expect(() => attachVerifiedSetup(base, supplement, PHOTO_HASH)).toThrow(/selected monster start markers/);
+    supplement.observedSetup.beholder.boardStartMarker = 4;
+    supplement.boardCrossReference.beholder.locationId = "location-5";
+    expect(() => attachVerifiedSetup(base, supplement, PHOTO_HASH)).toThrow(/conflicts with board start marker/);
+    supplement.boardCrossReference.beholder.locationId = "location-4";
+    supplement.observedSetup.beholder.damageMarkersInSupply = 9;
+    expect(() => attachVerifiedSetup(base, supplement, PHOTO_HASH)).toThrow(/does not match the verified mat/);
+  });
+
+  it("requires setup field exactly when setup capability is true", () => {
+    const base = normalizeVerifiedRecord(generatedRecord(), "a".repeat(64), "synthetic-policy-v2");
+    base.capabilities.setupVerified = true;
+    expect(() => validateGameData(base)).toThrow(/Setup presence/);
+    base.capabilities.setupVerified = false;
+    base.setup = attachVerifiedSetup(base, setupSupplement(base), PHOTO_HASH).setup;
+    expect(() => validateGameData(base)).toThrow(/Setup presence/);
   });
 });

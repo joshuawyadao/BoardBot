@@ -10,7 +10,7 @@ This records the agreed boundaries for the first Horrified: Dungeons & Dragons g
 
 The private packet can be normalized using `npm run data:prepare`; [Game-Data-Format.md](Game-Data-Format.md) describes the schema, evidence, validation, and publication boundary. The output remains ignored and is not loaded into the sample app. Card and ability descriptions are reference prose, not executable effects.
 
-Pure helpers under `src/engine/decisionPolicies.ts` cover effective d20 bounds and optional response priority. `src/engine/gamePrimitives.ts` covers deterministic random state and board routes. These helpers have synthetic unit coverage but are not yet connected to a Horrified session. Monster setup, effect execution, persistence, and complete-game acceptance remain pending.
+Pure helpers under `src/engine/decisionPolicies.ts` cover effective d20 bounds and optional response priority. `src/engine/gamePrimitives.ts` covers deterministic random state and board routes. `src/engine/horrifiedState.ts` now creates a solo Fighter's initial state from schema v2's verified setup fields and exposes an explicit player projection that hides future draws and unrevealed Lairs. These modules have synthetic unit coverage but are not connected to the sample UI. Action/effect execution, persistence, and complete-game acceptance remain pending.
 
 ## Responsibilities
 
@@ -43,6 +43,8 @@ The interaction progresses through selection or targeting, optional confirmation
 Inject randomness so test cases can reproduce dice and card behavior. Version snapshots with the game data, rules interpretation, and save schema. Preserve random-generator state or recorded outcomes, deck and bag state, active effects, and the ordered command/result history. A seed alone is insufficient across rule or algorithm changes.
 
 Persist committed outcomes before presenting a recoverable pending choice. Saving after each resolved action remains the normal stable boundary. On reload, restore the pending choice and its existing outcome; do not execute the original action again. During implementation, choose an atomic persistence approach and define recovery for interruptions between state commit and rendering. Surface storage failures without claiming a session was saved.
+
+The isolated initializer now stores a SHA-256 fingerprint of the actual validated data, canonically ordered, alongside its rules and random-generator versions. Source labels alone cannot establish save compatibility. Persistence and restoration are still unimplemented.
 
 Reject malformed or incompatible saves without replacing the current session. Initial storage remains local; cloud sync and cross-device conflict handling are out of scope. Keep private reference photos and personal sessions outside tracked files.
 

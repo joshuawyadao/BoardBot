@@ -1,5 +1,5 @@
 /** Private, JSON-safe component data. The public repository contains no game text. */
-export const GAME_DATA_SCHEMA_VERSION = 1 as const;
+export const GAME_DATA_SCHEMA_VERSION = 2 as const;
 
 export interface GameData {
   schemaVersion: typeof GAME_DATA_SCHEMA_VERSION;
@@ -9,7 +9,18 @@ export interface GameData {
   interpretationVersion: string;
   provenance: { recordVersion: number; recordSha256: string; verification: string; componentPointers: Record<string, string>; componentSourceUrls: Record<string, string[]> };
   effectStatus: "reference-prose-only";
-  capabilities: { setupVerified: false; playableRulesEngine: false };
+  capabilities: { setupVerified: boolean; playableRulesEngine: false };
+  setup?: {
+    beholderLocation: string;
+    displacerLocation: string;
+    beholderDamageMarkers: number;
+    beholderReferenceReady: boolean;
+    provenance: {
+      sourceUrl: string;
+      photoSha256: string;
+      sourceKind: "photograph-of-printed-component" | "synthetic";
+    };
+  };
   board: {
     locations: { id: string; name: string; kind: "numbered" | "unnumbered" | "circle"; number?: number; region?: string; printedDragonExclusion?: boolean }[];
     edges: { from: string; to: string; kind: "ordinary" | "passage" | "teleport" }[];
@@ -88,12 +99,13 @@ const outcomeCoverage = (values: { min: number; max: number }[], path: string, e
 /** Reject malformed, inconsistent, or unsupported data before any session can use it. */
 export function validateGameData(value: unknown): GameData {
   const data = object(value, "gameData") as unknown as GameData;
-  if (data.schemaVersion !== 1) throw new Error("Unsupported game-data schema version");
+  if (data.schemaVersion !== GAME_DATA_SCHEMA_VERSION) throw new Error("Unsupported game-data schema version");
   if (data.contentKind !== "owner-verified" && data.contentKind !== "synthetic") throw new Error("Invalid content kind");
   string(data.gameId, "gameId"); string(data.edition, "edition");
   string(data.interpretationVersion, "interpretationVersion");
   if (data.effectStatus !== "reference-prose-only") throw new Error("Unsupported effect status");
-  if (data.capabilities?.setupVerified !== false || data.capabilities?.playableRulesEngine !== false) throw new Error("Unsupported capability claim");
+  if (typeof data.capabilities?.setupVerified !== "boolean" || data.capabilities?.playableRulesEngine !== false) throw new Error("Unsupported capability claim");
+  if (data.capabilities.setupVerified !== (data.setup !== undefined)) throw new Error("Setup presence must match setupVerified capability");
   integer(field(data.provenance, "recordVersion", "provenance"), "recordVersion", 0);
   string(data.provenance.recordSha256, "recordSha256");
   string(data.provenance.verification, "verification");
@@ -124,6 +136,19 @@ export function validateGameData(value: unknown): GameData {
   if (data.contentKind === "owner-verified" && (numbered.length !== 20 || locationIds.filter(x => x.kind === "unnumbered").length !== 5 || locationIds.filter(x => x.kind === "circle").length !== 4)) throw new Error("Incorrect verified board location count");
   const known = new Set(locationIds.map(x => x.id));
   const ref = (value: unknown, path: string) => { const id = string(value, path); if (!known.has(id)) throw new Error(`${path} refers to missing location ${id}`); return id; };
+  if (data.setup) {
+    const setup = object(data.setup, "setup");
+    ref(setup.beholderLocation, "setup.beholderLocation");
+    ref(setup.displacerLocation, "setup.displacerLocation");
+    integer(setup.beholderDamageMarkers, "setup.beholderDamageMarkers", 1);
+    if (setup.beholderReferenceReady !== true) throw new Error("Beholder reference setup must be verified");
+    const provenance = object(setup.provenance, "setup.provenance");
+    const sourceKind = string(provenance.sourceKind, "setup.provenance.sourceKind");
+    if (sourceKind !== "photograph-of-printed-component" && sourceKind !== "synthetic") throw new Error("Invalid setup source kind");
+    if (!/^https:\/\//.test(string(provenance.sourceUrl, "setup.provenance.sourceUrl"))) throw new Error("Invalid setup source URL");
+    if (!/^[a-f0-9]{64}$/.test(string(provenance.photoSha256, "setup.provenance.photoSha256"))) throw new Error("Invalid setup photo hash");
+    if (data.contentKind === "owner-verified" && sourceKind !== "photograph-of-printed-component") throw new Error("Owner setup requires printed photo evidence");
+  }
   const edges = arr(board.edges, "edges", (v, p) => {
     const x = object(v, p); const from = ref(x.from, `${p}.from`), to = ref(x.to, `${p}.to`);
     if (from === to) throw new Error(`${p} is a self edge`);
@@ -147,6 +172,13 @@ export function validateGameData(value: unknown): GameData {
   const lairLocations = arr(board.lairLocations, "lairLocations", ref);
   unique(lairLocations, "lair locations");
   if (data.contentKind === "owner-verified" && (starts.length !== 6 || lairLocations.length !== 4)) throw new Error("Incorrect verified board markers");
+  if (data.setup) {
+    const beholderStart = starts.find(start => start.number === 4);
+    const displacerStart = starts.find(start => start.number === 1);
+    if (data.setup.beholderLocation !== beholderStart?.location || data.setup.displacerLocation !== displacerStart?.location) {
+      throw new Error("Setup locations conflict with selected board start markers");
+    }
+  }
   const heroes = arr(data.heroes, "heroes", (value, path) => {
     const hero = object(value, path);
     string(hero.id, `${path}.id`);
@@ -286,6 +318,7 @@ export function validateGameData(value: unknown): GameData {
     string(bd[key], `beholder.defeat.${key}`);
   }
   integer(beholder.damageMarkers, "beholder.damageMarkers", 1);
+  if (data.setup && data.setup.beholderDamageMarkers !== beholder.damageMarkers) throw new Error("Setup damage marker count conflicts with Beholder mat");
   const displacer = object(monsters.displacerBeast, "displacerBeast");
   integer(displacer.frenzyOrder, "displacer.frenzyOrder", 1);
   activationSymbols(displacer.activationSymbols, "displacer.activationSymbols");
@@ -604,7 +637,7 @@ export function normalizeVerifiedRecord(recordValue: unknown, recordSha256: stri
     },
   };
   const data: GameData = {
-    schemaVersion: 1,
+    schemaVersion: GAME_DATA_SCHEMA_VERSION,
     contentKind: "owner-verified",
     gameId: "horrified-dnd",
     edition: "original-base",
@@ -647,4 +680,69 @@ export function normalizeVerifiedRecord(recordValue: unknown, recordSha256: stri
     monsters: { beholder: beholderData, displacerBeast: displacerData },
   };
   return validateGameData(data);
+}
+
+/** Attach independently photographed printed setup without mutating the immutable v6 record. */
+export function attachVerifiedSetup(
+  base: GameData,
+  supplementValue: unknown,
+  actualPhotoSha256: string,
+): GameData {
+  validateGameData(base);
+  if (base.contentKind !== "owner-verified" || base.capabilities.setupVerified || base.setup) {
+    throw new Error("Setup supplement requires unconfigured owner-verified data");
+  }
+  const supplement = object(supplementValue, "setup supplement");
+  if (supplement.supplementVersion !== 1) throw new Error("Unsupported setup supplement version");
+  if (supplement.baseRecordVersion !== base.provenance.recordVersion ||
+      supplement.baseRecordSha256 !== base.provenance.recordSha256) {
+    throw new Error("Setup supplement does not match the verified base record");
+  }
+  if (supplement.ownerConfirmation !== false) throw new Error("Setup source must not claim owner confirmation");
+  if (supplement.sourceKind !== "photograph-of-printed-component") throw new Error("Unsupported setup source kind");
+  if (supplement.sourceFile !== "online-monster-setup.jpg") throw new Error("Unexpected setup photo file");
+  const sourceUrl = string(supplement.sourceUrl, "setup.sourceUrl");
+  if (!/^https:\/\//.test(sourceUrl)) throw new Error("Invalid setup source URL");
+  const expectedPhotoSha256 = string(supplement.sourceSha256, "setup.sourceSha256");
+  if (!/^[a-f0-9]{64}$/.test(expectedPhotoSha256) || expectedPhotoSha256 !== actualPhotoSha256) {
+    throw new Error("Setup photo hash mismatch");
+  }
+  const observed = object(supplement.observedSetup, "observedSetup");
+  const beholder = object(observed.beholder, "observedSetup.beholder");
+  const displacer = object(observed.displacerBeast, "observedSetup.displacerBeast");
+  const beholderMarker = integer(beholder.boardStartMarker, "beholder start marker", 1);
+  const displacerMarker = integer(displacer.boardStartMarker, "displacer start marker", 1);
+  if (beholderMarker !== 4 || displacerMarker !== 1) throw new Error("Unexpected selected monster start markers");
+  const beholderDamageMarkers = integer(beholder.damageMarkersInSupply, "beholder damage markers", 1);
+  if (beholderDamageMarkers !== base.monsters.beholder.damageMarkers ||
+      beholder.damageMarkerSymbol !== "X" || beholder.eyeRayReferenceBesideMat !== true) {
+    throw new Error("Beholder setup does not match the verified mat and reference card");
+  }
+  const crossReference = object(supplement.boardCrossReference, "boardCrossReference");
+  const resolveStart = (marker: number, reference: unknown, path: string) => {
+    const locationId = base.board.monsterStarts.find(start => start.number === marker)?.location;
+    const boardLocation = base.board.locations.find(location => location.id === locationId);
+    const printedReference = object(reference, path);
+    if (!boardLocation || printedReference.locationId !== locationId || printedReference.name !== boardLocation.name) {
+      throw new Error(`${path} conflicts with board start marker ${marker}`);
+    }
+    return locationId;
+  };
+  const beholderLocation = resolveStart(beholderMarker, crossReference.beholder, "boardCrossReference.beholder");
+  const displacerLocation = resolveStart(displacerMarker, crossReference.displacerBeast, "boardCrossReference.displacerBeast");
+  return validateGameData({
+    ...base,
+    capabilities: { ...base.capabilities, setupVerified: true },
+    setup: {
+      beholderLocation,
+      displacerLocation,
+      beholderDamageMarkers,
+      beholderReferenceReady: true,
+      provenance: {
+        sourceUrl,
+        photoSha256: actualPhotoSha256,
+        sourceKind: "photograph-of-printed-component",
+      },
+    },
+  });
 }

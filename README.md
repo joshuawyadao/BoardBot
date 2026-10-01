@@ -5,7 +5,7 @@
 
 BoardBot is a project for playing board games solo against bots on your computer and trying out games, strategies, and rule variations through repeatable playtests.
 
-> **Status: interaction prototype and verified component research.** A local React app demonstrates a synthetic sample turn; no Horrified: Dungeons & Dragons game is playable yet. The first game milestone targets an M1 MacBook Pro. Owner verification of the scoped components is complete. Private component-data normalization and isolated dice, response, and route helpers have focused test coverage. Game setup, effect execution, saving, complete-game validation, and publication gates remain pending; the references below preserve that research.
+> **Status: interaction prototype and verified component research.** A local React app demonstrates a synthetic sample turn; no Horrified: Dungeons & Dragons game is playable yet. The first game milestone targets an M1 MacBook Pro. Owner verification of the scoped components is complete. Private component-data normalization and isolated dice, response, and route helpers have focused test coverage. An isolated solo setup initializer is tested. Effect execution, UI integration, saving, complete-game validation, and publication gates remain pending; the references below preserve that research.
 
 ## Try the sample turn
 

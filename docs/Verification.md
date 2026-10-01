@@ -34,6 +34,8 @@ The repository verifier is a small hygiene check, not a complete Markdown parser
 
 The data and policy foundation was checked under Node.js 26.10.0: the build, 34 unit tests across seven files, five repository tests, and eight existing Chromium tests passed. The private packet also passed the preparation command. The 26 added unit tests cover data, decision policies, random state, and graph primitives; no playable-game acceptance is implied.
 
+The setup continuation adds schema v2 validation for the photographed supplement and seven isolated setup tests. It checks physical piece conservation, initial supplies and locations, deterministic setup/refill, content fingerprints, unsupported inputs, and hidden-information projection. The actual private packet prepares and initializes successfully; missing/tampered setup evidence preserves the previous prepared output. This is setup coverage, not action resolution or completed-game acceptance.
+
 ## GitHub CI
 
 The `CI Verify` workflow runs repository checks, the locked npm install, build, engine tests, and Chromium interaction tests on pushes to `main`, pull requests, and manual dispatch. It selects Node 26 from `.nvmrc` and uses pinned checkout and Node setup actions, read-only repository permissions, disabled persisted checkout credentials, a short timeout, and cancellation of superseded runs. Dependabot checks GitHub Actions and npm dependencies weekly; major `@types/node` updates are excluded so a future runtime upgrade can change `.nvmrc`, the package engine requirement, and types together. Minor and patch type updates remain enabled. Repository rules require a pull request for `main`; direct pushes are blocked.
