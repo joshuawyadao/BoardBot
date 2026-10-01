@@ -1,25 +1,27 @@
 # Plan
 
-Complete the Node.js 26 upgrade on PR #4 by aligning the runtime, type definitions, dependency metadata, and contributor documentation. Validate the existing prototype under Node 26 before publishing the updated PR.
+Complete the six-task path from BoardBot's synthetic interaction prototype to a local, playable solo Horrified: Dungeons & Dragons milestone. Preserve the verified evidence and accepted interpretations, build and validate one Hero before extending to all five, and stop for user input when a rule or product choice is unresolved. This task plan tracks execution; Work-Plan.md remains the durable baseline.
 
 ## Scope
-- In: PR #4, `.nvmrc`, package metadata and lockfile, Dependabot policy, setup and architecture documentation, and Node 26 validation.
-- Out: Gameplay changes, unrelated dependency upgrades, private research data, and changes to other projects' Node installations.
+- In: Current feature branch `codex/identify-remaining-boardbot-work`; private evidence recovery; versioned game data and validation; two remaining rule decisions; one human-controlled Hero against Beholder and Displacer Beast; all five base Heroes by completion; local recovery, accessible controls, deterministic replay, and offline acceptance on the target Mac.
+- Out: Other monsters or editions, multiplayer and strategic Hero bots, cloud services, accounts, paid dependencies, full commercial text or photos in public commits, polished artwork, desktop packaging, and merging pull requests without explicit user authorization.
 
 ## Action items
-[x] Review runtime references, CI, locked dependency requirements, and existing unit, repository, and browser checks; reconcile the PR branch with current main.
-[x] Align `.nvmrc`, `package.json`, and `package-lock.json` with Node 26 and retain the PR's Node 26 types.
-[x] Keep future major `@types/node` upgrades coordinated with the runtime through `.github/dependabot.yml`.
-[x] Update `README.md`, `docs/Architecture.md`, `docs/Verification.md`, and the runtime reference in `docs/Work-Plan.md`; preserve historical validation evidence and the durable game requirements.
-[x] Perform a clean locked install, `npm run verify`, and `npm run test:e2e` with Node 26; record the actual runtime and results. Existing tests cover the unchanged executable behavior, so no test files need changing.
-[x] Review the final diff for runtime/type mismatches, dependency churn, documentation drift, and preservation of current main.
-[ ] Commit and push the task-owned changes to PR #4, update its title and description, and confirm CI on the pushed commit before completing the previously authorized merge and branch cleanup.
-
-## Validation
-
-Local validation passed on macOS 27.0.1 arm64 using the official Node.js 26.10.0 distribution and bundled npm 11.19.1: a clean `npm ci`, `npm run verify` (build, eight unit tests, five repository tests), and `CI=1 npm run test:e2e` (eight Chromium 153.0.8010.12 tests). The existing fsevents native module also loaded successfully under Node 26. The locked application dependencies did not change beyond Dependabot's original Node/Undici type updates. Independent Brooks review found no actionable issues.
-
-Publication and merge are deliberately unchecked in this pre-push snapshot. Record CI against the actual pushed commit and the merge outcome in [PR #4](https://github.com/joshuawyadao/BoardBot/pull/4), rather than claiming future checks passed in the commit they will validate.
+[x] Inspect README.md, Architecture.md, Product-Brief.md, Work-Plan.md, Roadmap.md, Game-Data-Checklist.md, Rules-Reference.md, Verification.md, and existing Vitest/Playwright coverage. Confirm this clean feature branch matches GitHub main at `2dbb7b6`, including the merged research and Node 26 upgrades. Locate the separately preserved version-6 evidence record and both photos; confirm the record matches the canonical SHA-256. The current worktree has no local packet yet.
+[x] Resolve the two rule questions with the user and update this plan before checkpointing it. After the plan checkpoint, record approved policies and interpretation version `boardbot-dnd-2026-09-30-v2` in Rules-Reference.md.
+[ ] Complete task 1: checkpoint the resolved plan locally using save-branch guardrails before implementation, then restore the private record and photos under ignored `local-data/horrified-dnd/`, generate and verify a manifest, retain the separate source copy, and confirm nothing private is tracked.
+[ ] Complete task 2: add a versioned data schema, strict validator, and local import/conversion path; cross-check IDs, all board connections, quantities, references, and provenance against the verified packet. Keep real component data private while publication rights remain unresolved; use original synthetic fixtures for public tests and clearly document what a fresh clone can run. Reject incomplete or inconsistent data without substituting invented game content.
+[ ] Complete task 3: implement and test the approved result and response policies, recording interpretation versions in game/session data. Preserve printed timing, resource ownership, accepted graph choices, and the existing conventions for Perk exhaustion, rerolls, Displacer powers, and movement away.
+[ ] Complete task 4: build a pure rules engine and session commands for one validated Hero, setup, movement and escort, items, citizens, actions, Perks, both monsters, required choices, and victory/defeat. Inject randomness, reject invalid/stale/duplicate commands without side effects, and connect the existing tray, board, explanations, and log to engine legality. Complete an internal game and present a runnable build for user feedback before expanding Hero support.
+[ ] Complete task 5: add atomic local autosave and validated resume, preserving committed rolls, draws, inventories, effects, pending choices, and event history. Test interruption, storage failure, incompatible/malformed saves, and replay without duplicate execution. Implement and independently validate the remaining four base Heroes, exposing only supported behavior.
+[ ] Maintain README.md, Architecture.md, Product-Brief.md, Game-Data-Checklist.md, Rules-Reference.md, Verification.md, Work-Plan.md, and Roadmap.md as each capability becomes real; add a focused data/storage document if needed. Keep planned, implemented, tested, and unresolved behavior distinct, including local-only data and publication boundaries.
+[ ] Complete task 6: add source-linked engine tests, deterministic complete-game scenarios, and browser acceptance for every Hero and both outcomes. Cover illegal actions, resource ownership and hidden information, duplicate submissions, optional/required responses, zero-action Perks, accepted edge cases, reload recovery, keyboard controls, responsive layout, and blocked external network requests with localhost available. Run `npm run verify` and `npm run test:e2e` under Node 26; validate on the actual M1 Mac or request a concrete user-assisted acceptance pass if that hardware is unavailable.
+[ ] Review each coherent slice and create local commit checkpoints with focused checks. After complete validation, save and push task-owned changes using save-branch; prepare the feature for the required PR review workflow, leaving main and merging under user control. Record actual commits, test results, user feedback, and any remaining blockers here; mark the goal complete only when all six tasks meet their acceptance criteria.
 
 ## Open questions
-- None. The user authorized a complete Node 26 upgrade on PR #4 and previously authorized merging the reviewed PRs once ready.
+- None currently. Stop for new material rule/product questions or the first playable-build feedback checkpoint.
+
+## Accepted decisions
+- On September 30, the user approved retaining the full adjusted d20 total and applying rules to an effective value capped to 1-20. A legal +2 modifier remains usable on 19 and resolves effectively as 20; an adjustment below 1 resolves effectively as 1. Preserve base roll, modifiers, adjusted total, and effective result in history/saves; apply any roll reward once after permitted adjustments close.
+- The user approved active-seat-first, then normal turn order for optional responses, with prompts only for owners who currently have at least one legal response relevant to the event. Resolve one response fully, recalculate eligibility, and restart ordering; close after all eligible owners pass, or immediately if none are eligible. Explicit printed timing and the accepted Skeemo closure convention take precedence. No response timeout chooses for the player.
+- Preserve the existing single-Hero milestone and all previously accepted interpretations. Public code and synthetic tests can be saved; the verified runtime dataset stays local until publication rights are documented.
