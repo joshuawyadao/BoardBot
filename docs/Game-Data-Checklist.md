@@ -9,7 +9,7 @@ Scope: original Horrified: Dungeons & Dragons, the five base Heroes, Beholder an
 1. Use this register for physical coverage and evidence access.
 2. Use [Rules-Reference.md](Rules-Reference.md) for published findings, reported clarifications, accepted working interpretations, source links, and remaining questions. It is the canonical rules research memory; do not repeat source searches just because a temporary task plan has changed.
 3. Use the private local evidence packet for exact component fields. Its data has been confirmed by the owner; distinguish printed facts from interpretive decisions.
-4. Reopen research only for a documented gap, a conflicting observation, a different edition, or new authoritative evidence. No additional owner photos or readouts are currently requested.
+4. Reopen research only for a documented gap, a conflicting observation, a different edition, or new authoritative evidence. A focused readout of the two selected Monster mats' reverse-side setup instructions is pending after the implementation audit below; the completed component faces do not need to be checked again.
 
 ## Confirmed component coverage
 
@@ -61,8 +61,9 @@ Before packaging a public game-data manifest or redistributable assets, document
 
 ## Remaining implementation gates
 
-- Resolve the explicitly open rules boundaries in [Rules-Reference.md](Rules-Reference.md), notably Ott's out-of-range results and competing optional-response order, before implementing affected behavior.
-- Translate confirmed component data into a reviewed, versioned representation with suitable provenance. Check every board edge and deck multiplicity against the packet, not the coverage totals alone.
+- Confirm the selected Monster mats' reverse-side setup steps and initial positions. The stored gameplay faces and board start numbers do not establish that mapping. Preserve the completed verification above and request only this newly identified gap.
+- Integrate the tested v2 result and response helpers into the future rules engine, preserving the owner-approved policies in [Rules-Reference.md](Rules-Reference.md). Reopen only genuinely new gaps or conflicting evidence.
+- The [versioned private reference](Game-Data-Format.md) now validates the confirmed data, board connections, quantities, and provenance. Its component effects remain prose and setup is explicitly unverified; a successful conversion does not implement gameplay.
 - Record the accepted interpretation version in sessions/replays. Keep published findings, reported answers, and BoardBot choices distinguishable.
 - Add source-linked engine tests and actual complete-game acceptance checks. Repository hygiene checks and synthetic engine/browser tests validate tooling and the invented sample turn, not Horrified component data, game balance, or human/bot multiplayer.
 

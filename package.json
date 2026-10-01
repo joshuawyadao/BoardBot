@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "verify": "npm run build && npm test && ./scripts/verify-repository.sh"
+    "verify": "npm run build && npm test && ./scripts/verify-repository.sh",
+    "data:prepare": "node scripts/prepare-game-data.ts"
   },
   "dependencies": {
     "react": "19.3.0",

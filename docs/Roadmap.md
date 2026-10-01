@@ -12,6 +12,8 @@ Deliver a local React browser game for the M1 MacBook Pro, using one human-contr
 
 **In progress:** A React sample-turn shell demonstrates a floating action tray with eight stable card positions, descriptions in a reserved help area, direct movement to highlighted destinations, a separately confirmed invented Wait, action counts, an explicit End Hero Phase, a short resolution lock, and restart. Seven cards are unavailable previews with explanations, not game actions. The right-side Event log keeps numbered sample turns and moves below the board on narrow screens. Its four-location map, explorer, Move/Wait actions, and three-action allowance are invented. Reloading resets the session. It does not satisfy the game, data, monster, offline acceptance, or save/resume criteria below.
 
+Private data normalization and isolated dice, response, random-state, and route helpers now support the engine foundation. They are not connected to the sample UI. A focused readout of the selected Monster mats' reverse-side setup steps remains pending; their verified gameplay faces do not need to be checked again. See [local data preparation](Game-Data-Format.md).
+
 Build in this order:
 
 1. Preserve the verified source packet, encode suitable game data, and resolve the remaining rules/publication gates; use synthetic fixtures where public data is unavailable.

@@ -15,7 +15,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-`npm run verify` typechecks and builds the React prototype, runs its engine and session tests, then calls `./scripts/verify-repository.sh`. The shell script finds the repository relative to itself, so an absolute script path also works from another directory. It runs the repository verifier, Python unittest discovery, and Git whitespace checks for staged and unstaged changes. The Python tests can also be run directly:
+`npm run verify` typechecks the application and preparation script, builds the React prototype, runs sample and foundation tests, then calls `./scripts/verify-repository.sh`. The shell script finds the repository relative to itself, so an absolute script path also works from another directory. It runs the repository verifier, Python unittest discovery, and Git whitespace checks for staged and unstaged changes. The Python tests can also be run directly:
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
@@ -30,7 +30,9 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 - Git reports no whitespace errors in staged or unstaged diffs.
 - Sample-engine and session tests cover invalid and repeated actions, stale-command handling, explicit phase end at zero or with actions remaining, phase logging once, and numbered-turn continuity. Playwright tests cover direct destination execution, separately confirmed Wait, resolution locking, explicit phase end, stable help for unavailable cards, the floating tray and right-side Event log, local requests and reload reset, keyboard interaction, log scrolling, and narrow viewports.
 
-The repository verifier is a small hygiene check, not a complete Markdown parser or secret scanner. It does not validate external URLs, Markdown heading anchors, every credential format, content ownership, or gameplay. Review content before publishing it. The engine and browser tests validate only the synthetic sample, not Horrified rules, monsters, saves, or completed games. The prototype was initially exercised on a macOS 27 arm64 host with Node.js 24.19 and Chromium 153. On September 30, 2026, the Node 26 upgrade passed a clean install, build, eight engine/session tests, five repository tests, and eight Chromium tests on macOS 27.0.1 arm64 with Node.js 26.10.0, npm 11.19.1, and Chromium 153.0.8010.12. Target M1 hardware has not been separately validated.
+The repository verifier is a small hygiene check, not a complete Markdown parser or secret scanner. It does not validate external URLs, Markdown heading anchors, every credential format, content ownership, or gameplay. Review content before publishing it. The browser tests validate the synthetic sample. Foundation unit tests separately cover normalized data validation, private packet failure handling, effective d20 results, optional response priority, random-state replay, and graph traversal using synthetic fixtures. These helpers are not integrated gameplay; the suite does not validate complete Horrified rules, monsters, saves, or completed games. The prototype was initially exercised on a macOS 27 arm64 host with Node.js 24.19 and Chromium 153. On September 30, 2026, the Node 26 upgrade passed a clean install, build, eight engine/session tests, five repository tests, and eight Chromium tests on macOS 27.0.1 arm64 with Node.js 26.10.0, npm 11.19.1, and Chromium 153.0.8010.12. Target M1 hardware has not been separately validated.
+
+The data and policy foundation was checked under Node.js 26.10.0: the build, 34 unit tests across seven files, five repository tests, and eight existing Chromium tests passed. The private packet also passed the preparation command. The 26 added unit tests cover data, decision policies, random state, and graph primitives; no playable-game acceptance is implied.
 
 ## GitHub CI
 
@@ -38,11 +40,11 @@ The `CI Verify` workflow runs repository checks, the locked npm install, build, 
 
 ## Acceptance checks for the planned solo game
 
-No Horrified gameplay tests exist yet. During implementation, add focused engine tests for setup, legal/illegal commands, action budgets, movement, resource costs, hero abilities, monster resolution, and end conditions. Derive cases from verified sources in the [game-data checklist](Game-Data-Checklist.md); keep unresolved interpretations visible.
+No complete Horrified gameplay tests exist yet. Isolated policy, graph, and data tests are only prerequisite coverage. During implementation, add focused engine tests for setup, legal/illegal commands, action budgets, movement, resource costs, hero abilities, monster resolution, and end conditions. Derive cases from verified sources in the [game-data checklist](Game-Data-Checklist.md); keep unresolved interpretations visible.
 
 Test that invalid actions preserve state and that repeated confirmation cannot spend twice, redraw, or reroll. Exercise effects that alter action availability and decisions within monster phases. Verify the selected pair and each base hero independently, then complete games through both victory and defeat paths.
 
-Use the accepted working interpretations and explicit gaps in [Rules-Reference.md](Rules-Reference.md) when writing those tests. Include exhausted Item and Perk supplies, repeated Displacer powers, Cleric self-rescue and effect expiry, Wizard destination 1, dice adjustment finalization, and the chosen board routes. Ott out-of-range results and competing optional responses need an explicit policy before assertions can encode expected behavior. No such gameplay tests were added by the research handoff.
+Use the accepted working interpretations and explicit gaps in [Rules-Reference.md](Rules-Reference.md) when writing those tests. Include exhausted Item and Perk supplies, repeated Displacer powers, Cleric self-rescue and effect expiry, Wizard destination 1, dice adjustment finalization, and the chosen board routes. Use the owner-approved v2 policies for out-of-range effective d20 results and competing optional responses. No such gameplay tests were added by the research handoff.
 
 When multiplayer is implemented later, cover one, two, and five Hero seats with human/bot controllers, co-located and off-board targets, cross-seat Perks, resource ownership, and active-player versus attacked-Hero choices. Logical consistency of a rule across seat counts is not evidence of tested balance or an implemented multiplayer feature.
 

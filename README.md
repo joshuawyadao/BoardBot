@@ -5,7 +5,7 @@
 
 BoardBot is a project for playing board games solo against bots on your computer and trying out games, strategies, and rule variations through repeatable playtests.
 
-> **Status: interaction prototype and verified component research.** A local React app demonstrates a synthetic sample turn; no Horrified: Dungeons & Dragons game is playable yet. The first game milestone targets an M1 MacBook Pro. Owner verification of the scoped components is complete. Encoding those components, implementing the game rules, and resolving the remaining rules and publication gates are still pending; the references below preserve that research.
+> **Status: interaction prototype and verified component research.** A local React app demonstrates a synthetic sample turn; no Horrified: Dungeons & Dragons game is playable yet. The first game milestone targets an M1 MacBook Pro. Owner verification of the scoped components is complete. Private component-data normalization and isolated dice, response, and route helpers have focused test coverage. Game setup, effect execution, saving, complete-game validation, and publication gates remain pending; the references below preserve that research.
 
 ## Try the sample turn
 
@@ -41,7 +41,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-The first command typechecks, builds, runs sample engine and session tests, and runs repository checks. The browser tests use Playwright Chromium. `./scripts/verify-repository.sh` remains available for repository checks alone. The shell script works on macOS and Linux; Windows contributors can use WSL. These are contributor prerequisites, not supported platforms for a finished game. No API keys are needed. See [verification](docs/Verification.md) for coverage and limits.
+The first command typechecks, builds, runs sample and foundation tests, and runs repository checks. The browser tests use Playwright Chromium. `./scripts/verify-repository.sh` remains available for repository checks alone. The shell script works on macOS and Linux; Windows contributors can use WSL. These are contributor prerequisites, not supported platforms for a finished game. No API keys are needed. See [verification](docs/Verification.md) for coverage and limits.
 
 ## Project direction
 
@@ -54,6 +54,7 @@ The first command typechecks, builds, runs sample engine and session tests, and 
 | [Work plan](docs/Work-Plan.md) | Finalized planning baseline, build order, and completion criteria |
 | [Game-data checklist](docs/Game-Data-Checklist.md) | Confirmed component coverage, private evidence access, and publication gates |
 | [Rules reference](docs/Rules-Reference.md) | Durable sourced findings, accepted interpretations, open cases, and multiplayer boundaries |
+| [Local game-data format](docs/Game-Data-Format.md) | Private data preparation, schema, and engine-foundation limits |
 
 ## Public development and game content
 
