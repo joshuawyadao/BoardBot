@@ -1,26 +1,20 @@
 # Plan
 
-Remove the invented Wait action and use explicit End Hero Phase to forfeit remaining actions. Keep zero-action Perks available before the phase ends and preserve existing solo saves.
+Redesign the solo table around a complete, fitted board with the physical board's regional arrangement, clear routes, contextual panels, and visible dice outcomes. Keep the existing game rules, command validation, private-data boundary, and save compatibility.
 
 ## Scope
-- In: Sample engine and controls, phase-end action budgets, focused unit/browser regressions, current behavior documentation, checkpoint commits and final branch push.
-- Out: New game actions, rules interpretations, onboarding changes, save-format migrations, multiplayer, PR creation, and merging.
+- In: Responsive solo workspace; verified board-relative positions; ordinary/passage/teleport route clarity; collapsible and repositionable contextual panels; explicit action confirmation and roll results; Hero outcome ranges from imported data; focused tests, canonical docs, checkpoint commits, final push.
+- Out: Copied board artwork or public private-data assets, rules or save-format changes, new Monsters, multiplayer, deployment, PR creation, and merging. Keep the synthetic practice table independently usable.
 
 ## Action items
-[x] Inspect README, Architecture, Rules-Reference, Game-Data-Checklist, Verification, sample action/session code, solo phase transitions, and related tests.
-[x] Checkpoint the resolved plan on the existing feature branch.
-[x] Remove Wait from the sample engine and UI, including obsolete confirmation controls and styles; clear unused actions on sample phase end.
-[x] Expose zero usable actions outside the solo Hero Phase through the engine projection, preserving internal replay snapshots and existing save compatibility; explain forfeiture on the phase controls and in action help.
-[x] Update sample engine/session and browser tests to use actual moves, preserving duplicate, stale, keyboard, collapse, and log coverage; verify early end, no action carryover, and zero-action Perks.
-[x] Update README, Architecture, Product-Brief, Work-Plan, and Verification to describe movement and action forfeiture without Wait.
-[x] Run focused checks, npm run verify, and npm run test:e2e; review the diff and prepare the completed branch for final save/push.
+[x] Inspect current layout, projection, action flow, saved board photo, verified location graph, Hero outcome schema, and existing browser tests.
+[ ] Checkpoint the resolved plan on the existing feature branch.
+[ ] Replace the fixed scrollable grid with a fitted board arranged by the physical regions, use clear ordinary/passage routes, and show teleport links only when relevant; preserve graph legality and keyboard operation.
+[ ] Rebuild the solo workspace with compact persistent status/actions and on-demand inventory, Monster, log, and selection panels; let users close optional panels and move the panel to either side.
+[ ] Expose only committed public pending-roll values, show prominent pending/final dice arithmetic and ability effects, and display imported special-action roll ranges before confirmation.
+[ ] Update browser coverage for fitted board geometry, region layout, reachable routes, panel visibility/position, keyboard movement, confirmation, outcomes, save recovery, and narrow screens; retain rules and duplicate-command coverage.
+[ ] Update README, Architecture, Product-Brief, Work-Plan, and Verification to record the new interaction model and remaining human acceptance.
+[ ] Run focused tests, npm run verify, and npm run test:e2e; inspect isolated desktop and narrow screenshots, review the diff, checkpoint and push.
 
 ## Open questions
-- None. The current full-game command boundary already blocks paid actions during the Monster Phase and resets the next Hero's allowance. A projection-only budget change avoids invalidating existing replay-validated saves.
-
-
-## Execution notes
-- Resolved plan checkpoint: `7a7674e` (Plan removal of the invented Wait action).
-- Focused checks passed (27 tests). Final checks passed: build/typecheck, 88 unit tests, five repository tests, and 35 Chromium browser tests.
-- Updated three unit/session test files and both affected browser suites, including pending Monster Phase save/resume and no carryover. Public fixtures remain synthetic; private data is excluded.
-- Implementation and validation are complete. Git history and the completion response record the final commit and push.
+- None blocking. Use original schematic styling and relative placement from the verified private photo, without copying its artwork. Panels move between left and right docks through an accessible control. Saved games and the underlying legal graph stay compatible.
