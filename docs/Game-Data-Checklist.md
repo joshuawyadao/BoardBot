@@ -61,12 +61,12 @@ Tracked material here consists of original project research notes, factual verif
 
 Before packaging a public game-data manifest or redistributable assets, document provenance and publication rights for the proposed content. Physical ownership and accurate transcription do not satisfy that gate. A private reference packet is neither a public runtime dependency nor an implemented data importer.
 
-## Remaining implementation gates
+## Current implementation and remaining gates
 
 - Setup import and isolated solo initialization now have focused coverage. Preserve the distinct source grades and immutable v6 packet as the complete engine is built.
-- Integrate the tested v2 result and response helpers into the future rules engine, preserving the owner-approved policies in [Rules-Reference.md](Rules-Reference.md). Reopen only genuinely new gaps or conflicting evidence.
+- The solo engine integrates the approved d20 bounds and relevant response policies under interpretation v3, with all five base Heroes and local recovery. Preserve the owner-approved policies in [Rules-Reference.md](Rules-Reference.md); reopen only genuinely new gaps or conflicting evidence.
 - The [versioned private reference](Game-Data-Format.md) now validates the confirmed data, setup, board connections, quantities, and provenance. Component effects remain prose; a successful conversion does not implement gameplay. The owner accepted Charm’s eligible Citizen pool, strength-legal relocation after an ordinary Displacer miss, and per-step escorts in v3. These are encoded in the Fighter engine.
 - Record the accepted interpretation version in sessions/replays. Keep published findings, reported answers, and BoardBot choices distinguishable.
-- Add source-linked engine tests and actual complete-game acceptance checks. Repository hygiene checks and synthetic engine/browser tests validate tooling and the invented sample turn, not Horrified component data, game balance, or human/bot multiplayer.
+- Source references and synthetic engine/browser tests now accompany the solo implementation. They exercise legal transitions, effects, complete outcomes, and recovery with invented fixtures; they do not establish exact private component contents, game balance, or human/bot multiplayer. Private-data checks and remaining owner acceptance are recorded in [Verification.md](Verification.md) and [Playtest-Checklist.md](Playtest-Checklist.md).
 
 The [work plan](Work-Plan.md) still targets one human-controlled Hero first. The one-to-five-Hero consistency review in the rules reference preserves a later extension path without declaring multiplayer or strategic bots implemented.

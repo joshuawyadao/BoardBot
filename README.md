@@ -53,9 +53,10 @@ To check a contribution, install Git, Python 3.9 or newer, and Node.js 26. From 
 npm run verify
 npx playwright install chromium
 npm run test:e2e
+npm run test:production
 ```
 
-The first command typechecks, builds, runs sample, data, and game-engine tests, and runs repository checks. The browser tests use Playwright Chromium. `./scripts/verify-repository.sh` remains available for repository checks alone. The shell script works on macOS and Linux; Windows contributors can use WSL. These are contributor prerequisites, not supported platforms for a finished game. No API keys are needed. See [verification](docs/Verification.md) for coverage and limits.
+The first command typechecks, builds, runs sample, data, and game-engine tests, and runs repository checks. The browser tests use Playwright Chromium. `test:production` builds the app and checks startup, pending-save recovery, cached components, and a complete synthetic defeat against an isolated preview on port 4180, with external HTTP requests blocked. `./scripts/verify-repository.sh` remains available for repository checks alone. The shell script works on macOS and Linux; Windows contributors can use WSL. These are contributor prerequisites, not supported platforms for a finished game. No API keys are needed. See [verification](docs/Verification.md) for coverage and limits, and the [owner playtest checklist](docs/Playtest-Checklist.md) for the remaining human acceptance.
 
 ## Project direction
 

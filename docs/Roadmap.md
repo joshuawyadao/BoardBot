@@ -12,7 +12,7 @@ Deliver a local React browser game for the M1 MacBook Pro, using one human-contr
 
 **In progress:** Prepared private data can now open a solo game with Fighter, Bard, Cleric, Rogue, or Wizard against Beholder and Displacer Beast. The table has shared Hero actions, Perks, monster turns, required choices, action costs and legality, direct movement, confirmed spending/rolls, progress, and an event log. Synthetic complete-game and replay tests cover victory and defeat. Actual private-data smoke checks exercise the Monster-card catalog and complete defeat games. The owner has approved the compact table layout. Full human game acceptance remains open.
 
-The default four-location sample is still available without private data. The sample resets on reload. The solo game autosaves before publishing committed outcomes and offers resume, private backup export/import, and previous-save recovery. Broader human effect acceptance and full owner playthroughs on the target Mac remain open. See [local data preparation](Game-Data-Format.md).
+The default four-location sample is still available without private data. The sample resets on reload. The solo game autosaves before publishing committed outcomes and offers an independent game library, resume, private backup export/import, previous-save recovery, and confirmed deletion. The current table supports simultaneous information panels, visible setup pieces, and explained roll choices. The production build has a separate startup/recovery check with external HTTP requests blocked. Broader human effect acceptance and full owner playthroughs on the target Mac remain open; follow the [owner playtest checklist](Playtest-Checklist.md). See [local data preparation](Game-Data-Format.md).
 
 Build in this order:
 

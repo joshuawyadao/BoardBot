@@ -15,10 +15,10 @@ The optional sample demonstrates the invented map, movement, and explicit phase 
 - Out: Other monsters, promo heroes, Ravenloft, multiplayer, strategic bots controlling extra heroes, companion mode, cloud accounts/services, polished commercial artwork, and desktop packaging in the first milestone.
 
 ## Action items
-[ ] Encode the verified component packet described in `docs/Game-Data-Checklist.md` into a reviewed, versioned representation; resolve publication gates there and explicitly open rules cases in `docs/Rules-Reference.md`. Preserve sources, confidence, and accepted interpretation versions, and keep incomplete content visibly unavailable without reopening completed owner verification.
+[x] Encode the verified private component packet described in `docs/Game-Data-Checklist.md` into a reviewed, versioned representation with validation and provenance. Preserve sources, confidence, accepted interpretation versions, and the publication boundary; the separate rights gate remains open before redistributing third-party content.
 [x] Expand the existing React prototype into a verified rules engine independent of the interface, with explicit game phases, legal commands, injected randomness, and synthetic test fixtures. The Fighter slice implements these boundaries; the separate sample remains invented.
 [x] Implement shared setup, movement, action budgets, items, citizens, perks, monster phases, and end conditions; reject invalid commands without changing state or spending resources.
-[ ] Deliver a complete internal playthrough with one validated hero and both selected monsters, including required choices during resolution; do not claim faithful gameplay while its data or rulings remain unverified.
+[ ] Deliver a complete accepted playthrough with one validated Hero and both selected Monsters, including required choices during resolution. Automated synthetic victories/defeats and private-data defeat runs exist; a complete owner game and real-data victory remain unrecorded. Do not claim faithful gameplay beyond verified data and accepted interpretations.
 [x] Implement and test each remaining base Hero, exposing all five for the solo playtest. Complete human play acceptance remains below.
 [x] Connect the floating tray to verified game data: available/remaining actions, card costs, hover/focus/tap explanations, action-specific targets and items, and engine-provided reasons for illegal actions. Keep unavailable cards in stable positions. The Fighter table now uses game-specific targets, costs, Perks, and legality; the sample remains separate. Confirm consequential item and dice choices before committing.
 [x] Add local autosave, resume, and recovery that preserve committed random results, pending choices, and the action log; reject invalid saves and prevent duplicate action execution.
@@ -46,6 +46,8 @@ The optional sample demonstrates the invented map, movement, and explicit phase 
 ## Completion criteria
 
 A documented local setup on the M1 Mac can complete a game with either victory or defeat using each supported hero and the selected monster pair. Tests cover illegal actions, duplicate confirmation, interrupted resolution, temporary effects, player decision points, and save/reload without rerolling. All milestone-required data and rulings have verified sources or an explicitly documented user-approved interpretation. Gameplay, bundled assets, and local saves work without external network access after setup; the development server still needs to run locally.
+
+The remaining owner checks are listed in [Playtest-Checklist.md](Playtest-Checklist.md). Approval of the interface so far is recorded separately from full-game acceptance; automated external-request blocking is separate from a physical internet-disconnection check.
 
 ## Dependencies and later updates
 

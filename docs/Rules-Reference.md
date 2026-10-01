@@ -1,6 +1,6 @@
 # Horrified: Dungeons & Dragons rules reference
 
-**Status, September 30, 2026:** research and working interpretation for BoardBot's planned first milestone. The owner accepted the conventions below for implementation after reviewing their one-to-five-Hero consistency. The interpretation set is **`boardbot-dnd-2026-09-30-v3`**. These are **BoardBot interpretations**, not publisher rulings or playtested balance. The first Fighter playtest build implements the selected Monster pair and shared effects using prepared private data. The other Heroes, persistence, and complete milestone validation remain pending; accepted interpretations are still not official rulings or playtested balance.
+**Interpretation baseline, September 30, 2026; implementation status updated October 1:** The owner accepted the conventions below after reviewing their one-to-five-Hero consistency. The interpretation set is **`boardbot-dnd-2026-09-30-v3`**. These are **BoardBot interpretations**, not publisher rulings or playtested balance. The solo build now implements all five base Heroes, the selected Monster pair, shared effects, and local save/recovery using prepared private data. Complete human play acceptance remains open; this status update does not change the accepted rules or make them official rulings.
 
 This is an original summary and source index, not a replacement for the commercial instructions or physical components. It covers the original base game, the five base Heroes, Beholder, Displacer Beast, and shared rules. Red Dragon, Mimic, promotional Heroes, and Ravenloft gameplay are outside the milestone. See [Game-Data-Checklist.md](Game-Data-Checklist.md) for component coverage and remaining implementation gates; private owner evidence and complete component transcriptions remain outside this public repository.
 
@@ -67,7 +67,7 @@ These decisions were accepted as working assumptions on September 30, 2026. Vers
 | Move “away” | For the initial monster scope, each step must increase shortest legal-path distance from the source, counting legal special connections. The active seat chooses among qualifying steps; stop when none exists. | Low confidence algorithm, an inverse of the [D&D toward rule](https://product-files.ravensburger.cloud/manuals/704005.pdf#page=8). It rejects an equal-distance intermediate step even if a later step could finish farther away. Red Dragon cases need their own decision. |
 | Two possible city shortcuts | Use the supported routes **3–2–4** and **5–4–7**; do not add direct 3–4 or 5–7 edges yet. | Low confidence map convention, not a verified adjacency ruling. The owner board image and bounded online search did not settle whether shared road junctions count as passing through the middle location. |
 
-No automatic reroll, substitute target, fallback draw, or resource refund should be inferred beyond these cases. The accepted interpretations still need executable cases and actual playtesting.
+No automatic reroll, substitute target, fallback draw, or resource refund should be inferred beyond these cases. Focused executable cases now cover the solo interpretations; complete human playtesting remains open. Later multi-Hero cases remain outside the implemented solo scope.
 
 ## One to five Hero seats
 

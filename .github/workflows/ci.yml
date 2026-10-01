@@ -32,9 +32,11 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci
-      - name: Typecheck, build and test the sample engine
+      - name: Typecheck, build and test game rules and sessions
         run: npm run build && npm test
       - name: Install browser for interaction tests
         run: npx playwright install --with-deps chromium
-      - name: Test the sample turn in Chromium
+      - name: Test game interactions in Chromium
         run: npm run test:e2e
+      - name: Test production startup and recovery without external services
+        run: npm run test:production
