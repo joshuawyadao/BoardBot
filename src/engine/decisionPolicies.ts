@@ -1,5 +1,5 @@
 /** BoardBot's selected interpretation for the scoped original D&D game. */
-export const RULESET_VERSION = 'boardbot-dnd-2026-09-30-v2'
+export const RULESET_VERSION = 'boardbot-dnd-2026-09-30-v3'
 
 export interface D20Result {
   readonly base: number
