@@ -5,10 +5,13 @@ async function loadSyntheticFighter(page: Page, seed = 17, data = fighterFixture
   await page.goto('/');
   await page.getByText('Load prepared local game data').click();
   await page.getByLabel('Seed (optional, for a repeatable setup)').fill(String(seed));
+  await expect(page.locator('#game-data-file')).toBeEnabled();
+  const replacing = await page.getByRole('button', { name: 'Resume saved game' }).isVisible();
   await page.locator('#game-data-file').setInputFiles({
     name: 'synthetic-game-data.json', mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(data)),
   });
+  if (replacing) await page.getByRole('button', { name: 'Replace saved game', exact: true }).click();
   await expect(page.getByText('Local game in progress.')).toBeVisible();
 }
 

@@ -1,6 +1,6 @@
 # Roadmap
 
-**Planning baseline finalized September 28, 2026; interaction direction updated September 29; research updated September 30.** Milestone 0 is complete. A local Fighter playtest build is implemented alongside the default synthetic sample; the full milestone is incomplete. The [work plan](Work-Plan.md) records the agreed build sequence. Scoped component verification is complete; the [game-data checklist](Game-Data-Checklist.md) and [rules reference](Rules-Reference.md) retain evidence, accepted interpretations, and remaining implementation/publication dependencies.
+**Planning baseline finalized September 28, 2026; interaction direction updated September 29; research updated September 30.** Milestone 0 is complete. A local solo playtest build with all five base Heroes and recovery is implemented alongside the default synthetic sample; the full milestone is incomplete. The [work plan](Work-Plan.md) records the agreed build sequence. Scoped component verification is complete; the [game-data checklist](Game-Data-Checklist.md) and [rules reference](Rules-Reference.md) retain evidence, accepted interpretations, and remaining implementation/publication dependencies.
 
 ## 0. Public project foundation - complete
 
@@ -10,9 +10,9 @@ MIT licensing, community policies, contribution templates, repository verificati
 
 Deliver a local React browser game for the M1 MacBook Pro, using one human-controlled hero against the Displacer Beast and Beholder. Use a simplified labeled map and generic markers. All five base heroes are selectable at completion; develop and validate them one at a time.
 
-**In progress:** Prepared private data can now open a Fighter game against Beholder and Displacer Beast. The table has shared Hero actions, Perks, monster turns, required choices, action costs and legality, direct movement, confirmed spending/rolls, progress, and an event log. Synthetic complete-game and replay tests cover victory and defeat. Actual private-data smoke checks exercise the Monster-card catalog and complete defeat games. This is the first user-feedback checkpoint, not finished milestone acceptance.
+**In progress:** Prepared private data can now open a solo game with Fighter, Bard, Cleric, Rogue, or Wizard against Beholder and Displacer Beast. The table has shared Hero actions, Perks, monster turns, required choices, action costs and legality, direct movement, confirmed spending/rolls, progress, and an event log. Synthetic complete-game and replay tests cover victory and defeat. Actual private-data smoke checks exercise the Monster-card catalog and complete defeat games. The owner has approved the compact table layout. Full human game acceptance remains open.
 
-The default four-location sample is still available without private data. Both views reset on reload. The other four Heroes, local recovery, broader effect acceptance, and target M1 validation remain open. See [local data preparation](Game-Data-Format.md).
+The default four-location sample is still available without private data. The sample resets on reload. The solo game autosaves before publishing committed outcomes and offers resume, private backup export/import, and previous-save recovery. Broader human effect acceptance and full owner playthroughs on the target Mac remain open. See [local data preparation](Game-Data-Format.md).
 
 Build in this order:
 

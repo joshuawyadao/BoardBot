@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { GameData } from '../data/gameData';
 import type { GameView } from '../engine/horrifiedGame';
 import type { HeroAction } from '../engine/horrifiedRuntime';
@@ -15,6 +16,7 @@ interface Props {
   busy: boolean;
   error: string | null;
   onReturnToSample: () => void;
+  saveControls?: ReactNode;
 }
 
 const cards: { id: TrayId; label: string; icon: string; caption: string; description: string; cost: string }[] = [
@@ -24,7 +26,7 @@ const cards: { id: TrayId; label: string; icon: string; caption: string; descrip
   { id: 'share', label: 'Share', icon: '⇄', caption: 'Exchange items', description: 'Share Items with another eligible Hero.', cost: '1 action' },
   { id: 'advance', label: 'Advance', icon: '▤', caption: 'Challenge', description: 'Review the Monster, Item cost, and target before committing a roll.', cost: '1 action' },
   { id: 'defeat', label: 'Defeat', icon: '⚑', caption: 'Monster', description: 'Choose the Monster and Items to spend, then confirm.', cost: '1 action' },
-  { id: 'special', label: 'Special Action', icon: '✧', caption: 'Hero ability', description: 'Review the Fighter ability and confirm before rolling.', cost: '1 action' },
+  { id: 'special', label: 'Special Action', icon: '✧', caption: 'Hero ability', description: 'Review your Hero ability and confirm before rolling.', cost: '1 action' },
   { id: 'perks', label: 'Perks', icon: '▱', caption: 'Eligible cards', description: 'Play an eligible owned Perk during its permitted timing.', cost: 'Free' },
 ];
 
@@ -78,7 +80,8 @@ function PendingChoicePanel({ pending, busy, onAction }: {
   </section>;
 }
 
-export function FighterTable({ data, game, onAction, reasonFor, busy, error, onReturnToSample }: Props) {
+export function FighterTable({ data, game, onAction, reasonFor, busy, error, onReturnToSample, saveControls }: Props) {
+  const heroClass = game.hero.definitionId.replace('hero-', '').replace(/^./, letter => letter.toUpperCase());
   const [actionsCollapsed, setActionsCollapsed] = useState(false);
   const [selected, setSelected] = useState<TrayId | null>(null);
   const [inspected, setInspected] = useState<TrayId | null>(null);
@@ -163,18 +166,18 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
   return <div className={`app-shell h-table ${actionsCollapsed ? 'actions-collapsed' : ''}`}>
     <header className="app-header">
       <a className="brand" href="#main"><span className="brand-mark" aria-hidden="true">B</span>BoardBot<span className="brand-note">THE PRACTICE TABLE</span></a>
-      <div className="header-tools"><span className="prototype-badge">Local Fighter game</span><button className="quiet-button" onClick={() => setShowHelp(value => !value)} aria-expanded={showHelp}>How to play <span aria-hidden="true">↗</span></button><button className="quiet-button" onClick={onReturnToSample} disabled={busy}>Sample table</button></div>
+      <div className="header-tools"><span className="prototype-badge">Local {heroClass} game</span><button className="quiet-button" onClick={() => setShowHelp(value => !value)} aria-expanded={showHelp}>How to play <span aria-hidden="true">↗</span></button><button className="quiet-button" onClick={onReturnToSample} disabled={busy}>Sample table</button></div>
     </header>
     <main id="main">
-      <h1 className="sr-only">Horrified Fighter table</h1>
-      <div className="notice"><strong>Local game in progress.</strong> This first playable path supports one human Fighter. Game data stays in memory. Reloading resets this game; save and resume are still in development.</div>
-      {showHelp && <section className="guide"><h2>Playing the Fighter table</h2><p>Select an action card. Move highlights destinations and commits when you choose one. Item spending and rolls have a separate confirmation. The game pauses for required choices; use the choice panel to continue.</p><p>Tab, Enter, and Space operate controls. Ordinary actions stay locked during resolution. End the Hero Phase when you are ready, including when actions reach zero.</p></section>}
+      <h1 className="sr-only">Horrified {heroClass} table</h1>
+      <div className="notice"><strong>Local game in progress.</strong> One human {heroClass} against Beholder and Displacer Beast. {saveControls}</div>
+      {showHelp && <section className="guide"><h2>Playing the {heroClass} table</h2><p>Select an action card. Move highlights destinations and commits when you choose one. Item spending and rolls have a separate confirmation. The game pauses for required choices; use the choice panel to continue.</p><p>Tab, Enter, and Space operate controls. Ordinary actions stay locked during resolution. End the Hero Phase when you are ready, including when actions reach zero.</p></section>}
       {error && <p className="h-error" role="alert">{error}</p>}
       {terminal && <div className="h-end" role="status"><strong>{game.phase === 'won' ? 'Victory' : 'Defeat'}</strong><span>{game.endReason}</span></div>}
       <div className="h-layout">
         <div className="h-main-column">
           <section className="board-panel" aria-labelledby="h-board-title">
-            <div className="panel-heading"><div><p className="eyebrow">TURN {game.turn} · {game.phase.toUpperCase()} PHASE</p><h2 id="h-board-title">The city and dungeon</h2></div><div className="hero"><strong>{hero?.name ?? 'Fighter'}</strong><span>At {locationName(at)}</span></div></div>
+            <div className="panel-heading"><div><p className="eyebrow">TURN {game.turn} · {game.phase.toUpperCase()} PHASE</p><h2 id="h-board-title">The city and dungeon</h2></div><div className="hero"><strong>{hero?.name ?? heroClass}</strong><span>At {locationName(at)}</span></div></div>
             <div className="h-status"><span>Terror <strong>{game.terror}</strong></span><span>Frenzy <strong>{MONSTER_NAMES[game.frenzy]}</strong></span><span>Items in bag <strong>{game.bagCount}</strong></span><span>Monster deck <strong>{game.monsterDeckCount}</strong></span></div>
             <div className="h-map-scroll"><div className="h-map" style={{ height: boardHeight }} role="group" aria-label="Game board with ordinary, passage, and teleport connections">
               <svg className="h-map-paths" width="1220" height={boardHeight} viewBox={`0 0 1220 ${boardHeight}`} aria-hidden="true">
@@ -192,15 +195,15 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
                 const itemsHere = game.boardItems[location.id]?.length ?? 0;
                 return <button key={location.id} ref={element => { if (element) mapButtons.current.set(location.id, element); else mapButtons.current.delete(location.id); }}
                   type="button" className={`h-location ${location.kind} ${here ? 'current' : ''} ${canMove ? 'reachable' : ''}`}
-                  style={{ left: point.x, top: point.y }} aria-label={`${location.name}${here ? ', Fighter here' : ''}${monstersHere.length ? `, ${monstersHere.join(' and ')}` : ''}`}
+                  style={{ left: point.x, top: point.y }} aria-label={`${location.name}${here ? `, ${heroClass} here` : ''}${monstersHere.length ? `, ${monstersHere.join(' and ')}` : ''}`}
                   aria-disabled={!canMove} title={canMove ? `Move to ${location.name}` : 'Select Move to see legal destinations'}
                   onClick={() => { if (canMove) commit(moveAction(location.id)); }}>
                   <span className="h-node-name">{location.name}</span>
-                  <span className="h-node-meta">{here ? 'FIGHTER · ' : ''}{monstersHere.length ? `${monstersHere.join(', ')} · ` : ''}{itemsHere} item{itemsHere === 1 ? '' : 's'}{citizensHere ? ` · ${citizensHere} citizen${citizensHere === 1 ? '' : 's'}` : ''}</span>
+                  <span className="h-node-meta">{here ? `${heroClass.toUpperCase()} · ` : ''}{monstersHere.length ? `${monstersHere.join(', ')} · ` : ''}{itemsHere} item{itemsHere === 1 ? '' : 's'}{citizensHere ? ` · ${citizensHere} citizen${citizensHere === 1 ? '' : 's'}` : ''}</span>
                 </button>;
               })}
             </div></div>
-            <div className="h-map-key"><span>— Ordinary</span><span>┄ Passage</span><span>┈ Teleport circles</span><span>● Fighter</span></div>
+            <div className="h-map-key"><span>— Ordinary</span><span>┄ Passage</span><span>┈ Teleport circles</span><span>● {heroClass}</span></div>
           </section>
           {pending && <PendingChoicePanel key={pending.id} pending={pending} busy={busy} onAction={onAction} />}
           <ActionTray className="h-tray" title={busy ? 'Resolving…' : pending ? 'Choice required' : terminal ? 'Game complete' : game.phase === 'monster' ? 'Monster Phase' : 'Your Hero Phase'}
@@ -221,7 +224,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
               {selected === 'share' && <p>{unavailable('share') ?? 'Choose another Hero to share with.'}</p>}
               {selected === 'advance' && <div><h3>Advance a Monster</h3>{game.advanceOptions.length ? <fieldset disabled={selectionLocked}><legend>Eligible costs and targets</legend>{game.advanceOptions.map((option, index) => <label className="h-check-row" key={`${option.monster}-${option.item}-${option.cell ?? index}`}><input type="radio" name="advance-option" checked={selectedAdvance === index} onChange={() => setSelectedAdvance(index)} />{MONSTER_NAMES[option.monster]} · {itemSummary(option.item)}{option.cell ? ` · cell ${option.cell}` : ''}</label>)}</fieldset> : <p>No advance attempt is available now.</p>}</div>}
               {selected === 'defeat' && <div><h3>Defeat a Monster</h3><fieldset disabled={selectionLocked}><legend>Target</legend>{(Object.keys(MONSTER_NAMES) as (keyof typeof MONSTER_NAMES)[]).map(monster => <label className="h-check-row" key={monster}><input type="radio" name="defeat-monster" checked={selectedMonster === monster} onChange={() => setSelectedMonster(monster)} />{MONSTER_NAMES[monster]}{game.monsters[monster].defeated ? ' · defeated' : ''}</label>)}</fieldset><fieldset disabled={selectionLocked}><legend>Items to spend · {inventoryStrength} Strength selected</legend>{ownedItems.map(id => <label className="h-check-row" key={id}><input type="checkbox" checked={spentItems.includes(id)} onChange={() => setSpentItems(current => toggle(current, id))} />{itemSummary(id)}</label>)}</fieldset><p>{reasonFor(defeatAction) ?? 'Ready to confirm the selected cost.'}</p></div>}
-              {selected === 'special' && <div><h3>Fighter special action</h3><p>{hero?.specialAction ?? 'Fighter ability'}</p><p>{reasonFor(specialAction) ?? 'Confirm to roll and resolve this ability.'}</p></div>}
+              {selected === 'special' && <div><h3>{heroClass} special action</h3><p>{hero?.specialAction ?? `${heroClass} ability`}</p><p>{reasonFor(specialAction) ?? 'Confirm to roll and resolve this ability.'}</p></div>}
               {selected === 'perks' && <div><h3>Your Perks</h3>{game.perkOptions.length ? <fieldset disabled={selectionLocked}><legend>Owned cards</legend>{game.perkOptions.map(option => <label className="h-check-row" key={option.id}><input type="radio" name="perk-option" checked={selectedPerk === option.id} onChange={() => setSelectedPerk(option.id)} />{game.visiblePerks[option.id]?.name ?? 'Perk'}{option.reason ? ` · ${option.reason}` : ''}</label>)}</fieldset> : <p>No Perks in hand.</p>}{selectedPerkOption && <p>{game.visiblePerks[selectedPerkOption.id]?.effect}</p>}</div>}
               {selected && selected !== 'move' && selected !== 'share' && <p className="h-preview">{currentReason ?? (currentAction ? 'Review your selection, then confirm.' : 'Choose an option to continue.')}</p>}
             </div>}
@@ -230,7 +233,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
           <details className="h-reveal"><summary>Reveal a Lair <span>1 action · choose Items</span></summary><div className="h-reveal-body"><div><strong>Reveal a Lair</strong><p>At a Lair location, choose Items to spend. Confirming commits the reveal.</p><fieldset disabled={selectionLocked}><legend>Items to spend</legend>{ownedItems.map(id => <label className="h-check-row" key={id}><input type="checkbox" checked={revealItems.includes(id)} onChange={() => setRevealItems(current => toggle(current, id))} />{itemSummary(id)}</label>)}</fieldset><p>{reasonFor(revealAction) ?? 'Ready to reveal this Lair.'}</p><button type="button" className="clear-button" disabled={selectionLocked || revealItems.length === 0} onClick={() => setRevealItems([])}>Clear reveal selection</button></div><button type="button" className="end-button" disabled={selectionLocked || !!reasonFor(revealAction)} title={reasonFor(revealAction) ?? undefined} onClick={() => { commit(revealAction); setRevealItems([]); }}>Confirm reveal</button></div></details>
         </div>
         <aside className="h-sidebar">
-          <section className="h-info-card"><h2>Fighter inventory</h2>{ownedItems.length ? <ul>{ownedItems.map(id => <li key={id}>{itemSummary(id)}</li>)}</ul> : <p>No Items held.</p>}<h3>Perks</h3>{game.hero.perks.length ? <ul>{game.hero.perks.map(id => <li key={id}>{game.visiblePerks[id]?.name ?? 'Perk'}</li>)}</ul> : <p>No Perks held.</p>}</section>
+          <section className="h-info-card"><h2>{heroClass} inventory</h2>{ownedItems.length ? <ul>{ownedItems.map(id => <li key={id}>{itemSummary(id)}</li>)}</ul> : <p>No Items held.</p>}<h3>Perks</h3>{game.hero.perks.length ? <ul>{game.hero.perks.map(id => <li key={id}>{game.visiblePerks[id]?.name ?? 'Perk'}</li>)}</ul> : <p>No Perks held.</p>}</section>
           <section className="h-info-card"><h2>Monster progress</h2><h3>Beholder</h3><p>{game.monsters.beholder.defeated ? 'Defeated' : `At ${locationName(game.monsters.beholder.location)}`}</p><p>{game.damagedEyes.length} of {data.monsters.beholder.eyestalks.length} eyestalks damaged</p><ol className="h-eyes">{data.monsters.beholder.eyestalks.map(eye => <li key={`${eye.min}-${eye.max}`} className={game.damagedEyes.includes(eye.min) ? 'done' : ''}>{eye.name} · {eye.min}–{eye.max}</li>)}</ol><h3>Displacer Beast</h3><p>{game.monsters.displacerBeast.defeated ? 'Defeated' : `At ${locationName(game.monsters.displacerBeast.location)}`}</p><div className="h-displacement-grid">{data.monsters.displacerBeast.advance.grid.flatMap((row, rowIndex) => row.map((cell, columnIndex) => {
             const key = cellKey(rowIndex, columnIndex); const item = game.displacement[key];
             return <div key={key} className={item ? 'filled' : ''}><span>{cell.join(', ')}</span><small>{item ? itemName(item) : 'Open'}</small></div>;

@@ -5,7 +5,7 @@
 
 BoardBot is a project for playing board games solo against bots on your computer and trying out games, strategies, and rule variations through repeatable playtests.
 
-> **Status: first Fighter playtest build.** The local React app can run a one-Hero Fighter game against Beholder and Displacer Beast using the owner’s prepared private data. Shared actions, Perks, monster turns, required choices, and win/loss conditions are implemented under the accepted BoardBot interpretations. The synthetic sample remains the default for a fresh clone. Saving, the other four Heroes, full milestone acceptance, and public game-content rights remain unfinished.
+> **Status: solo playtest build with local recovery.** The local React app supports Fighter, Bard, Cleric, Rogue, and Wizard against Beholder and Displacer Beast using the owner’s prepared private data. Shared actions, Hero abilities, Perks, monster turns, required choices, and win/loss conditions follow the accepted BoardBot interpretations. Local autosave and resume preserve committed outcomes. The synthetic sample remains the default for a fresh clone. Full human play acceptance and public game-content rights remain unfinished.
 
 ## Try the sample turn
 
@@ -20,22 +20,24 @@ npm run dev
 
 Open http://127.0.0.1:5173 in your browser. Choose Move in the compact tray, then click a highlighted board destination to move immediately. Wait (sample) uses a separate Confirm button. Hover, focus, or tap a compact action button to inspect it in the help area below the buttons; planned cards explain why they are unavailable. Hide actions collapses the tray to its status and phase controls; Show actions restores it. Hiding clears an uncommitted selection without spending an action. The invented explorer has three actions. After a roughly 900 ms resolution lock, choose another action or explicitly End Hero Phase, even if actions remain. Reaching zero actions does not end the phase automatically. The compact right-side Event log keeps earlier sample turns until you reload; use Hide log to leave only the latest event visible, or Show log to reopen history. It follows new entries while you are at the bottom and offers Jump to latest when you scroll back. On narrow screens the log moves below the board. Reloading resets everything. There is no undo or persistence. Once dependencies are installed, this sample runs locally without a gameplay service or account.
 
-## Try the local Fighter game
+## Try the local solo game
 
-With the verified private packet present, run `npm run data:prepare`. Start the app, expand **Load prepared local game data**, and choose `local-data/horrified-dnd/game-data.json`. An optional seed repeats setup. Use Pick Up to collect Items, Move to travel, and the challenge controls to advance and defeat the two Monsters. Use Hide actions for more map space; required game choices remain visible separately. Lair controls open only when requested. Ordinary actions stay locked while a required choice is pending. End the Hero Phase explicitly; eligible Perks remain available at zero actions.
+With the verified private packet present, run `npm run data:prepare`. Start the app, expand **Load prepared local game data**, and choose `local-data/horrified-dnd/game-data.json`. Choose a Hero before importing; an optional seed repeats setup. Use Pick Up to collect Items, Move to travel, and the challenge controls to advance and defeat the two Monsters. Use Hide actions for more map space; required game choices remain visible separately. Lair controls open only when requested. Ordinary actions stay locked while a required choice is pending. End the Hero Phase explicitly; eligible Perks remain available at zero actions.
 
-This build keeps progress in memory. Reloading or returning to the sample ends the session; save/resume is the next implementation stage. No game data is uploaded, bundled into public assets, or fetched during play. A fresh clone needs its own verified private packet for the Fighter game; the synthetic sample and public tests work without one. See [local data preparation](docs/Game-Data-Format.md).
+Each committed action and pending choice saves locally before its result appears. After reloading, choose **Resume saved game**. Returning to the sample keeps the saved game. **Export backup** downloads a private save; import it through the same setup panel. Starting another game requires an explicit replacement. Failed saves pause play and offer **Retry saving**, preserving the exact result. Recovery options can restore the previous save. See [local saves](docs/Local-Saves.md) for storage and recovery details.
+
+Game data is stored with the save in this browser on this device. It is never uploaded, bundled into public assets, or fetched during play. A fresh clone needs its own verified private packet; the synthetic sample and public tests work without one. See [local data preparation](docs/Game-Data-Format.md).
 
 ## Intended first experience
 
-- Play the entire game on screen with one human-controlled hero, choosing from all five base-game heroes once each is validated.
+- Play the entire game on screen with one human-controlled hero, choosing from all five base-game heroes.
 - Face the Displacer Beast and Beholder, with rules-driven monster turns and required player choices.
 - Use a simplified labeled map with accurate connections and clearly indicated legal actions.
 - Use a compact, collapsible action tray below the map, with stable positions and visible action costs. Phase status, the action count, and End Hero Phase stay available when collapsed. Temporarily illegal actions stay visible with a reason. Selecting Move highlights legal destinations, and clicking one executes it; consequential item or roll choices require confirmation. New actions stay locked while the current action resolves.
 - End the Hero Phase explicitly; reaching zero paid actions must not prevent eligible free perks before that boundary.
 - Save and resume locally, preserving committed dice/card outcomes and pending choices. Play without internet access after initial setup while the local development server is running.
 
-The full milestone still requires all five Heroes and recovery. The separate sample turn only tests the interaction pattern; its map, actions, and action budget are invented. Its Guide, Pick Up, Share, Advance, Defeat, Special Action, and Perks cards are unavailable previews, not implemented game actions or legal-rule checks. A later physical-game companion will reuse the rules foundation for setup, tracking, and sourced rules lookup. Other monsters, devices, optional desktop packaging, and broader bot playtesting follow later. No paid AI service or account is planned for the initial milestone.
+The full milestone still requires the owner’s complete-game acceptance on the physical game data. The separate sample turn only tests the interaction pattern; its map, actions, and action budget are invented. Its Guide, Pick Up, Share, Advance, Defeat, Special Action, and Perks cards are unavailable previews, not implemented game actions or legal-rule checks. A later physical-game companion will reuse the rules foundation for setup, tracking, and sourced rules lookup. Other monsters, devices, optional desktop packaging, and broader bot playtesting follow later. No paid AI service or account is planned for the initial milestone.
 
 ## Get started
 

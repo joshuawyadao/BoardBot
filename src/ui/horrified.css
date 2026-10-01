@@ -71,3 +71,12 @@
 .h-table.actions-collapsed .h-map-scroll { max-height: min(72vh, 720px); }
 
 @media (min-width: 1051px) { .h-eyes { columns: 1; } }
+
+.save-status { margin-left: 8px; display: inline-flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 12px; color: #51634b; }
+.save-status [role='alert'], .local-import > [role='alert'] { flex-basis: 100%; margin: 4px 0; color: #8b3026; }
+.saved-game { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 0; font-size: 13px; }
+.saved-game details { flex-basis: 100%; }
+.saved-game p { margin: 4px 0; }
+.local-import select { min-height: 36px; border: 1px solid var(--line); border-radius: 5px; background: #fffef9; padding: 6px; }
+.saved-game > button, .saved-game details button, .save-status .confirm-button { min-height: 36px; padding: 8px 12px; border-radius: 6px; font-size: 12px; }
+@media (pointer: coarse) { .saved-game button, .save-status button { min-height: 44px; } }

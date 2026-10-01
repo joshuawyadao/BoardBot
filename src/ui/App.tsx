@@ -1,15 +1,11 @@
 import { useRef, useState } from 'react';
 import { connections, getActionReason, getEndPhaseReason, locations } from '../engine/sampleGame';
 import type { Action, LocationId } from '../engine/sampleGame';
-import { validateGameData } from '../data/gameData';
-import type { GameData } from '../data/gameData';
-import { createFighterGame, dispatchGame, getActionReason as getRealActionReason, getFighterView } from '../engine/horrifiedGame';
-import type { FighterGame, HeroAction } from '../engine/horrifiedRuntime';
 import { useSampleSession } from '../session/useSampleSession';
 import { SessionLog } from './SessionLog';
 import { trayActions, waitAction } from './actionCatalog';
 import type { TrayActionId } from './actionCatalog';
-import { FighterTable } from './FighterTable';
+import { LocalGameApp } from './LocalGameApp';
 import { ActionTray } from './ActionTray';
 import './horrified.css';
 
@@ -145,90 +141,5 @@ function SampleApp() {
   );
 }
 
-/** The synthetic table remains the default; private JSON is loaded only by a local file choice. */
-export function App() {
-  const [data, setData] = useState<GameData | null>(null);
-  const [game, setGame] = useState<FighterGame | null>(null);
-  const gameRef = useRef<FighterGame | null>(null);
-  const lockedRef = useRef(false);
-  const [busy, setBusy] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [seedInput, setSeedInput] = useState('');
-
-  async function loadFile(file: File | undefined) {
-    if (!file || lockedRef.current) return;
-    lockedRef.current = true;
-    setLoading(true);
-    setError(null);
-    try {
-      const candidate = validateGameData(JSON.parse(await file.text()) as unknown);
-      const randomSeed = seedInput.trim() ? Number(seedInput) : crypto.getRandomValues(new Uint32Array(1))[0] || 1;
-      if (!Number.isSafeInteger(randomSeed) || randomSeed < 1) throw new Error('Seed must be a positive whole number.');
-      const created = await createFighterGame(candidate, randomSeed);
-      gameRef.current = created;
-      setData(candidate);
-      setGame(created);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'The selected game data could not be loaded.');
-    } finally {
-      lockedRef.current = false;
-      setLoading(false);
-    }
-  }
-
-  function submit(action: HeroAction) {
-    const current = gameRef.current;
-    if (!data || !current || lockedRef.current) return;
-    lockedRef.current = true;
-    setBusy(true);
-    setError(null);
-    const command = {
-      id: crypto.randomUUID(), revision: current.revision,
-      actorSeatId: 'solo', action,
-    };
-    try {
-      const result = dispatchGame(data, current, command);
-      gameRef.current = result.state;
-      setGame(result.state);
-      if (result.error) setError(result.error);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'The action could not be completed.');
-    } finally {
-      window.setTimeout(() => { lockedRef.current = false; setBusy(false); }, 300);
-    }
-  }
-
-  function reasonFor(action: HeroAction): string | null {
-    return data && gameRef.current ? getRealActionReason(data, gameRef.current, action) : 'Load game data first.';
-  }
-
-  if (data && game) {
-    return <FighterTable data={data} game={getFighterView(data, game)} onAction={submit}
-      reasonFor={reasonFor} busy={busy} error={error} onReturnToSample={() => {
-        if (lockedRef.current) return;
-        gameRef.current = null;
-        setData(null);
-        setGame(null);
-        setError(null);
-      }} />;
-  }
-  return <>
-    <div className="local-import">
-      <details>
-        <summary>Load prepared local game data</summary>
-        <div className="local-import-body">
-          <label htmlFor="game-data-file">Choose your private <code>game-data.json</code> file. It stays in this browser session.</label>
-          <label htmlFor="game-seed">Seed (optional, for a repeatable setup)</label>
-          <input id="game-seed" type="number" min="1" step="1" value={seedInput} onChange={event => setSeedInput(event.target.value)} />
-          <input id="game-data-file" type="file" accept=".json,application/json" disabled={loading}
-            onChange={event => { void loadFile(event.currentTarget.files?.[0]); event.currentTarget.value = ''; }} />
-          <p>First playable path: solo Fighter. Progress resets on reload; saving is not available yet.</p>
-          {loading && <p role="status">Preparing the Fighter table…</p>}
-          {error && <p role="alert">{error}</p>}
-        </div>
-      </details>
-    </div>
-    <SampleApp />
-  </>;
-}
+/** The synthetic table remains the default; private games require an explicit local import or resume. */
+export function App() { return <LocalGameApp sample={<SampleApp />} />; }
