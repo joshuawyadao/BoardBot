@@ -65,7 +65,7 @@ Before packaging a public game-data manifest or redistributable assets, document
 
 - Setup import and isolated solo initialization now have focused coverage. Preserve the distinct source grades and immutable v6 packet as the complete engine is built.
 - Integrate the tested v2 result and response helpers into the future rules engine, preserving the owner-approved policies in [Rules-Reference.md](Rules-Reference.md). Reopen only genuinely new gaps or conflicting evidence.
-- The [versioned private reference](Game-Data-Format.md) now validates the confirmed data, setup, board connections, quantities, and provenance. Component effects remain prose; a successful conversion does not implement gameplay. Charm Ray's Citizen pool, failed Displacer strikes, and multi-step escorts await owner interpretation before their effects are encoded.
+- The [versioned private reference](Game-Data-Format.md) now validates the confirmed data, setup, board connections, quantities, and provenance. Component effects remain prose; a successful conversion does not implement gameplay. The owner accepted Charm’s eligible Citizen pool, strength-legal relocation after an ordinary Displacer miss, and per-step escorts in v3. These are encoded in the Fighter engine.
 - Record the accepted interpretation version in sessions/replays. Keep published findings, reported answers, and BoardBot choices distinguishable.
 - Add source-linked engine tests and actual complete-game acceptance checks. Repository hygiene checks and synthetic engine/browser tests validate tooling and the invented sample turn, not Horrified component data, game balance, or human/bot multiplayer.
 

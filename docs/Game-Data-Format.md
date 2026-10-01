@@ -1,6 +1,6 @@
 # Local game data
 
-The data preparation tool converts the private, owner-verified component record and separately photographed setup instructions into a versioned JSON reference. It does not execute card effects or make the sample app playable. A separate tested engine initializer can create the solo Fighter's starting state. A fresh clone can run the synthetic prototype and public tests without the private packet.
+The data preparation tool converts the private, owner-verified component record and separately photographed setup instructions into a versioned JSON reference. The preparation tool itself does not execute effects. The separate Fighter engine can load its output through the local file picker and execute the selected solo game. A fresh clone can run the synthetic prototype and public tests without the private packet.
 
 ## Prepare the reference
 
@@ -18,7 +18,7 @@ The reference stays ignored and is not bundled by Vite or served by the sample a
 
 `src/data/gameData.ts` defines the format, validator, and conversion boundary. The schema version identifies the JSON shape. The interpretation version identifies BoardBot's accepted rules choices. Source-record version, fingerprint, and component pointers make fields traceable without carrying historical private machine paths into the normalized reference.
 
-Schema version 2 distinguishes owner-verified content from synthetic fixtures and records the independently photographed setup facts with their own provenance. Setup locations reference the board's numbered Monster start markers, not their Frenzy order. The setup capability is true only when its required fields and references validate; gameplay capability remains false. Effect descriptions are reference prose, never executable code. A successful conversion verifies data consistency; it does not prove gameplay correctness, validate publication rights, or authenticate arbitrary JSON presented later by a user.
+Schema version 2 distinguishes owner-verified content from synthetic fixtures and records the independently photographed setup facts with their own provenance. Setup locations reference the board's numbered Monster start markers, not their Frenzy order. The setup capability is true only when its required fields and references validate; the data-only `playableRulesEngine` capability remains false because a reference file cannot establish executable gameplay support. The separate engine supplies Fighter behavior. Effect descriptions are reference prose, never executable code. A successful conversion verifies data consistency; it does not prove gameplay correctness, validate publication rights, or authenticate arbitrary JSON presented later by a user.
 
 ## Board and quantities
 
@@ -34,4 +34,4 @@ Keep quantities and destinations attached to item types and card faces. Expansio
 
 `src/engine/horrifiedState.ts` creates an isolated solo Fighter state from validated setup data. It assigns stable physical instance IDs, shuffles Items/cards/Lairs deterministically, places twelve Items, deals one Perk, sets solo Terror and Frenzy, and separates waiting Citizens from the board. Its explicit player projection hides future draws, random state, and unrevealed Lair identities. Tests cover quantities, original token destinations, replay, supply exhaustion, and rejection of unsupported setup. No actions, Monster Phase, session storage, or playable interface are supplied by this initializer.
 
-The canonical [rules reference](Rules-Reference.md) records the recovered setup evidence and accepted conventions. Before gameplay integration, tests must cover every implemented effect, legal command, ownership boundary, and save/replay transition. See [Verification.md](Verification.md).
+The canonical [rules reference](Rules-Reference.md) records the recovered setup evidence and accepted conventions. Fighter command, effect, monster, and deterministic replay tests now accompany the integration. Save/recovery transitions and the remaining four Heroes still require implementation and acceptance. See [Verification.md](Verification.md).

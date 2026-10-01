@@ -93,7 +93,7 @@ test('browser runtime uses only local requests and reload starts a fresh sample'
   await expect(page.getByTestId('action-budget')).toHaveText('2 / 3');
   await page.reload();
   await expect(page.getByTestId('action-budget')).toHaveText('3 / 3');
-  await expect(page.getByText(/Progress resets on reload/)).toBeVisible();
+  await expect(page.getByRole('main').getByText(/Progress resets on reload/)).toBeVisible();
   expect(externalRequests).toEqual([]);
   expect(errors).toEqual([]);
 });

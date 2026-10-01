@@ -10,7 +10,15 @@ This records the agreed boundaries for the first Horrified: Dungeons & Dragons g
 
 The private packet can be normalized using `npm run data:prepare`; [Game-Data-Format.md](Game-Data-Format.md) describes the schema, evidence, validation, and publication boundary. The output remains ignored and is not loaded into the sample app. Card and ability descriptions are reference prose, not executable effects.
 
-Pure helpers under `src/engine/decisionPolicies.ts` cover effective d20 bounds and optional response priority. `src/engine/gamePrimitives.ts` covers deterministic random state and board routes. `src/engine/horrifiedState.ts` now creates a solo Fighter's initial state from schema v2's verified setup fields and exposes an explicit player projection that hides future draws and unrevealed Lairs. These modules have synthetic unit coverage but are not connected to the sample UI. Action/effect execution, persistence, and complete-game acceptance remain pending.
+Pure helpers under `src/engine/decisionPolicies.ts` cover effective d20 bounds and optional response priority. `src/engine/gamePrimitives.ts` covers deterministic random state and board routes. `src/engine/horrifiedState.ts` now creates a solo Fighter's initial state from schema v2's verified setup fields and exposes an explicit player projection that hides future draws and unrevealed Lairs. The Fighter table now uses these foundations through `horrifiedGame.ts` and `monsterResolution.ts`. Saving and complete milestone acceptance remain pending.
+
+## Fighter playtest engine
+
+`horrifiedRuntime.ts` defines serializable continuations, required choices, d20 response windows, attacks, and commands. `horrifiedGame.ts` owns Hero legality, atomic command application, shared movement/resource effects, Fighter actions, Perks, and public projections. `monsterResolution.ts` owns Monster-card events, printed activation order, targeting, dice, powers, and hits. Neither module calls the UI, network, storage, or a timer.
+
+A command carries an ID, expected revision, seat, and action. The engine rejects invalid, duplicate, foreign, or stale submissions before cloning the state. Commands are bound to the exact validated data snapshot used at initialization; changed or unregistered data is rejected. Each accepted command drains a finite continuation queue until another choice or the phase boundary. The state retains committed random state and structured final d20 arithmetic. Complete command replay is tested. Save loading will need to validate and rebind this identity before commands can resume.
+
+`getFighterView` exposes observed resources, counts, choices, and legal controls without future draw order, RNG, hidden Lair faces, or continuation payloads. The React wrapper imports a local JSON file and keeps the data and internal state in memory. It locks submission synchronously and uses a short display-only busy interval after a command commits. `FighterTable` consumes the projection; decision policy remains in the engine. The private file is never copied into public assets or requested by a remote service. The default synthetic table remains independently usable.
 
 ## Responsibilities
 

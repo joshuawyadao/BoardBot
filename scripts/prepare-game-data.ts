@@ -53,7 +53,7 @@ export async function prepareGameData(packetDirectory: string) {
 
 async function main() {
   const normalized = await prepareGameData(packet);
-  process.stdout.write(`Verified private packet and setup photo; wrote local game-data.json: ${normalized.board.locations.length} locations, ${normalized.board.edges.filter(edge => edge.kind === "ordinary").length} ordinary edges, ${normalized.items.reduce((total, item) => total + item.quantity, 0)} items, ${normalized.monsterCards.reduce((total, card) => total + card.quantity, 0)} monster cards, ${normalized.perks.reduce((total, perk) => total + perk.quantity, 0)} perks. Prose effects and gameplay remain unimplemented.\n`);
+  process.stdout.write(`Verified private packet and setup photo; wrote local game-data.json: ${normalized.board.locations.length} locations, ${normalized.board.edges.filter(edge => edge.kind === "ordinary").length} ordinary edges, ${normalized.items.reduce((total, item) => total + item.quantity, 0)} items, ${normalized.monsterCards.reduce((total, card) => total + card.quantity, 0)} monster cards, ${normalized.perks.reduce((total, perk) => total + perk.quantity, 0)} perks. Load this private reference through the local Fighter table; this preparation step does not validate gameplay.\n`);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

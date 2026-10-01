@@ -5,7 +5,7 @@
 
 BoardBot is a project for playing board games solo against bots on your computer and trying out games, strategies, and rule variations through repeatable playtests.
 
-> **Status: interaction prototype and verified component research.** A local React app demonstrates a synthetic sample turn; no Horrified: Dungeons & Dragons game is playable yet. The first game milestone targets an M1 MacBook Pro. Owner verification of the scoped components is complete. Private component-data normalization and isolated dice, response, and route helpers have focused test coverage. An isolated solo setup initializer is tested. Effect execution, UI integration, saving, complete-game validation, and publication gates remain pending; the references below preserve that research.
+> **Status: first Fighter playtest build.** The local React app can run a one-Hero Fighter game against Beholder and Displacer Beast using the owner’s prepared private data. Shared actions, Perks, monster turns, required choices, and win/loss conditions are implemented under the accepted BoardBot interpretations. The synthetic sample remains the default for a fresh clone. Saving, the other four Heroes, full milestone acceptance, and public game-content rights remain unfinished.
 
 ## Try the sample turn
 
@@ -20,6 +20,12 @@ npm run dev
 
 Open http://127.0.0.1:5173 in your browser. Choose Move in the floating tray, then click a highlighted board destination to move immediately. Wait (sample) uses a separate Confirm button. Hover, focus, or tap a card to inspect it in the fixed help area; planned cards explain why they are unavailable. The invented explorer has three actions. After a roughly 900 ms resolution lock, choose another action or explicitly End Hero Phase, even if actions remain. Reaching zero actions does not end the phase automatically. The right-side Event log keeps earlier sample turns until you reload; it follows new entries while you are at the bottom and offers Jump to latest when you scroll back. On narrow screens the log moves below the board. Reloading resets everything. There is no undo or persistence. Once dependencies are installed, this sample runs locally without a gameplay service or account.
 
+## Try the local Fighter game
+
+With the verified private packet present, run `npm run data:prepare`. Start the app, expand **Load prepared local game data**, and choose `local-data/horrified-dnd/game-data.json`. An optional seed repeats setup. Use Pick Up to collect Items, Move to travel, and the challenge controls to advance and defeat the two Monsters. Ordinary actions stay locked while a required choice is pending. End the Hero Phase explicitly; eligible Perks remain available at zero actions.
+
+This build keeps progress in memory. Reloading or returning to the sample ends the session; save/resume is the next implementation stage. No game data is uploaded, bundled into public assets, or fetched during play. A fresh clone needs its own verified private packet for the Fighter game; the synthetic sample and public tests work without one. See [local data preparation](docs/Game-Data-Format.md).
+
 ## Intended first experience
 
 - Play the entire game on screen with one human-controlled hero, choosing from all five base-game heroes once each is validated.
@@ -29,7 +35,7 @@ Open http://127.0.0.1:5173 in your browser. Choose Move in the floating tray, th
 - End the Hero Phase explicitly; reaching zero paid actions must not prevent eligible free perks before that boundary.
 - Save and resume locally, preserving committed dice/card outcomes and pending choices. Play without internet access after initial setup while the local development server is running.
 
-These are planned Horrified capabilities. The sample turn only tests the interaction pattern; its map, actions, and action budget are invented. Its Guide, Pick Up, Share, Advance, Defeat, Special Action, and Perks cards are unavailable previews, not implemented game actions or legal-rule checks. A later physical-game companion will reuse the rules foundation for setup, tracking, and sourced rules lookup. Other monsters, devices, optional desktop packaging, and broader bot playtesting follow later. No paid AI service or account is planned for the initial milestone.
+The full milestone still requires all five Heroes and recovery. The separate sample turn only tests the interaction pattern; its map, actions, and action budget are invented. Its Guide, Pick Up, Share, Advance, Defeat, Special Action, and Perks cards are unavailable previews, not implemented game actions or legal-rule checks. A later physical-game companion will reuse the rules foundation for setup, tracking, and sourced rules lookup. Other monsters, devices, optional desktop packaging, and broader bot playtesting follow later. No paid AI service or account is planned for the initial milestone.
 
 ## Get started
 
@@ -41,7 +47,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-The first command typechecks, builds, runs sample and foundation tests, and runs repository checks. The browser tests use Playwright Chromium. `./scripts/verify-repository.sh` remains available for repository checks alone. The shell script works on macOS and Linux; Windows contributors can use WSL. These are contributor prerequisites, not supported platforms for a finished game. No API keys are needed. See [verification](docs/Verification.md) for coverage and limits.
+The first command typechecks, builds, runs sample, data, and game-engine tests, and runs repository checks. The browser tests use Playwright Chromium. `./scripts/verify-repository.sh` remains available for repository checks alone. The shell script works on macOS and Linux; Windows contributors can use WSL. These are contributor prerequisites, not supported platforms for a finished game. No API keys are needed. See [verification](docs/Verification.md) for coverage and limits.
 
 ## Project direction
 

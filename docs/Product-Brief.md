@@ -2,7 +2,7 @@
 
 ## Purpose and status
 
-BoardBot's first game experience is for practicing the original Horrified: Dungeons & Dragons, understanding its rules and edge cases, and completing solo games on a computer. The planning baseline was finalized September 28, 2026; the action layout and phase boundary were refined September 29. A local React interaction prototype offers an invented map and three-action sample turn. It exercises direct board movement, a separate confirmed Wait, an explicit phase end, a brief resolution lock, and an event log across sample turns. No Horrified gameplay or complete verified game dataset exists yet; the sample resets on reload.
+BoardBot's first game experience is for practicing the original Horrified: Dungeons & Dragons, understanding its rules and edge cases, and completing solo games on a computer. The planning baseline was finalized September 28, 2026; the action layout and phase boundary were refined September 29. A local React interaction prototype offers an invented map and three-action sample turn. It exercises direct board movement, a separate confirmed Wait, an explicit phase end, a brief resolution lock, and an event log across sample turns. A separate local import now opens a Fighter playtest game against Beholder and Displacer Beast using prepared private data. Shared actions, Perks, monster turns, required choices, and end conditions are implemented; both views reset on reload. All five Heroes and recovery remain milestone requirements.
 
 ## Agreed first milestone
 
@@ -19,7 +19,7 @@ The map is the main play surface. A floating action tray occupies reserved space
 
 Selecting Move is free; clicking a highlighted destination executes the move after the engine rechecks legality. Consequential choices such as spending an item or rolling dice use a separate review and confirmation step. The sample Wait demonstrates that confirmation pattern. While an action resolves, ordinary selections and repeat submissions are disabled. If resolution needs a player decision, only the controls for that decision become available. The tray refreshes when resolution finishes. Uncommitted selections may be changed or cleared; the initial design has no undo command.
 
-The player explicitly ends the Hero Phase, including when no paid actions remain. Eligible free perks should remain available at zero actions until that boundary; their own timing and prerequisites still determine legality. The prototype demonstrates the explicit boundary and logs it once, but has no playable perks or Monster Phase.
+The player explicitly ends the Hero Phase, including when no paid actions remain. Eligible free perks should remain available at zero actions until that boundary; their own timing and prerequisites still determine legality. The sample demonstrates the explicit boundary; the Fighter table also implements eligible zero-action Perks and Monster Phases.
 
 ## Continuity and learning
 

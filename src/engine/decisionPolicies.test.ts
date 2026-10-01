@@ -20,7 +20,7 @@ const options: readonly ResponseOption[] = [
 
 describe('d20 interpretation', () => {
   it('preserves overflow arithmetic while capping only its rule result', () => {
-    expect(RULESET_VERSION).toBe('boardbot-dnd-2026-09-30-v2')
+    expect(RULESET_VERSION).toBe('boardbot-dnd-2026-09-30-v3')
     expect(resolveD20(19, [2])).toEqual({
       base: 19, modifiers: [2], adjustedTotal: 21, effectiveResult: 20,
     })

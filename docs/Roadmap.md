@@ -1,6 +1,6 @@
 # Roadmap
 
-**Planning baseline finalized September 28, 2026; interaction direction updated September 29; research updated September 30.** Milestone 0 is complete. A synthetic interaction prototype exists; no Horrified game is playable yet. The [work plan](Work-Plan.md) records the agreed build sequence. Scoped component verification is complete; the [game-data checklist](Game-Data-Checklist.md) and [rules reference](Rules-Reference.md) retain evidence, accepted interpretations, and remaining implementation/publication dependencies.
+**Planning baseline finalized September 28, 2026; interaction direction updated September 29; research updated September 30.** Milestone 0 is complete. A local Fighter playtest build is implemented alongside the default synthetic sample; the full milestone is incomplete. The [work plan](Work-Plan.md) records the agreed build sequence. Scoped component verification is complete; the [game-data checklist](Game-Data-Checklist.md) and [rules reference](Rules-Reference.md) retain evidence, accepted interpretations, and remaining implementation/publication dependencies.
 
 ## 0. Public project foundation - complete
 
@@ -10,14 +10,14 @@ MIT licensing, community policies, contribution templates, repository verificati
 
 Deliver a local React browser game for the M1 MacBook Pro, using one human-controlled hero against the Displacer Beast and Beholder. Use a simplified labeled map and generic markers. All five base heroes are selectable at completion; develop and validate them one at a time.
 
-**In progress:** A React sample-turn shell demonstrates a floating action tray with eight stable card positions, descriptions in a reserved help area, direct movement to highlighted destinations, a separately confirmed invented Wait, action counts, an explicit End Hero Phase, a short resolution lock, and restart. Seven cards are unavailable previews with explanations, not game actions. The right-side Event log keeps numbered sample turns and moves below the board on narrow screens. Its four-location map, explorer, Move/Wait actions, and three-action allowance are invented. Reloading resets the session. It does not satisfy the game, data, monster, offline acceptance, or save/resume criteria below.
+**In progress:** Prepared private data can now open a Fighter game against Beholder and Displacer Beast. The table has shared Hero actions, Perks, monster turns, required choices, action costs and legality, direct movement, confirmed spending/rolls, progress, and an event log. Synthetic complete-game and replay tests cover victory and defeat. Actual private-data smoke checks exercise the Monster-card catalog and complete defeat games. This is the first user-feedback checkpoint, not finished milestone acceptance.
 
-Private data normalization and isolated dice, response, random-state, and route helpers now support the engine foundation. Schema v2 imports the separately photographed Monster setup, and a tested initializer creates the solo Fighter's starting state. These are not connected to the sample UI. Three effect interpretations await user input; no new owner photo is needed. See [local data preparation](Game-Data-Format.md).
+The default four-location sample is still available without private data. Both views reset on reload. The other four Heroes, local recovery, broader effect acceptance, and target M1 validation remain open. See [local data preparation](Game-Data-Format.md).
 
 Build in this order:
 
 1. Preserve the verified source packet, encode suitable game data, and resolve the remaining rules/publication gates; use synthetic fixtures where public data is unavailable.
-2. Establish the app and shared rules/command boundaries. A synthetic prototype establishes the first UI/engine/session seam; the verified game engine is still to be built.
+2. Establish the app and shared rules/command boundaries. A synthetic prototype establishes the first UI/engine/session seam; the Fighter engine now implements the next slice.
 3. Complete a game with one hero and the selected monster pair.
 4. Add and validate the remaining heroes.
 5. Finish the action panel, explanations, local recovery, offline behavior, and complete-game validation.
