@@ -1,11 +1,12 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './test';
 import { heroFixture } from '../../src/engine/fixtures/heroFixture';
 
 async function currentSave(page: Page) {
   return page.evaluate(async () => {
-    const path = '/src/session/localSaveStore.ts';
-    const store = await (await import(path)).openLocalSaveStore();
-    const slots = await store.read(); store.close(); return JSON.parse(slots.current!.payload).state;
+    const path = '/src/session/gameLibrary.ts';
+    const library = await (await import(path)).openGameLibrary();
+    const games = await library.list();
+    const slots = await library.game(games[0].id).read(); library.close(); return JSON.parse(slots.current!.payload).state;
   });
 }
 
@@ -13,14 +14,15 @@ for (const hero of ['Fighter', 'Bard', 'Cleric', 'Rogue', 'Wizard']) {
   test(`${hero} selection, ability, and recovery work with external requests blocked`, async ({ page, context }) => {
     const external: string[] = [];
     await context.route('**/*', route => {
-      if (new URL(route.request().url()).hostname === '127.0.0.1') return route.continue();
+      if (new URL(route.request().url()).hostname === '127.0.0.1') return route.fallback();
       external.push(route.request().url()); return route.abort('internetdisconnected');
     });
     await page.goto('/');
-    await page.getByText('Load prepared local game data').click();
+    await page.getByText('Import game data or backup').click();
+    await page.locator('#game-data-file').setInputFiles({ name: 'synthetic.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(heroFixture())) });
     await page.getByLabel('Hero', { exact: true }).selectOption(hero);
     await page.getByLabel('Seed (optional, for a repeatable setup)').fill('17');
-    await page.locator('#game-data-file').setInputFiles({ name: 'synthetic.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(heroFixture())) });
+    await page.getByRole('button', { name: 'Start game', exact: true }).click();
     await expect(page.getByText(`Local ${hero} game`)).toBeVisible();
     await page.getByRole('button', { name: /^Inventory/ }).click();
     await expect(page.getByRole('heading', { name: `${hero} inventory` })).toBeVisible();

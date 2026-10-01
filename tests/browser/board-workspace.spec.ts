@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './test';
 import type { GameData } from '../../src/data/gameData';
 import { heroFixture } from '../../src/engine/fixtures/heroFixture';
 
@@ -26,9 +26,10 @@ function layoutFixture(): GameData {
 
 async function load(page: Page, data: GameData, seed = 2) {
   await page.goto('/');
-  await page.getByText('Load prepared local game data').click();
-  await page.getByLabel('Seed (optional, for a repeatable setup)').fill(String(seed));
+  await page.getByText('Import game data or backup').click();
   await page.locator('#game-data-file').setInputFiles({ name: 'synthetic-layout.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
+  await page.getByLabel('Seed (optional, for a repeatable setup)').fill(String(seed));
+  await page.getByRole('button', { name: 'Start game', exact: true }).click();
   await expect(page.getByText('Local game in progress.')).toBeVisible();
 }
 

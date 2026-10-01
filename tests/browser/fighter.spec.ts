@@ -1,17 +1,16 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './test';
 import { fighterFixture } from '../../src/engine/fixtures/fighterFixture';
 
 async function loadSyntheticFighter(page: Page, seed = 17, data = fighterFixture()) {
   await page.goto('/');
-  await page.getByText('Load prepared local game data').click();
-  await page.getByLabel('Seed (optional, for a repeatable setup)').fill(String(seed));
+  await page.getByText('Import game data or backup').click();
   await expect(page.locator('#game-data-file')).toBeEnabled();
-  const replacing = await page.getByRole('button', { name: 'Resume saved game' }).isVisible();
   await page.locator('#game-data-file').setInputFiles({
     name: 'synthetic-game-data.json', mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(data)),
   });
-  if (replacing) await page.getByRole('button', { name: 'Replace saved game', exact: true }).click();
+  await page.getByLabel('Seed (optional, for a repeatable setup)').fill(String(seed));
+  await page.getByRole('button', { name: 'Start game', exact: true }).click();
   await expect(page.getByText('Local game in progress.')).toBeVisible();
 }
 
@@ -142,7 +141,7 @@ test('confirmed special action and Monster Phase run with local requests only', 
   page.on('request', request => {
     if (new URL(request.url()).hostname !== '127.0.0.1') externalRequests.push(request.url());
   });
-  await page.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort());
+  await page.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1' ? route.fallback() : route.abort());
   await loadSyntheticFighter(page);
   const special = page.getByRole('button', { name: 'Special Action Hero ability' });
   await special.focus();

@@ -18,7 +18,7 @@ interface Props {
   reasonFor: ActionReason;
   busy: boolean;
   error: string | null;
-  onReturnToSample: () => void;
+  onReturnToGames: () => void;
   saveControls?: ReactNode;
 }
 
@@ -69,7 +69,7 @@ function PendingChoicePanel({ pending, busy, onAction, visible }: {
   </section>;
 }
 
-export function FighterTable({ data, game, onAction, reasonFor, busy, error, onReturnToSample, saveControls }: Props) {
+export function FighterTable({ data, game, onAction, reasonFor, busy, error, onReturnToGames, saveControls }: Props) {
   const heroClass = game.hero.definitionId.replace('hero-', '').replace(/^./, letter => letter.toUpperCase());
   const [actionsCollapsed, setActionsCollapsed] = useState(false);
   const [selected, setSelected] = useState<TrayId | null>(null);
@@ -172,7 +172,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
   return <div className={`app-shell h-table h-workspace-table ${actionsCollapsed ? 'actions-collapsed' : ''}`}>
     <header className="app-header">
       <a className="brand" href="#main"><span className="brand-mark" aria-hidden="true">B</span>BoardBot</a>
-      <div className="header-tools"><span className="prototype-badge">Local {heroClass} game</span><button className="quiet-button" onClick={() => openPanel('help')} aria-expanded={context === 'help'}>How to play</button><button className="quiet-button" onClick={onReturnToSample} disabled={busy}>Sample table</button></div>
+      <div className="header-tools"><span className="prototype-badge">Local {heroClass} game</span><button className="quiet-button" onClick={() => openPanel('help')} aria-expanded={context === 'help'}>How to play</button><button className="quiet-button" onClick={onReturnToGames} disabled={busy}>Saved games</button></div>
     </header>
     <main id="main">
       <h1 className="sr-only">Horrified {heroClass} table</h1>

@@ -1,20 +1,58 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './test';
 import { fighterFixture } from '../../src/engine/fixtures/fighterFixture';
 
 async function loadGame(page: Page, data = fighterFixture()) {
   await page.goto('/');
-  await page.getByText('Load prepared local game data').click();
-  await page.getByLabel('Seed (optional, for a repeatable setup)').fill('17');
+  await page.getByText('Import game data or backup').click();
   await page.locator('#game-data-file').setInputFiles({ name: 'synthetic.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
+  await page.getByLabel('Seed (optional, for a repeatable setup)').fill('17');
+  await page.getByRole('button', { name: 'Start game', exact: true }).click();
   await expect(page.getByText('Local game in progress.')).toBeVisible();
 }
 async function savedPayload(page: Page) {
   return page.evaluate(async () => {
-    const modulePath = '/src/session/localSaveStore.ts';
-    const module = await import(modulePath);
-    const store = await module.openLocalSaveStore();
-    const saved = await store.read(); store.close(); return saved.current!.payload;
+    const modulePath = '/src/session/gameLibrary.ts';
+    const library = await (await import(modulePath)).openGameLibrary();
+    const games = await library.list();
+    const saved = await library.game(games[0].id).read(); library.close(); return saved.current!.payload;
   });
+}
+
+async function allPayloads(page: Page): Promise<string[]> {
+  return page.evaluate(async () => {
+    const path = '/src/session/gameLibrary.ts';
+    const library = await (await import(path)).openGameLibrary();
+    const games = await library.list();
+    const payloads = await Promise.all(games.map(async (game: { id: string }) => (await library.game(game.id).read()).current!.payload));
+    library.close(); return payloads;
+  });
+}
+
+async function damageCurrent(page: Page, metadata: boolean) {
+  await page.evaluate(async metadata => {
+    const path = '/src/session/gameLibrary.ts';
+    const library = await (await import(path)).openGameLibrary();
+    const [game] = await library.list();
+    const store = library.game(game.id);
+    const slots = await store.read();
+    await store.write(slots.current!.payload, slots.current!.token);
+    library.close();
+    await new Promise<void>((resolve, reject) => {
+      const open = indexedDB.open('boardbot-game-library', 1);
+      open.onerror = () => reject(open.error);
+      open.onsuccess = () => {
+        const db = open.result; const tx = db.transaction('games', 'readwrite');
+        const records = tx.objectStore('games'); const request = records.get(game.id);
+        request.onsuccess = () => {
+          const record = request.result;
+          if (metadata) record.current = { payload: 'broken wrapper' };
+          else record.current.dataRef = 'sha256:missing';
+          records.put(record, game.id);
+        };
+        tx.oncomplete = () => { db.close(); resolve(); }; tx.onabort = () => { db.close(); reject(tx.error); };
+      };
+    });
+  }, metadata);
 }
 
 test('autosaves movement and resumes after reload without replaying another action', async ({ page }) => {
@@ -28,7 +66,7 @@ test('autosaves movement and resumes after reload without replaying another acti
   await expect(page.locator('.h-tray .action-budget')).toContainText('3 / 4');
   await expect(page.locator('.h-table .hero')).toContainText('Room 1');
   expect(await savedPayload(page)).toBe(before);
-  await page.getByRole('button', { name: 'Sample table' }).click();
+  await page.getByRole('button', { name: 'Saved games' }).click();
   await page.getByRole('button', { name: 'Resume saved game' }).click();
   await expect(page.locator('.h-tray .action-budget')).toContainText('3 / 4');
 });
@@ -53,12 +91,11 @@ test('restores the exact pending d20 response and exports a locally usable backu
   await page.getByRole('button', { name: 'Confirm choice', exact: true }).click();
   await expect.poll(async () => JSON.parse(await savedPayload(page)).state.revision).toBe(2);
   const later = await savedPayload(page);
-  await page.getByRole('button', { name: 'Sample table' }).click();
-  await page.getByText('Load prepared local game data').click();
+  await page.getByRole('button', { name: 'Saved games' }).click();
+  await page.getByText('Import game data or backup').click();
   await page.locator('#game-save-file').setInputFiles({ name: 'boardbot-save.json', mimeType: 'application/json', buffer: Buffer.from(before) });
-  await expect(page.getByRole('button', { name: 'Replace saved game', exact: true })).toBeVisible();
-  expect(await savedPayload(page)).toBe(later);
-  await page.getByRole('button', { name: 'Replace saved game', exact: true }).click();
+  await expect.poll(async () => (await allPayloads(page)).length).toBe(2);
+  expect(await allPayloads(page)).toContain(later);
   await expect(page.locator('.h-pending')).toHaveText(pending, { useInnerText: true });
   expect(await savedPayload(page)).toBe(before);
 });
@@ -89,20 +126,15 @@ test('failed writes pause gameplay and retry commits the already resolved action
 test('invalid imports retain the save and a damaged current payload can recover the previous save', async ({ page }) => {
   await loadGame(page);
   const original = await savedPayload(page);
-  await page.getByRole('button', { name: 'Sample table' }).click();
-  await page.getByText('Load prepared local game data').click();
+  await page.getByRole('button', { name: 'Saved games' }).click();
+  await page.getByText('Import game data or backup').click();
   await page.locator('#game-save-file').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{broken') });
   await expect(page.getByRole('alert')).toContainText('malformed');
   expect(await savedPayload(page)).toBe(original);
-  await page.evaluate(async () => {
-    const modulePath = '/src/session/localSaveStore.ts';
-    const module = await import(modulePath);
-    const store = await module.openLocalSaveStore();
-    const slots = await store.read(); await store.write('{broken', slots.current!.token); store.close();
-  });
+  await damageCurrent(page, false);
   await page.reload();
   await page.getByRole('button', { name: 'Resume saved game' }).click();
-  await expect(page.getByRole('alert')).toContainText('malformed');
+  await expect(page.getByRole('alert')).toContainText('record is damaged');
   await page.getByText('Recovery options', { exact: true }).click();
   await page.getByRole('button', { name: 'Recover previous save' }).click();
   await expect(page.getByText('Local game in progress.')).toBeVisible();
@@ -153,19 +185,7 @@ test('an interruption immediately after storage commit resumes the committed mov
 test('damaged current metadata still exposes previous-save recovery in the app', async ({ page }) => {
   await loadGame(page);
   const original = await savedPayload(page);
-  await page.evaluate(async () => {
-    const path = '/src/session/localSaveStore.ts';
-    const store = await (await import(path)).openLocalSaveStore();
-    const slots = await store.read(); await store.write(slots.current!.payload, slots.current!.token); store.close();
-    await new Promise<void>((resolve, reject) => {
-      const open = indexedDB.open('boardbot-local-game', 1);
-      open.onsuccess = () => {
-        const db = open.result; const tx = db.transaction('saves', 'readwrite');
-        tx.objectStore('saves').put({ payload: 'broken wrapper' }, 'current');
-        tx.oncomplete = () => { db.close(); resolve(); }; tx.onabort = () => reject(tx.error);
-      };
-    });
-  });
+  await damageCurrent(page, true);
   await page.reload();
   await page.getByRole('button', { name: 'Resume saved game' }).click();
   await expect(page.getByRole('alert')).toContainText('record is damaged');

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './test';
 
 async function moveOnce(page: Page) {
   await page.getByRole('button', { name: 'Move Connected location' }).click();
@@ -8,6 +8,7 @@ async function moveOnce(page: Page) {
 test('selecting Move is free; a destination commits once and locks controls until resolution', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
   await page.goto('/');
+  await page.getByRole('button', { name: 'Try sample table' }).click();
   await page.clock.pauseAt(new Date('2026-01-01T01:00:00Z'));
   await expect(page.getByText('A sample, not a real game.')).toBeVisible();
   const move = page.getByRole('button', { name: 'Move Connected location' });
@@ -37,6 +38,7 @@ test('selecting Move is free; a destination commits once and locks controls unti
 test('keyboard movement reaches zero actions without automatically ending the Hero Phase', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
   await page.goto('/');
+  await page.getByRole('button', { name: 'Try sample table' }).click();
   await page.clock.pauseAt(new Date('2026-01-01T01:00:00Z'));
   const move = page.getByRole('button', { name: 'Move Connected location' });
   await move.focus();
@@ -68,6 +70,7 @@ test('keyboard movement reaches zero actions without automatically ending the He
 
 test('ending early cancels uncommitted selections and records one phase boundary', async ({ page }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Try sample table' }).click();
   await page.getByRole('button', { name: 'Move Connected location' }).click();
   await page.getByRole('button', { name: 'End Hero Phase' }).evaluate((button: HTMLButtonElement) => { button.click(); button.click(); });
   await expect(page.getByRole('heading', { name: 'Sample turn complete' })).toBeVisible();
@@ -85,11 +88,13 @@ test('browser runtime uses only local requests and reload starts a fresh sample'
     if (new URL(request.url()).hostname !== '127.0.0.1') externalRequests.push(request.url());
   });
   page.on('pageerror', error => errors.push(error.message));
-  await page.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort());
+  await page.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1' ? route.fallback() : route.abort());
   await page.goto('/');
+  await page.getByRole('button', { name: 'Try sample table' }).click();
   await moveOnce(page);
   await expect(page.getByTestId('action-budget')).toHaveText('2 / 3');
   await page.reload();
+  await page.getByRole('button', { name: 'Try sample table' }).click();
   await expect(page.getByTestId('action-budget')).toHaveText('3 / 3');
   await expect(page.getByRole('main').getByText(/Progress resets on reload/)).toBeVisible();
   expect(externalRequests).toEqual([]);
@@ -99,6 +104,7 @@ test('browser runtime uses only local requests and reload starts a fresh sample'
 test('the compact tray fits below the map and the event log occupies the right rail', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/');
+  await page.getByRole('button', { name: 'Try sample table' }).click();
   const board = await page.getByRole('region', { name: 'The training grounds' }).boundingBox();
   const tray = await page.getByRole('region', { name: 'Your Hero Phase' }).boundingBox();
   const history = await page.getByRole('region', { name: 'Event log' }).boundingBox();
@@ -117,6 +123,7 @@ test('the compact tray fits below the map and the event log occupies the right r
 
 test('the Event log hides by keyboard, preserves history, and previews new events', async ({ page }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Try sample table' }).click();
   const panel = page.getByRole('region', { name: 'Event log' });
   const log = page.getByRole('log', { name: 'Session history' });
   const hide = page.getByRole('button', { name: 'Hide log' });
@@ -143,6 +150,7 @@ test('the Event log hides by keyboard, preserves history, and previews new event
 test('hiding actions preserves the phase controls, clears a draft, and reopens by keyboard', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
+  await page.getByRole('button', { name: 'Try sample table' }).click();
   await page.getByRole('button', { name: 'Move Connected location' }).click();
   await expect(page.getByRole('button', { name: 'Crossroads', exact: true })).toBeEnabled();
   const tray = page.getByRole('region', { name: 'Your Hero Phase' });
@@ -168,6 +176,7 @@ test('hiding actions preserves the phase controls, clears a draft, and reopens b
 
 test('phase end remains available with actions hidden', async ({ page }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Try sample table' }).click();
   await page.getByRole('button', { name: 'Hide actions' }).click();
   await page.getByRole('button', { name: 'End Hero Phase' }).click();
   await expect(page.getByRole('heading', { name: 'Sample turn complete' })).toBeVisible();
@@ -179,6 +188,7 @@ test('small screens keep the board, tray, and log within the viewport', async ({
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     await page.goto('/');
+  await page.getByRole('button', { name: 'Try sample table' }).click();
     await page.getByRole('button', { name: 'How to play' }).click();
     await expect(page.getByRole('heading', { name: 'Your first sample turn' })).toBeVisible();
     await page.getByRole('button', { name: 'Move Connected location' }).click();
@@ -203,6 +213,7 @@ test('small screens keep the board, tray, and log within the viewport', async ({
 
 test('unavailable cards explain themselves without shifting controls or executing actions', async ({ page }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Try sample table' }).click();
   const move = page.getByRole('button', { name: 'Move Connected location' });
   const guide = page.getByRole('button', { name: 'Guide Citizen' });
   const help = page.getByRole('note', { name: 'Action details' });
@@ -238,6 +249,7 @@ test('unavailable cards explain themselves without shifting controls or executin
 test('session log preserves older reading position until jumping to latest', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
   await page.goto('/');
+  await page.getByRole('button', { name: 'Try sample table' }).click();
   await page.clock.pauseAt(new Date('2026-01-01T01:00:00Z'));
   const log = page.getByRole('log', { name: 'Session history' });
   for (let turn = 0; turn < 3; turn++) {

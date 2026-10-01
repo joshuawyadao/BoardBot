@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './test';
 
 // This module URL gives the test an app origin without mounting a game session.
 const adapterPage = '/src/session/localSaveStore.ts';

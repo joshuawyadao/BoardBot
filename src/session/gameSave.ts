@@ -1,26 +1,13 @@
-import { validateGameData } from '../data/gameData';
+import { MAX_SAVE_LENGTH, validateLocalGameData } from '../data/localGameData.ts';
+export { MAX_SAVE_LENGTH, validateLocalGameData } from '../data/localGameData.ts';
 import type { GameData } from '../data/gameData';
 import { createFighterGame, dispatchGame } from '../engine/horrifiedGame';
 import type { FighterGame, GameCommand } from '../engine/horrifiedRuntime';
 
 export const SAVE_VERSION = 1;
 export const ENGINE_VERSION = 'solo-1';
-export const MAX_SAVE_LENGTH = 8 * 1024 * 1024;
 const MAX_COMMANDS = 5000;
 export interface SavedGame { data: GameData; game: FighterGame }
-
-/** Bound imported synthetic quantities as well as owner-verified data before expanding pieces. */
-export function validateLocalGameData(input: unknown): GameData {
-  const data = validateGameData(input);
-  const cards = [...data.monsterCards, ...data.perks, ...data.lairTokens.faces];
-  if (cards.reduce((sum, card) => sum + card.quantity, 0) > 1000 ||
-    data.items.reduce((sum, item) => sum + item.quantity, 0) > 1000 || data.board.locations.length > 500 ||
-    data.citizens.length > 100 || data.dice.monsterDice.quantity > 100 ||
-    data.monsterCards.some(card => card.movement > 1000 || card.itemsDrawn > 1000)) {
-    throw new Error('The imported data exceeds the supported local game size.');
-  }
-  return data;
-}
 
 function canonical(value: unknown): string {
   if (value === null || typeof value !== 'object') return JSON.stringify(value);

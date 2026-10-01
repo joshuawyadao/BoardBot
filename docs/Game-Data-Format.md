@@ -1,6 +1,6 @@
 # Local game data
 
-The data preparation tool converts the private, owner-verified component record and separately photographed setup instructions into a versioned JSON reference. The preparation tool itself does not execute effects. The solo engine can load its output through the local file picker and execute the selected solo game with any of the five base Heroes. A fresh clone can run the synthetic prototype and public tests without the private packet.
+The data preparation tool converts the private, owner-verified component record and separately photographed setup instructions into a versioned JSON reference. The preparation tool itself does not execute effects. The local app loads its output automatically at startup, caches it separately from saved games, and executes the selected solo game after Hero selection. A one-time local file picker remains available when the prepared file is absent. A fresh clone can run the synthetic prototype and public tests without the private packet.
 
 ## Prepare the reference
 
@@ -12,7 +12,7 @@ npm run data:prepare
 
 The command verifies the packet manifest, hashes of the record and both photos, the canonical version-6 record fingerprint, the separate setup supplement and its photo hash, and the normalized data structure. Only after those checks succeed does it atomically replace `local-data/horrified-dnd/game-data.json`. Missing files, unexpected record versions, hash mismatches, or invalid data fail without replacing a previously prepared reference. The original record and photos are retained.
 
-The reference stays ignored and is not bundled by Vite or served by the sample app. It contains component descriptions that are private source material. Do not commit, upload, or copy it into a public asset directory. A future runtime import must validate the format and separately establish which effects the engine supports. Publication rights remain a separate gate.
+The reference stays ignored and is not bundled into Vite build assets. A local development/preview middleware serves only this validated file through `GET /__boardbot/local-game-data`, with an 8 MiB limit, no-store headers, and same-origin loopback restrictions. Direct access to the private `local-data` directory is blocked. Static deployments without this middleware use cached or manually imported data. It contains component descriptions that are private source material. Do not commit, upload, or copy it into a public asset directory. The startup and manual import paths validate the format; the separate engine determines supported effects. Publication rights remain a separate gate.
 
 ## Version and evidence
 
@@ -34,4 +34,4 @@ Keep quantities and destinations attached to item types and card faces. Expansio
 
 `src/engine/horrifiedState.ts` creates an isolated solo state for the selected base Hero from validated setup data. It assigns stable physical instance IDs, shuffles Items/cards/Lairs deterministically, places twelve Items, deals one Perk, sets solo Terror and Frenzy, and separates waiting Citizens from the board. Its explicit player projection hides future draws, random state, and unrevealed Lair identities. Tests cover quantities, original token destinations, replay, supply exhaustion, and rejection of unsupported setup. No actions, Monster Phase, session storage, or playable interface are supplied by this initializer.
 
-The canonical [rules reference](Rules-Reference.md) records the recovered setup evidence and accepted conventions. Fighter command, effect, monster, and deterministic replay tests now accompany the integration. Save/recovery transitions and all five Heroes now have executable coverage. Full human play acceptance is still required. Imported data is stored privately with local saves; see [Local-Saves.md](Local-Saves.md). See [Verification.md](Verification.md).
+The canonical [rules reference](Rules-Reference.md) records the recovered setup evidence and accepted conventions. Fighter command, effect, monster, and deterministic replay tests now accompany the integration. Save/recovery transitions and all five Heroes now have executable coverage. Full human play acceptance is still required. Imported data is stored privately by exact version, separately from each game’s progress; see [Local-Saves.md](Local-Saves.md). See [Verification.md](Verification.md).
