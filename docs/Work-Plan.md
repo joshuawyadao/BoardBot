@@ -44,7 +44,7 @@ A documented local setup on the M1 Mac can complete a game with either victory o
 - Component reference photos/transcriptions: scoped verification is complete and retained in the private local packet described by the [game-data checklist](Game-Data-Checklist.md). Do not restart photo collection; preserve the packet separately from Git and verify fields when creating the runtime representation.
 - Edge-case rulings: use the canonical [rules reference](Rules-Reference.md). Preserve the distinction between publisher rules, reported correspondence, accepted BoardBot interpretations, and still-open cases. Accepted interpretations enable explicit implementation choices; they do not become official rules.
 - Before publishing third-party content, document its source and publication rights. Private reference photos stay outside tracked files. The simplified UI can use original labels and generic markers while content review proceeds.
-- The prototype uses React, Vite, TypeScript, Node.js 24, and pinned npm dependencies. Game storage mechanism/schema and supported browser versions for the milestone remain to be selected. These implementation choices do not reopen the agreed product scope.
+- The prototype uses React, Vite, TypeScript, Node.js 26, and pinned npm dependencies. Game storage mechanism/schema and supported browser versions for the milestone remain to be selected. These implementation choices do not reopen the agreed product scope.
 - Stage two is a physical-game companion for setup, tracking, and quick sourced rules/edge-case lookup. Other monsters, devices, and optional desktop packaging follow later.
 
 ## Open questions

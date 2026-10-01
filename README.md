@@ -9,7 +9,7 @@ BoardBot is a project for playing board games solo against bots on your computer
 
 ## Try the sample turn
 
-Install Node.js 24 and npm, then run:
+Install Node.js 26 and its bundled npm, then run:
 
 ```sh
 git clone https://github.com/joshuawyadao/BoardBot.git
@@ -33,7 +33,7 @@ These are planned Horrified capabilities. The sample turn only tests the interac
 
 ## Get started
 
-To check a contribution, install Git, Python 3.9 or newer, and Node.js 24. From the checkout, run:
+To check a contribution, install Git, Python 3.9 or newer, and Node.js 26. From the checkout, run:
 
 ```sh
 npm run verify
