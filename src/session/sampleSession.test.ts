@@ -19,8 +19,8 @@ describe('sample session log', () => {
     ])
 
     session = completeAction(session, { type: 'move', destination: 'crossroads' })
-    session = completeAction(session, { type: 'wait' })
     session = completeAction(session, { type: 'move', destination: 'lookout' })
+    session = completeAction(session, { type: 'move', destination: 'ruins' })
     expect(session.game.phase).toBe('ready')
     expect(session.entries.map(({ id }) => id)).toEqual(['entry-1', 'entry-2', 'entry-3', 'entry-4'])
 
@@ -36,17 +36,17 @@ describe('sample session log', () => {
     expect(session.entries.map(({ turn, kind, message }) => ({ turn, kind, message }))).toEqual([
       { turn: 1, kind: 'start', message: 'Practice explorer is at Camp.' },
       { turn: 1, kind: 'action', message: 'Moved from camp to crossroads.' },
-      { turn: 1, kind: 'action', message: 'Waited at crossroads.' },
       { turn: 1, kind: 'action', message: 'Moved from crossroads to lookout.' },
+      { turn: 1, kind: 'action', message: 'Moved from lookout to ruins.' },
       { turn: 1, kind: 'phase', message: 'Ended the sample Hero Phase.' },
       { turn: 2, kind: 'start', message: 'Practice explorer is at Camp.' },
     ])
 
-    session = completeAction(session, { type: 'wait' })
+    session = completeAction(session, { type: 'move', destination: 'crossroads' })
     expect(session.entries.map(({ id }) => id)).toEqual([
       'entry-1', 'entry-2', 'entry-3', 'entry-4', 'entry-5', 'entry-6', 'entry-7',
     ])
-    expect(session.entries.at(-1)).toMatchObject({ turn: 2, kind: 'action', message: 'Waited at camp.' })
+    expect(session.entries.at(-1)).toMatchObject({ turn: 2, kind: 'action', message: 'Moved from camp to crossroads.' })
   })
 
   it('does not log or spend actions for invalid, stale, duplicate, or premature commands', () => {
@@ -55,14 +55,16 @@ describe('sample session log', () => {
     expect(reduceSession(initial, {
       type: 'confirm', action: { type: 'move', destination: 'ruins' }, revision: 0,
     })).toBe(initial)
+    const wait = { type: 'wait' } as unknown as Action
+    expect(reduceSession(initial, { type: 'confirm', action: wait, revision: 0 })).toBe(initial)
 
     const resolving = reduceSession(initial, {
-      type: 'confirm', action: { type: 'wait' }, revision: 0,
+      type: 'confirm', action: { type: 'move', destination: 'crossroads' }, revision: 0,
     })
     expect(resolving.game.actionsRemaining).toBe(2)
     expect(resolving.entries).toHaveLength(2)
-    expect(reduceSession(resolving, { type: 'confirm', action: { type: 'wait' }, revision: 0 })).toBe(resolving)
-    expect(reduceSession(resolving, { type: 'confirm', action: { type: 'wait' }, revision: 1 })).toBe(resolving)
+    expect(reduceSession(resolving, { type: 'confirm', action: { type: 'move', destination: 'lookout' }, revision: 0 })).toBe(resolving)
+    expect(reduceSession(resolving, { type: 'confirm', action: { type: 'move', destination: 'lookout' }, revision: 1 })).toBe(resolving)
     expect(reduceSession(resolving, { type: 'finish', id: 999 })).toBe(resolving)
     expect(reduceSession(resolving, { type: 'restart' })).toBe(resolving)
     expect(reduceSession(resolving, { type: 'end-phase', revision: resolving.game.revision })).toBe(resolving)
@@ -70,7 +72,7 @@ describe('sample session log', () => {
     const ready = reduceSession(resolving, { type: 'finish', id: resolving.game.pending!.id })
     expect(ready.entries).toBe(resolving.entries)
     expect(reduceSession(ready, { type: 'finish', id: resolving.game.pending!.id })).toBe(ready)
-    expect(reduceSession(ready, { type: 'confirm', action: { type: 'wait' }, revision: 0 })).toBe(ready)
+    expect(reduceSession(ready, { type: 'confirm', action: { type: 'move', destination: 'lookout' }, revision: 0 })).toBe(ready)
     expect(ready.game.actionsRemaining).toBe(2)
     expect(ready.entries).toHaveLength(2)
     expect(reduceSession(ready, { type: 'end-phase', revision: 0 })).toBe(ready)
@@ -79,22 +81,22 @@ describe('sample session log', () => {
   it('keeps revisions distinct so commands from a prior turn cannot affect a later turn', () => {
     let session = createSession()
     const oldRevision = session.game.revision
-    session = completeAction(session, { type: 'wait' })
+    session = completeAction(session, { type: 'move', destination: 'crossroads' })
     const oldResolutionId = session.game.revision - 1
-    session = completeAction(session, { type: 'wait' })
-    session = completeAction(session, { type: 'wait' })
+    session = completeAction(session, { type: 'move', destination: 'lookout' })
+    session = completeAction(session, { type: 'move', destination: 'ruins' })
     session = reduceSession(session, { type: 'end-phase', revision: session.game.revision })
     const previousTurnRevision = session.game.revision
 
     session = reduceSession(session, { type: 'restart' })
     expect(session.game.revision).toBeGreaterThan(previousTurnRevision)
     expect(reduceSession(session, {
-      type: 'confirm', action: { type: 'wait' }, revision: oldRevision,
+      type: 'confirm', action: { type: 'move', destination: 'crossroads' }, revision: oldRevision,
     })).toBe(session)
     expect(reduceSession(session, { type: 'end-phase', revision: previousTurnRevision })).toBe(session)
 
     const resolving = reduceSession(session, {
-      type: 'confirm', action: { type: 'wait' }, revision: session.game.revision,
+      type: 'confirm', action: { type: 'move', destination: 'crossroads' }, revision: session.game.revision,
     })
     expect(resolving.game.phase).toBe('resolving')
     expect(resolving.game.actionsRemaining).toBe(2)
@@ -107,13 +109,13 @@ describe('sample session log', () => {
   it('ends early once, appends one phase event, and permits restart', () => {
     const start = createSession()
     const ended = reduceSession(start, { type: 'end-phase', revision: start.game.revision })
-    expect(ended.game).toMatchObject({ phase: 'complete', actionsRemaining: 3, revision: 1 })
+    expect(ended.game).toMatchObject({ phase: 'complete', actionsRemaining: 0, revision: 1 })
     expect(ended.entries).toEqual([
       { id: 'entry-1', turn: 1, kind: 'start', message: 'Practice explorer is at Camp.' },
       { id: 'entry-2', turn: 1, kind: 'phase', message: 'Ended the sample Hero Phase.' },
     ])
     expect(reduceSession(ended, { type: 'end-phase', revision: ended.game.revision })).toBe(ended)
-    expect(reduceSession(ended, { type: 'confirm', action: { type: 'wait' }, revision: ended.game.revision })).toBe(ended)
+    expect(reduceSession(ended, { type: 'confirm', action: { type: 'move', destination: 'crossroads' }, revision: ended.game.revision })).toBe(ended)
 
     const restarted = reduceSession(ended, { type: 'restart' })
     expect(restarted).toMatchObject({ turnNumber: 2, game: { phase: 'ready', actionsRemaining: 3, revision: 2 } })

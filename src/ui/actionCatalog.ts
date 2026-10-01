@@ -10,9 +10,4 @@ export const trayActions = [
   { id: 'perks', label: 'Perks', icon: '▱', caption: 'Eligible cards', cost: 'Planned · free', description: 'Eligible perks will remain usable at zero actions until you end the Hero Phase.', unavailable: 'Not implemented: the sample has no perk cards.' },
 ] as const;
 
-export const waitAction = {
-  id: 'wait', label: 'Wait (sample)',
-  description: 'Stay at your current location. Select Wait, then Confirm to spend one sample action. This is an invented practice action.',
-} as const;
-
-export type TrayActionId = typeof trayActions[number]['id'] | 'wait';
+export type TrayActionId = typeof trayActions[number]['id'];

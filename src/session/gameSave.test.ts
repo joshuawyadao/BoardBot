@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { fighterFixture } from '../engine/fixtures/fighterFixture';
-import { createFighterGame, dispatchGame } from '../engine/horrifiedGame';
+import { createFighterGame, dispatchGame, getActionReason, getFighterView } from '../engine/horrifiedGame';
 import type { FighterGame, GameCommand, HeroAction } from '../engine/horrifiedRuntime';
 import type { GameData } from '../data/gameData';
 import { decodeGameSave, encodeGameSave, ENGINE_VERSION, SAVE_VERSION, validateLocalGameData } from './gameSave';
@@ -59,16 +59,22 @@ describe('local game save replay', () => {
     data.items.forEach(item => { item.locations = ['b', 'b']; });
     let original = await createFighterGame(data, 41);
     original = commit(data, original, { kind: 'pick-up', items: [...original.boardItems.b] });
+    expect(original.hero.actions).toBe(3);
     original = commit(data, original, { kind: 'end-phase' });
+    expect(getFighterView(data, original).hero.actions).toBe(0);
+    expect(getActionReason(data, original, { kind: 'move', destination: 'a', escorts: [] })).not.toBeNull();
     expect(original.phase).toBe('monster');
     expect(original.pending?.title).toMatch(/Items for the trial/);
     expect(original.currentCard).not.toBeNull();
     const saved = await decodeGameSave(encodeGameSave(data, original));
     expect(saved.game).toEqual(original);
+    expect(getFighterView(saved.data, saved.game).hero.actions).toBe(0);
     const resumed = chooseFirst(saved.data, saved.game);
     const uninterrupted = chooseFirst(data, original);
     expect(resumed).toEqual(uninterrupted);
     expect(resumed.random).toEqual(uninterrupted.random);
+    expect(resumed.phase).toBe('hero');
+    expect(getFighterView(saved.data, resumed).hero.actions).toBe(4);
   });
 
   it('rejects malformed, incompatible, and tampered snapshots before exposing a game', async () => {

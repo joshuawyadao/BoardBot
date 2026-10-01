@@ -152,7 +152,10 @@ export async function createHorrifiedGame(input: unknown, seed: number, heroId =
 export function projectGame(state: HorrifiedState) {
   return structuredClone({
     revision: state.revision, turn: state.turn, phase: state.phase, endReason: state.endReason,
-    terror: state.terror, frenzy: state.frenzy, hero: state.hero, monsters: state.monsters,
+    terror: state.terror, frenzy: state.frenzy,
+    // Remaining actions are usable only in the Hero Phase. Keep replay snapshots unchanged.
+    hero: { ...state.hero, actions: state.phase === 'hero' ? state.hero.actions : 0 },
+    monsters: state.monsters,
     damagedEyes: state.damagedEyes, displacement: state.displacement, citizens: state.citizens,
     boardItems: state.boardItems, itemDiscard: state.itemDiscard, perkDiscard: state.perkDiscard,
     monsterDiscard: state.monsterDiscard, bagCount: state.bag.length, perkDeckCount: state.perkDeck.length,

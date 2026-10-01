@@ -22,6 +22,7 @@ test('local import opens a Fighter table with visible map, resources, and no hid
   await expect(page.locator('.h-location')).toHaveCount(4);
   await expect(page.locator('.h-map-paths line')).toHaveCount(3);
   await expect(page.locator('.h-tray .action-card')).toHaveCount(8);
+  await expect(page.getByRole('button', { name: /Wait/ })).toHaveCount(0);
   await expect(page.getByText('Monster progress')).toBeVisible();
   await expect(page.getByText('Fighter inventory')).toBeVisible();
   await expect(page.getByText('Perks discarded:')).toBeVisible();
@@ -201,4 +202,27 @@ test('narrow Fighter layout has no document overflow with actions shown or hidde
     await page.getByRole('button', { name: 'Show log' }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
+});
+
+
+test('ending early forfeits remaining actions through a saved Monster Phase choice', async ({ page }) => {
+  const data = fighterFixture();
+  data.monsterCards[0].printedId = 314;
+  data.monsterCards[0].name = 'Synthetic item trial';
+  data.items.forEach(item => { item.locations = ['b', 'b']; });
+  await loadSyntheticFighter(page, 41, data);
+  await page.getByRole('button', { name: 'Pick Up Items' }).click();
+  for (const item of await page.locator('.h-action-editor input[type="checkbox"]').all()) await item.check();
+  await page.getByRole('button', { name: 'Confirm action' }).click();
+  await expect(page.locator('.h-tray .action-budget')).toContainText('3 / 4');
+  await page.getByRole('button', { name: 'End Hero Phase' }).click();
+  await expect(page.getByRole('heading', { name: /Items for the trial/ })).toBeVisible();
+  await expect(page.locator('.h-tray .action-budget')).toContainText('0 / 4');
+  await expect(page.getByRole('button', { name: 'Move Connected location' })).toBeDisabled();
+  await page.reload();
+  await page.getByRole('button', { name: 'Resume saved game' }).click();
+  await expect(page.locator('.h-tray .action-budget')).toContainText('0 / 4');
+  await page.getByRole('button', { name: 'Confirm choice' }).click();
+  await expect(page.getByRole('heading', { name: 'Your Hero Phase' })).toBeVisible();
+  await expect(page.locator('.h-tray .action-budget')).toContainText('4 / 4');
 });

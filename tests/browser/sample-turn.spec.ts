@@ -1,4 +1,9 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+async function moveOnce(page: Page) {
+  await page.getByRole('button', { name: 'Move Connected location' }).click();
+  await page.locator('.map-location.reachable').first().click();
+}
 
 test('selecting Move is free; a destination commits once and locks controls until resolution', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
@@ -6,11 +11,10 @@ test('selecting Move is free; a destination commits once and locks controls unti
   await page.clock.pauseAt(new Date('2026-01-01T01:00:00Z'));
   await expect(page.getByText('A sample, not a real game.')).toBeVisible();
   const move = page.getByRole('button', { name: 'Move Connected location' });
-  const wait = page.getByRole('button', { name: 'Wait (sample)' });
-  const confirm = page.getByRole('button', { name: 'Confirm action' });
+  await expect(page.getByRole('button', { name: /Wait/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Confirm action' })).toHaveCount(0);
   await move.click();
   await expect(page.getByTestId('action-budget')).toHaveText('3 / 3');
-  await expect(confirm).toBeDisabled();
   const ruins = page.getByRole('button', { name: 'Ruins', exact: true });
   await expect(ruins).toHaveAttribute('aria-disabled', 'true');
   await ruins.evaluate((button: HTMLButtonElement) => button.click());
@@ -22,34 +26,31 @@ test('selecting Move is free; a destination commits once and locks controls unti
   await page.getByRole('button', { name: 'Crossroads', exact: true }).evaluate((button: HTMLButtonElement) => { button.click(); button.click(); });
   await expect(page.getByTestId('action-budget')).toHaveText('2 / 3');
   await expect(move).toBeDisabled();
-  await expect(wait).toBeDisabled();
   await expect(page.getByRole('button', { name: 'End Hero Phase' })).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Resolving…', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Clear selection' })).toBeDisabled();
   await expect(page.getByRole('listitem').filter({ hasText: 'Moved from camp to crossroads.' })).toHaveCount(1);
   await page.clock.runFor(950);
   await expect(page.getByRole('heading', { name: 'Your Hero Phase', exact: true })).toBeVisible();
   await expect(move).toBeEnabled();
-  await expect(confirm).toBeDisabled();
 });
 
-test('keyboard confirmation reaches zero actions without automatically ending the Hero Phase', async ({ page }) => {
+test('keyboard movement reaches zero actions without automatically ending the Hero Phase', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
   await page.goto('/');
   await page.clock.pauseAt(new Date('2026-01-01T01:00:00Z'));
-  const wait = page.getByRole('button', { name: 'Wait (sample)' });
-  await wait.focus();
-  await expect(page.getByRole('note', { name: 'Action details' })).toContainText('Stay at your current location');
+  const move = page.getByRole('button', { name: 'Move Connected location' });
+  await move.focus();
+  await expect(page.getByRole('note', { name: 'Action details' })).toContainText('highlighted destination');
   for (let remaining = 2; remaining >= 0; remaining--) {
-    await wait.focus();
+    await move.focus();
     await page.keyboard.press('Enter');
-    await page.getByRole('button', { name: 'Confirm action' }).focus();
-    await expect(page.getByRole('button', { name: 'Confirm action' })).toBeFocused();
+    await expect(page.locator('.map-location.reachable').first()).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('action-budget')).toHaveText(`${remaining} / 3`);
     await page.clock.runFor(950);
   }
   await expect(page.getByRole('heading', { name: 'No actions remaining' })).toBeVisible();
-  await expect(wait).toBeDisabled();
+  await expect(move).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Start a new sample turn' })).toHaveCount(0);
   const perks = page.getByRole('button', { name: 'Perks Eligible cards' });
   await perks.focus();
@@ -61,20 +62,20 @@ test('keyboard confirmation reaches zero actions without automatically ending th
   await page.getByRole('button', { name: 'Start a new sample turn' }).click();
   await expect(page.getByTestId('action-budget')).toHaveText('3 / 3');
   await expect(page.getByRole('log').getByRole('listitem')).toHaveCount(6);
-  await expect(page.getByRole('log').getByText('Waited at camp.', { exact: true })).toHaveCount(3);
+  await expect(page.getByRole('log').getByRole('listitem').filter({ hasText: 'Moved from' })).toHaveCount(3);
   await expect(page.getByRole('log').getByText('TURN 2', { exact: true })).toBeVisible();
 });
 
 test('ending early cancels uncommitted selections and records one phase boundary', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Wait (sample)' }).click();
+  await page.getByRole('button', { name: 'Move Connected location' }).click();
   await page.getByRole('button', { name: 'End Hero Phase' }).evaluate((button: HTMLButtonElement) => { button.click(); button.click(); });
   await expect(page.getByRole('heading', { name: 'Sample turn complete' })).toBeVisible();
-  await expect(page.getByTestId('action-budget')).toHaveText('3 / 3');
+  await expect(page.getByTestId('action-budget')).toHaveText('0 / 3');
   await expect(page.getByRole('log').getByRole('listitem')).toHaveCount(2);
   await page.getByRole('button', { name: 'Start a new sample turn' }).click();
-  await expect(page.getByRole('button', { name: 'Confirm action' })).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Wait (sample)' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByRole('button', { name: 'Crossroads', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Move Connected location' })).toHaveAttribute('aria-pressed', 'false');
 });
 
 test('browser runtime uses only local requests and reload starts a fresh sample', async ({ page }) => {
@@ -86,8 +87,7 @@ test('browser runtime uses only local requests and reload starts a fresh sample'
   page.on('pageerror', error => errors.push(error.message));
   await page.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort());
   await page.goto('/');
-  await page.getByRole('button', { name: 'Wait (sample)' }).click();
-  await page.getByRole('button', { name: 'Confirm action' }).click();
+  await moveOnce(page);
   await expect(page.getByTestId('action-budget')).toHaveText('2 / 3');
   await page.reload();
   await expect(page.getByTestId('action-budget')).toHaveText('3 / 3');
@@ -143,8 +143,8 @@ test('the Event log hides by keyboard, preserves history, and previews new event
 test('hiding actions preserves the phase controls, clears a draft, and reopens by keyboard', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Wait (sample)' }).click();
-  await expect(page.getByRole('button', { name: 'Confirm action' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Move Connected location' }).click();
+  await expect(page.getByRole('button', { name: 'Crossroads', exact: true })).toBeEnabled();
   const tray = page.getByRole('region', { name: 'Your Hero Phase' });
   const hide = page.getByRole('button', { name: 'Hide actions' });
   const bodyId = await hide.getAttribute('aria-controls');
@@ -161,8 +161,8 @@ test('hiding actions preserves the phase controls, clears a draft, and reopens b
   await show.focus();
   await page.keyboard.press('Enter');
   await expect(page.locator(`#${bodyId}`)).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Confirm action' })).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Wait (sample)' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByRole('button', { name: 'Crossroads', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Move Connected location' })).toHaveAttribute('aria-pressed', 'false');
   await expect(page.getByTestId('action-budget')).toHaveText('3 / 3');
 });
 
@@ -220,10 +220,10 @@ test('unavailable cards explain themselves without shifting controls or executin
     await card.hover();
     expect(await move.evaluate((element: HTMLElement) => element.offsetTop)).toBe(initialTop);
   }
-  await page.getByRole('button', { name: 'Wait (sample)' }).click();
+  await page.getByRole('button', { name: 'Move Connected location' }).click();
   // aria-disabled keeps the card focusable and tappable for its explanation only.
   await guide.click({ force: true });
-  await expect(page.getByRole('button', { name: 'Confirm action' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Crossroads', exact: true })).toBeDisabled();
   await expect(page.getByTestId('action-budget')).toHaveText('3 / 3');
   await guide.focus();
   await expect(help).toContainText('no citizens');
@@ -242,8 +242,7 @@ test('session log preserves older reading position until jumping to latest', asy
   const log = page.getByRole('log', { name: 'Session history' });
   for (let turn = 0; turn < 3; turn++) {
     for (let action = 0; action < 3; action++) {
-      await page.getByRole('button', { name: 'Wait (sample)' }).click();
-      await page.getByRole('button', { name: 'Confirm action' }).click();
+      await moveOnce(page);
       await page.clock.runFor(950);
     }
     await page.getByRole('button', { name: 'End Hero Phase' }).click();
@@ -258,15 +257,13 @@ test('session log preserves older reading position until jumping to latest', asy
   await expect(page.getByRole('button', { name: 'Jump to latest' })).toBeEnabled();
   await expect.poll(() => log.evaluate(element => element.scrollTop)).toBe(0);
   const previousPosition = await log.evaluate(element => element.scrollTop);
-  await page.getByRole('button', { name: 'Wait (sample)' }).click();
-  await page.getByRole('button', { name: 'Confirm action' }).click();
+  await moveOnce(page);
   await expect(log.getByRole('listitem')).toHaveCount(17);
   expect(await log.evaluate(element => element.scrollTop)).toBe(previousPosition);
   await page.clock.runFor(950);
   await page.getByRole('button', { name: 'Hide log' }).click();
-  await page.getByRole('button', { name: 'Wait (sample)' }).click();
-  await page.getByRole('button', { name: 'Confirm action' }).click();
-  await expect(page.getByRole('region', { name: 'Event log' })).toContainText('Waited at camp.');
+  await moveOnce(page);
+  await expect(page.getByRole('region', { name: 'Event log' })).toContainText('Moved from crossroads to camp.');
   await page.getByRole('button', { name: 'Show log' }).click();
   await expect(log.getByRole('listitem')).toHaveCount(18);
   expect(await log.evaluate(element => element.scrollTop)).toBe(previousPosition);
