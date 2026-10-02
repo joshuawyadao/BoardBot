@@ -28,6 +28,8 @@ The whole board fits the desktop table, arranged by the physical board’s regio
 
 Special Action opens the selected Hero’s roll ranges and effects before **Roll special action**. A persistent roll summary shows the value; **Latest result** shows its arithmetic, outcome, and recent events. Pending rolls are labeled **Awaiting response** until adjustments are finished.
 
+Required choices validate the complete selection before enabling **Confirm choice**. For example, Mystra explains when the selected Items do not total exactly seven strength.
+
 Wizard relocation prompts distinguish the initial ability roll from a follow-up destination roll. A Monster destination is highlighted, and each choice names the existing Monster’s current location and where it will move. This moves a piece already on the board; it is not an additional setup step.
 
 Each committed action and pending choice saves locally before its result appears. After reloading, choose **Resume saved game** beside the adventure you want. **Saved games** returns to the library; **New game** creates another adventure without replacing earlier games. Each saved game has a **Delete** option: confirm the selected adventure to remove it and its recovery save. Other games and base components remain available. **Export backup** downloads a private save; importing it adds a separate game. Failed saves pause play and offer **Retry saving**, preserving the exact result. Each game has Recovery options to restore its own previous save. See [local saves](docs/Local-Saves.md) for storage and recovery details.
@@ -57,6 +59,8 @@ npm run test:production
 ```
 
 The first command typechecks, builds, runs sample, data, and game-engine tests, and runs repository checks. The browser tests use Playwright Chromium. `test:production` builds the app and checks startup, pending-save recovery, cached components, and a complete synthetic defeat against an isolated preview on port 4180, with external HTTP requests blocked. `./scripts/verify-repository.sh` remains available for repository checks alone. The shell script works on macOS and Linux; Windows contributors can use WSL. These are contributor prerequisites, not supported platforms for a finished game. No API keys are needed. See [verification](docs/Verification.md) for coverage and limits, and the [owner playtest checklist](docs/Playtest-Checklist.md) for the remaining human acceptance.
+
+With the verified private packet prepared, `npm run test:private` additionally runs isolated browser games for all five Heroes using those actual components. It requires the ignored prepared JSON (or `BOARDBOT_PRIVATE_DATA`), uses port 4182, and keeps artifacts in the system temporary directory. It is opt-in and excluded from public CI; keep any output private.
 
 ## Project direction
 

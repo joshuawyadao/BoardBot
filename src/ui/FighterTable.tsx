@@ -45,17 +45,18 @@ function toggle(values: string[], value: string): string[] {
   return values.includes(value) ? values.filter(entry => entry !== value) : [...values, value];
 }
 
-function PendingChoicePanel({ pending, busy, onAction, visible, focusRequest }: {
+function PendingChoicePanel({ pending, busy, onAction, reasonFor, visible, focusRequest }: {
   pending: NonNullable<GameView['pending']>;
   visible: boolean;
   focusRequest: number;
   busy: boolean;
   onAction: Props['onAction'];
+  reasonFor: Props['reasonFor'];
 }) {
   const [selected, setSelected] = useState<string[]>([]);
   const headingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => { if (visible) headingRef.current?.focus({ preventScroll: true }); }, [visible, focusRequest]);
-  const valid = selected.length >= pending.min && selected.length <= pending.max;
+  const reason = reasonFor({ kind: 'choose', choiceId: pending.id, selected });
   return <section className="h-pending" aria-labelledby="pending-title">
     <div className="h-choice-scroll">
     <h2 id="pending-title" ref={headingRef} tabIndex={-1}>{pending.title}</h2>
@@ -72,8 +73,9 @@ function PendingChoicePanel({ pending, busy, onAction, visible, focusRequest }: 
         <span>{option.label}</span>
       </label>)}
     </fieldset></div>
+    {selected.length > 0 && reason && <p id="pending-choice-reason" aria-live="polite">{reason}</p>}
     </div>
-    <button className="confirm-button" disabled={busy || !valid} onClick={() => onAction({ kind: 'choose', choiceId: pending.id, selected })}>Confirm choice</button>
+    <button className="confirm-button" disabled={busy || !!reason} aria-describedby={selected.length > 0 && reason ? 'pending-choice-reason' : undefined} onClick={() => onAction({ kind: 'choose', choiceId: pending.id, selected })}>Confirm choice</button>
   </section>;
 }
 
@@ -213,7 +215,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
   }
 
   const panelContents: Record<PanelId, ReactNode> = {
-    choice: (<div className="h-choice-panel">{pending && <>{visiblePanels.length <= 2 && <RollResult game={game} data={data} compact={!game.currentRoll} />}<PendingChoicePanel key={pending.id} pending={pending} busy={busy} onAction={onAction} visible={context === 'choice'} focusRequest={choiceFocus} /></>}</div>),
+    choice: (<div className="h-choice-panel">{pending && <>{visiblePanels.length <= 2 && <RollResult game={game} data={data} compact={!game.currentRoll} />}<PendingChoicePanel key={pending.id} pending={pending} busy={busy} onAction={onAction} reasonFor={reasonFor} visible={context === 'choice'} focusRequest={choiceFocus} /></>}</div>),
     action: (<div className="h-action-panel">            {selected && <div className="h-action-editor" aria-live="polite">
               {selected === 'move' && <div><h3>Move from {locationName(at)}</h3><p>Select a highlighted destination on the board. Movement commits when you choose it.</p>{companions.length > 0 && <fieldset disabled={selectionLocked}><legend>Escort Citizens</legend>{companions.map(([id]) => <label className="h-check-row" key={id}><input type="checkbox" checked={escorts.includes(id)} onChange={() => setEscorts(current => toggle(current, id))} />{data.citizens.find(citizen => citizen.id === id)?.name ?? 'Citizen'}</label>)}</fieldset>}</div>}
               {selected === 'guide' && <div><h3>Guide a Citizen</h3>{game.guideOptions.length ? <fieldset disabled={selectionLocked}><legend>Available destinations</legend>{game.guideOptions.map((option, index) => <label className="h-check-row" key={`${option.citizen}-${option.destination}`}><input type="radio" name="guide-option" checked={selectedGuide === index} onChange={() => setSelectedGuide(index)} />{data.citizens.find(citizen => citizen.id === option.citizen)?.name ?? 'Citizen'} → {locationName(option.destination)}</label>)}</fieldset> : <p>No eligible guidance at this location.</p>}</div>}

@@ -7,6 +7,7 @@ export default defineConfig({
   workers: 1,
   timeout: 60000,
   reporter: 'list',
+  outputDir: './test-results/production',
   use: { baseURL: 'http://127.0.0.1:4180', trace: 'retain-on-failure' },
   projects: [{ name: 'production-chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {

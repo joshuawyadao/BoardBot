@@ -22,6 +22,8 @@ npm run test:production
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 ```
 
+Owners with prepared private components can additionally run `npm run test:private`. This opt-in suite reads the ignored `local-data/horrified-dnd/game-data.json`, or the file named by `BOARDBOT_PRIVATE_DATA`, and fails clearly if valid owner-verified data is absent. It starts an isolated server on port 4182 with disposable browser storage and blocks external requests. It never attaches to the owner's live game. Traces, screenshots, and videos are disabled; any failure artifacts stay in the system temporary directory. Keep output and artifacts private. Public CI does not run this command or require the owner's packet.
+
 ## What the checks cover
 
 - Required public project files are present and nonempty.
@@ -134,3 +136,23 @@ The October 1 acceptance continuation adds `tests/browser/victory.spec.ts`: each
 No gameplay defect was reproduced during these checks. The owner has approved the interface so far; completed human games and the physical disconnection check remain open in [Playtest-Checklist.md](Playtest-Checklist.md). The existing actual-data defeat checks remain separate from the synthetic victories, and no publication rights are inferred from either.
 
 Validation passed under Node 26.10.0 on macOS 27.0.1: build/typecheck, 101 unit tests across 18 files, five repository tests, all 67 Chromium browser tests, and the separate production acceptance test. The production check is included in `CI Verify`; these results are from the local run.
+
+## Rules audit and prepared-component browser play
+
+The next October 1 audit compared shared actions, Perks, challenge requirements, setup, Monster resolution, and end conditions with the verified component evidence and accepted interpretations. A targeted check of the publisher's manual confirmed the Displacer strength 4–6 exception on page 10; it is now recorded in Rules-Reference. No engine mismatch was reproduced in the audited cases. Repeated Slowing Ray penalties remain an explicit source/interpretation gap; the existing one-action cap was not changed or newly accepted by this audit.
+
+New public regressions cover these boundaries:
+
+| Test file | Independent rule expectations |
+| --- | --- |
+| `src/engine/actionRuleBoundaries.test.ts` | Strengths 1–6 across Displacer cells, occupied-cell denial, legal ordinary-miss relocation, both Monsters' defeat prerequisites and exact boundary costs, and atomic rejection preserving state/RNG/resources |
+| `src/engine/monsterRuleIntegration.test.ts` | Fear moves the original recipient before HITs; Citizen-origin Displacer POWs retarget the sole Hero and apply the original HIT once; maximum Terror interrupts remaining POWs/activations immediately |
+| `tests/browser/rule-consequences.spec.ts` | Natural 19 plus Ott +2 resolves effectively as 20 once, exact payment and free Mystra timing, uncommitted draft cancellation, and Displacer Item placement through normal controls |
+
+The browser tests reproduced one interface defect: Mystra's Confirm choice button used selection count alone and remained enabled for an incorrect combined Item strength. The engine already rejected that payment without spending Items. The panel now uses engine legality, explains the invalid cost, and enables confirmation only for a legal selection. No engine rule, RNG behavior, data version, or save format changed.
+
+Public browser and production suites now use separate subdirectories under ignored `test-results/` so concurrent runs cannot delete each other's artifacts. The opt-in prepared-component suite keeps its artifacts in the system temporary directory instead. Configuration changes must finish before browser runs begin, because Vite may reload the app during an active scenario.
+
+`tests/prepared/local-rules.spec.ts` and `playwright.prepared.config.ts` additionally passed with the actual ignored owner-verified dataset. All five Heroes used ordinary UI Move, Pick Up, Special Action, End Hero Phase, and required choices; no state or dice were injected. Setup checks matched the prepared Hero/Monster positions and action allowances, 12 board Items, one Perk, and four Lairs. Every run reloaded both a pending choice and its terminal state exactly, with no browser errors or external requests. Fighter finished at turn 14 after 26 committed decisions, Bard at 14/25, Cleric at 14/25, Rogue at 14/22, and Wizard at 8/19. All ended in defeat; these runs do not establish a private-data victory, balance, or human acceptance.
+
+Final checks passed on Node 26.10.0: build/typecheck, 108 unit tests across 20 files, five repository tests, 70 public Chromium browser tests, one production test, and five opt-in prepared-data browser tests. The UI fix preserves existing saves; raw private data, logs, backups, and failure artifacts remain outside Git.

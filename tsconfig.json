@@ -25,6 +25,7 @@
     "src",
     "tests/browser",
     "tests/production",
+    "tests/prepared",
     "*.config.ts",
     "scripts/*.ts"
   ]

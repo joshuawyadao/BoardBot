@@ -34,6 +34,8 @@ Separate Hero, Monster, Item, Citizen, and Lair markers keep co-located pieces v
 
 The public pending projection adds an optional description and Wizard Monster destination. Wizard wording uses observed rolls and locations to distinguish ability results from follow-up destination rolls and identify the existing piece to move. The original stored pending title/options and continuation are untouched. Inventory disclosures use effects from the already-public owned Perk projection.
 
+Required-choice confirmation uses the same engine legality callback as ordinary action review, including combined costs such as Mystra's exact Item strength. An invalid selection shows its reason and cannot be confirmed; the interface does not duplicate those rules. This validation does not change command semantics or saved state.
+
 The shared `SessionLog` receives visibility from the solo panel so closing it preserves the reader's position and opening it follows new entries only when appropriate. Panel positions and disclosure state are temporary interface preferences, not saved game rules.
 
 ## Responsibilities

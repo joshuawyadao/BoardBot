@@ -18,10 +18,11 @@ Report the Hero, outcome, whether reload preserved the pending roll, and any con
 | --- | --- |
 | Interface layout and controls | Owner feedback: looks good so far, October 1 |
 | All five Hero rules paths and legal terminal states | Automated synthetic tests; see Verification |
-| Actual prepared data | All five Heroes have command-driven defeat and replay checks; a complete real-data victory is still unrecorded |
+| Actual prepared data | All five Heroes have command-driven defeat/replay checks and complete isolated browser defeat games with exact pending/terminal recovery; a complete real-data victory is still unrecorded |
 | Complete owner game | Pending owner outcome and feedback |
 | Owner validation of the other Hero abilities | Pending full-play feedback; automated coverage exists |
 | Physical internet disconnection on the target Mac | Pending owner-run check; automated tests block external HTTP requests while retaining localhost |
+| Repeated Slowing Ray penalty | The current one-action cap is unchanged; cumulative penalties need a source clarification or owner interpretation, as recorded in Rules-Reference |
 | Public distribution of game text/assets | Separate publication-rights gate; private playtests do not grant those rights |
 
 Keep the six-task goal open until the required full-game and target-device evidence is recorded. Do not label an automated scripted run as an owner playthrough. The accepted rules and remaining interpretation limits are in [Rules-Reference.md](Rules-Reference.md); supported checks and their exact scope are in [Verification.md](Verification.md).
