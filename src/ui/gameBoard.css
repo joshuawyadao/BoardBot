@@ -1,0 +1,44 @@
+.h-game-board { width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.h-game-board .game-board-svg { display: block; width: 100%; max-width: 100%; max-height: 100%; min-height: 0; flex: 1 1 auto; }
+.game-board-bg { fill: #f6f5e9; stroke: #bdc9ae; stroke-width: 2; }
+.game-board-zone { stroke: #fbfbf3; stroke-width: 8; }
+.game-board-zone.waterdeep { fill: #e9f0e1; }
+.game-board-zone.arcane { fill: #f1e9d9; }
+.game-board-zone.dungeon { fill: #e7e8dc; }
+.game-board-zone.skullport { fill: #dfecef; }
+.game-board-zone.wyllowwood { fill: #e2ecd9; }
+.game-board-region { fill: #596b5d; font: 700 13px/1 system-ui, sans-serif; letter-spacing: 3px; }
+.game-board-region.arcane, .game-board-region.dungeon { font-size: 11px; }
+.game-board-route .route-gap { fill: none; stroke: #f7f6ec; stroke-width: 11; stroke-linejoin: round; stroke-linecap: round; }
+.game-board-route .route-line { fill: none; stroke: #738b6d; stroke-width: 3.5; stroke-linejoin: round; stroke-linecap: round; }
+.game-board-route.passage .route-line { stroke: #6b7a9e; stroke-width: 4; stroke-dasharray: 8 7; }
+.game-board-route.teleport .route-line { stroke: #8a65b1; stroke-width: 4; stroke-dasharray: 3 7; }
+.game-board-route.highlighted .route-line { stroke: #28633b; stroke-width: 6; }
+.game-board-route.teleport.highlighted .route-line { stroke: #7350a1; }
+.h-game-board .game-board-node.h-location { box-sizing: border-box; position: static; transform: none; width: 100%; min-height: 0; height: 100%; padding: 4px 5px; gap: 2px; border-radius: 9px; box-shadow: 0 2px 0 #d4ddce; overflow: hidden; cursor: default; }
+.h-game-board .game-board-node.h-location.circle { border-radius: 24px; }
+.h-game-board .game-board-node.h-location.reachable { cursor: pointer; }
+.h-game-board .game-board-node.h-location.wizard-destination { outline: 4px solid #bd6921; outline-offset: -4px; background: #fff0d9; }
+.h-game-board .game-board-node.h-location:focus-visible { outline: 3px solid #2d5a9d; outline-offset: -3px; }
+.game-board-node .h-node-name { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font: 600 15px/1.06 Georgia, serif; }
+.game-board-pieces { display: flex; flex: none; align-items: center; justify-content: center; gap: 3px; min-height: 17px; }
+.game-board-pieces .piece { flex: none; }
+.h-game-board .piece { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 3px; border: 1px solid currentColor; border-radius: 4px; color: #fff; font: 800 10px/1 system-ui, sans-serif; font-style: normal; }
+.h-game-board .piece.piece-hero { background: #25694a; border-color: #194d35; border-radius: 50%; }
+.h-game-board .piece.piece-beholder { background: #7142a2; border-color: #593181; border-radius: 50%; }
+.h-game-board .piece.piece-displacer { background: #9b405f; border-color: #763149; border-radius: 3px; }
+.h-game-board .piece.piece-item { background: #9b5d19; border-color: #74430f; }
+.h-game-board .piece.piece-citizen { background: #336a9a; border-color: #255073; border-radius: 50%; }
+.h-game-board .piece.piece-lair { background: #fff9eb; color: #695b42; border-style: dashed; }
+.h-game-board .piece.piece-lair.revealed { background: #695b42; color: #fff9eb; border-style: solid; }
+.game-board-number { display: inline-block; margin-right: 4px; color: #49664b; font: 700 13px/1 system-ui, sans-serif; }
+.game-board-key.h-map-key { box-sizing: border-box; flex: 0 0 auto; padding: 4px 8px; gap: 4px 13px; font-size: 10px; justify-content: center; }
+.game-board-key span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.game-board-key i { display: inline-block; flex: none; }
+.game-board-key .key-line { width: 16px; height: 0; border-top: 3px solid #738b6d; }
+.game-board-key .key-line.passage { border-top: 3px dashed #6b7a9e; }
+.game-board-key .key-circle { width: 11px; height: 11px; border: 2px solid #8a65b1; border-radius: 50%; }
+.game-board-key .key-current { width: 11px; height: 11px; border: 2px solid #234e38; border-radius: 3px; background: #e4f0df; }
+.game-board-key .key-reachable { width: 11px; height: 11px; border: 2px solid #4c793a; border-radius: 3px; background: #f3ffe9; }
+.game-board-key .key-wizard-destination { width: 11px; height: 11px; border: 3px solid #bd6921; border-radius: 3px; background: #fff0d9; }
+@media (max-width: 600px) { .game-board-key.h-map-key { font-size: 9px; gap: 2px 9px; } }

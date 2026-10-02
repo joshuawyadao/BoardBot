@@ -20,9 +20,7 @@ export const connections: readonly (readonly [LocationId, LocationId])[] = [
   ['lookout', 'ruins'],
 ]
 
-export type Action =
-  | { readonly type: 'move'; readonly destination: LocationId }
-  | { readonly type: 'wait' }
+export type Action = { readonly type: 'move'; readonly destination: LocationId }
 
 export interface GameState {
   readonly phase: 'ready' | 'resolving' | 'complete'
@@ -51,7 +49,6 @@ export function getActionReason(state: GameState, action: Action): string | null
   if (state.phase === 'complete') return 'The sample Hero Phase has ended.'
   if (state.actionsRemaining === 0) return 'No actions remain. End the Hero Phase when ready.'
 
-  if (action.type === 'wait') return null
   if (action.type !== 'move') return 'Unknown action.'
 
   if (!locations.some(({ id }) => id === action.destination)) return 'Unknown destination.'
@@ -76,6 +73,7 @@ export function endHeroPhase(state: GameState, expectedRevision: number): GameSt
   return {
     ...state,
     phase: 'complete',
+    actionsRemaining: 0,
     revision: state.revision + 1,
     history: [...state.history, 'Ended the sample Hero Phase.'],
   }
@@ -86,20 +84,14 @@ export function submitAction(state: GameState, action: Action, expectedRevision:
   if (state.revision !== expectedRevision || getActionReason(state, action) !== null) return state
 
   const nextRevision = state.revision + 1
-  const destination = action.type === 'move' ? action.destination : state.location
-  const event =
-    action.type === 'move'
-      ? `Moved from ${state.location} to ${action.destination}.`
-      : `Waited at ${state.location}.`
-
   return {
     ...state,
     phase: 'resolving',
     actionsRemaining: state.actionsRemaining - 1,
-    location: destination,
+    location: action.destination,
     revision: nextRevision,
     pending: { id: nextRevision, action },
-    history: [...state.history, event],
+    history: [...state.history, `Moved from ${state.location} to ${action.destination}.`],
   }
 }
 

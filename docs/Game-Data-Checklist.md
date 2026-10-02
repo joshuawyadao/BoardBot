@@ -9,7 +9,7 @@ Scope: original Horrified: Dungeons & Dragons, the five base Heroes, Beholder an
 1. Use this register for physical coverage and evidence access.
 2. Use [Rules-Reference.md](Rules-Reference.md) for published findings, reported clarifications, accepted working interpretations, source links, and remaining questions. It is the canonical rules research memory; do not repeat source searches just because a temporary task plan has changed.
 3. Use the private local evidence packet for exact component fields. Its data has been confirmed by the owner; distinguish printed facts from interpretive decisions.
-4. Reopen research only for a documented gap, a conflicting observation, a different edition, or new authoritative evidence. No additional owner photos or readouts are currently requested.
+4. Reopen research only for a documented gap, a conflicting observation, a different edition, or new authoritative evidence. The selected Monster setup gap was closed using a readable online photo of the printed mat, as recorded in Rules-Reference.md. No additional owner photo or readout is currently needed for those two Monsters.
 
 ## Confirmed component coverage
 
@@ -47,6 +47,8 @@ The working checkout contains an ignored `local-data/horrified-dnd/` packet:
 
 The immutable imported record version is 6. Its SHA-256 at capture is `46ff404d179853f854dec0a8565139ec4455f8f60b7f41266cd4bbd16c97e853`. Older draft proposal/approval fields in that historical record are superseded by the accepted interpretations in `Rules-Reference.md`; never implement its earlier Perk-reshuffle proposal.
 
+A separate ignored `setup-evidence/` directory holds `online-monster-setup.jpg` and `setup-supplement.json`, including the source URL, photo hash, readable Beholder/Displacer setup facts, and cross-references to the verified board. This supplement is online printed-component evidence, not owner-confirmed v6 content. Preserve it with the private packet when moving worktrees. The preparation command now verifies and imports it into schema v2.
+
 The packet contains legacy absolute and temporary reference paths. Use the packet's own two photo files and source URLs; a legacy path does not imply the file still exists. Not every research image/PDF was archived. The structured confirmations remain available without those transient files.
 
 **Git does not back up this packet.** A fresh clone or another checkout receives the public research notes, not the raw component fields/photos. The original persistent source packet is also retained outside this worktree on the owner's machine. Before removing a worktree, verify that separate copy or preserve the local packet to an owner-controlled backup. Managed worktree snapshots do not preserve needed ignored files automatically.
@@ -59,11 +61,12 @@ Tracked material here consists of original project research notes, factual verif
 
 Before packaging a public game-data manifest or redistributable assets, document provenance and publication rights for the proposed content. Physical ownership and accurate transcription do not satisfy that gate. A private reference packet is neither a public runtime dependency nor an implemented data importer.
 
-## Remaining implementation gates
+## Current implementation and remaining gates
 
-- Resolve the explicitly open rules boundaries in [Rules-Reference.md](Rules-Reference.md), notably Ott's out-of-range results and competing optional-response order, before implementing affected behavior.
-- Translate confirmed component data into a reviewed, versioned representation with suitable provenance. Check every board edge and deck multiplicity against the packet, not the coverage totals alone.
+- Setup import and isolated solo initialization now have focused coverage. Preserve the distinct source grades and immutable v6 packet as the complete engine is built.
+- The solo engine integrates the approved d20 bounds and relevant response policies under interpretation v5, with all five base Heroes and local recovery. V4 added the October 2 owner-approved Slowing Ray stacking policy; v5 corrects Rogue board-Item selection to match the accepted up-to-two clarification. Existing v3/v4 saves retain their earlier behavior. Specific verified component timing also confirms that the Cleric critical one-die limit covers every attack that turn and Jarlaxle applies only to the next d20 in the same Hero Phase. Preserve the owner-approved policies in [Rules-Reference.md](Rules-Reference.md); reopen only genuinely new gaps or conflicting evidence.
+- The [versioned private reference](Game-Data-Format.md) now validates the confirmed data, setup, board connections, quantities, and provenance. Component effects remain prose; a successful conversion does not implement gameplay. The owner accepted Charm’s eligible Citizen pool, strength-legal relocation after an ordinary Displacer miss, and per-step escorts in v3. These are encoded in the Fighter engine.
 - Record the accepted interpretation version in sessions/replays. Keep published findings, reported answers, and BoardBot choices distinguishable.
-- Add source-linked engine tests and actual complete-game acceptance checks. Repository hygiene checks and synthetic engine/browser tests validate tooling and the invented sample turn, not Horrified component data, game balance, or human/bot multiplayer.
+- Source references and synthetic engine/browser tests now accompany the solo implementation. They exercise legal transitions, effects, complete outcomes, and recovery with invented fixtures; they do not establish exact private component contents, game balance, or human/bot multiplayer. Private-data checks and remaining owner acceptance are recorded in [Verification.md](Verification.md) and [Playtest-Checklist.md](Playtest-Checklist.md).
 
 The [work plan](Work-Plan.md) still targets one human-controlled Hero first. The one-to-five-Hero consistency review in the rules reference preserves a later extension path without declaring multiplayer or strategic bots implemented.
