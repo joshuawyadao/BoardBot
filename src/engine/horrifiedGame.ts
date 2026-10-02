@@ -1,6 +1,6 @@
 import type { GameData } from '../data/gameData';
 import { adjacentLocations, awaySteps, nextInt, shortestRouteSteps } from './gamePrimitives.ts';
-import { closeResponseWindow, createResponseWindow, passResponse, resolveD20, selectResponse } from './decisionPolicies.ts';
+import { closeResponseWindow, createResponseWindow, passResponse, resolveD20, selectResponse, isSupportedRuleset, RULESET_VERSION } from './decisionPolicies.ts';
 import { createHorrifiedGame, drawBoardItems, gainPerk, logEntry, projectGame, SOLO_SEAT } from './horrifiedState.ts';
 import type { MonsterId } from './horrifiedState';
 import type { ChoiceOption, EngineContext, FighterGame, GameCommand, HeroAction, Task } from './horrifiedRuntime';
@@ -22,6 +22,12 @@ const cellFits = (data: GameData, state: FighterGame, item: string, cell: string
   const spot = cellEntries(data).find(candidate => candidate.id === cell);
   return !!spot && !!strength && (strength >= 4 || strength === spot.values.length);
 };
+
+/** Only new adventures adopt current rules; replay keeps its original data unchanged. */
+export function gameDataForNewGame(data: GameData): GameData {
+  if (!isSupportedRuleset(data.interpretationVersion)) throw new Error('Unsupported rules interpretation. Prepare the current game data.');
+  return { ...structuredClone(data), interpretationVersion: RULESET_VERSION };
+}
 
 export async function createFighterGame(data: GameData, seed: number, heroId = 'hero-fighter'): Promise<FighterGame> {
   const snapshot = structuredClone(data);

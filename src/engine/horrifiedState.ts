@@ -1,6 +1,6 @@
 import type { GameData } from '../data/gameData';
 import { validateGameData } from '../data/gameData.ts';
-import { RULESET_VERSION } from './decisionPolicies.ts';
+import { isSupportedRuleset } from './decisionPolicies.ts';
 import { createRandomState, shuffle } from './gamePrimitives.ts';
 import type { RandomState } from './gamePrimitives';
 
@@ -103,7 +103,7 @@ export function gainPerk(state: HorrifiedState): string | null {
 /** Rulebook p. 4 plus separately verified monster setup. No UI or storage effects. */
 export async function createHorrifiedGame(input: unknown, seed: number, heroId = 'hero-fighter'): Promise<HorrifiedState> {
   const data = structuredClone(validateGameData(input));
-  if (data.interpretationVersion !== RULESET_VERSION) throw new Error('Unsupported rules interpretation. Prepare the current game data.');
+  if (!isSupportedRuleset(data.interpretationVersion)) throw new Error('Unsupported rules interpretation. Prepare the current game data.');
   if (!data.setup || !data.capabilities.setupVerified) throw new Error('Verified monster setup is required.');
   if (!['hero-bard', 'hero-cleric', 'hero-fighter', 'hero-rogue', 'hero-wizard'].includes(heroId)) throw new Error('Unsupported Hero.');
   const hero = data.heroes.find(candidate => candidate.id === heroId);
@@ -129,7 +129,7 @@ export async function createHorrifiedGame(input: unknown, seed: number, heroId =
   const lairs = randomize(lairFaces);
   const frenzy: MonsterId = data.monsters.beholder.frenzyOrder < data.monsters.displacerBeast.frenzyOrder ? 'beholder' : 'displacerBeast';
   const state: HorrifiedState = {
-    schemaVersion: SESSION_SCHEMA_VERSION, rulesVersion: RULESET_VERSION, dataIdentity: await dataIdentity(data),
+    schemaVersion: SESSION_SCHEMA_VERSION, rulesVersion: data.interpretationVersion, dataIdentity: await dataIdentity(data),
     seed, random, revision: 0, turn: 1, phase: 'hero', endReason: null, terror: data.board.soloLabelAt, frenzy,
     hero: { seatId: SOLO_SEAT, definitionId: hero.id, location: hero.start, items: [], perks: [], actions: hero.actions, allowance: hero.actions,
       effects: { ignoreHits: 0, skipMonsterCard: false, skipMonsterPhase: false, automatic20: false,

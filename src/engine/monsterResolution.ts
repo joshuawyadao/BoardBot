@@ -1,10 +1,17 @@
 import { adjacentLocations, awaySteps, nextInt, type Traversal } from './gamePrimitives';
 import { drawBoardItems } from './horrifiedState';
+import { LEGACY_RULESET_VERSION } from './decisionPolicies';
 import type { MonsterId } from './horrifiedState';
 import type { ChoiceOption, EngineContext, Task } from './horrifiedRuntime';
 
 const HERO = 'hero';
 const monsters: MonsterId[] = ['beholder', 'displacerBeast'];
+
+function applySlowingPenalty(ctx: EngineContext) {
+  const penalties = ctx.state.hero.penalties;
+  penalties.fewerActions = ctx.state.rulesVersion === LEGACY_RULESET_VERSION
+    ? Math.max(1, penalties.fewerActions) : penalties.fewerActions + 1;
+}
 
 function cardOf(ctx: EngineContext) {
   const instance = ctx.state.currentCard ? ctx.state.monsterCards[ctx.state.currentCard] : undefined;
@@ -299,7 +306,7 @@ export function resolveMonsterTask(task: Task, ctx: EngineContext): boolean {
       } else if (result <= 9) {
         if (state.hero.location) {
           if (state.hero.items.length) ctx.prepend({ kind: 'monster:ray-choice', result, attackId: attack.id });
-          else state.hero.penalties.fewerActions = Math.max(1, state.hero.penalties.fewerActions);
+          else applySlowingPenalty(ctx);
         }
       } else if (result <= 11) {
         if (state.hero.location && state.hero.items.length > 2) ctx.prepend({ kind: 'monster:ray-choice', result, attackId: attack.id });
@@ -345,7 +352,7 @@ export function resolveMonsterTask(task: Task, ctx: EngineContext): boolean {
           break;
         }
         if (task.selected[0] === 'discard') ctx.prepend({ kind: 'discard', amount: 1, reason: 'Eye ray' });
-        else if (result <= 9) state.hero.penalties.fewerActions = Math.max(1, state.hero.penalties.fewerActions);
+        else if (result <= 9) applySlowingPenalty(ctx);
         else state.hero.penalties.skipTurn = true;
       } else if (result <= 11 && result >= 10) {
         const excess = state.hero.items.length - 2;

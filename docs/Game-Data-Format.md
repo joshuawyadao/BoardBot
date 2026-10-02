@@ -18,6 +18,8 @@ The reference stays ignored and is not bundled into Vite build assets. A local d
 
 `src/data/gameData.ts` defines the format, validator, and conversion boundary. The schema version identifies the JSON shape. The interpretation version identifies BoardBot's accepted rules choices. Source-record version, fingerprint, and component pointers make fields traceable without carrying historical private machine paths into the normalized reference.
 
+The current interpretation is v4 (`boardbot-dnd-2026-10-02-v4`), adding owner-approved cumulative Slowing Ray penalties. Preparation labels new output with that interpretation. The app can use supported v3 components for a new game by cloning them with the current interpretation; it does not rewrite the private packet or cached original. Existing v3 saves keep their original data and cap for exact replay. See [Local-Saves.md](Local-Saves.md).
+
 Schema version 2 distinguishes owner-verified content from synthetic fixtures and records the independently photographed setup facts with their own provenance. Setup locations reference the board's numbered Monster start markers, not their Frenzy order. The setup capability is true only when its required fields and references validate; the data-only `playableRulesEngine` capability remains false because a reference file cannot establish executable gameplay support. The separate engine supplies all five base Hero behaviors. Effect descriptions are reference prose, never executable code. A successful conversion verifies data consistency; it does not prove gameplay correctness, validate publication rights, or authenticate arbitrary JSON presented later by a user.
 
 ## Board and quantities

@@ -1,5 +1,10 @@
 /** BoardBot's selected interpretation for the scoped original D&D game. */
-export const RULESET_VERSION = 'boardbot-dnd-2026-09-30-v3'
+export const RULESET_VERSION = 'boardbot-dnd-2026-10-02-v4'
+export const LEGACY_RULESET_VERSION = 'boardbot-dnd-2026-09-30-v3'
+
+export function isSupportedRuleset(version: string): boolean {
+  return version === RULESET_VERSION || version === LEGACY_RULESET_VERSION
+}
 
 export interface D20Result {
   readonly base: number

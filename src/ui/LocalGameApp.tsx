@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { GameData } from '../data/gameData';
-import { createFighterGame, getActionReason, getFighterView } from '../engine/horrifiedGame';
+import { createFighterGame, gameDataForNewGame, getActionReason, getFighterView } from '../engine/horrifiedGame';
+import { LEGACY_RULESET_VERSION } from '../engine/decisionPolicies';
 import type { HeroAction } from '../engine/horrifiedRuntime';
 import { decodeGameSave, encodeGameSave, MAX_SAVE_LENGTH, validateLocalGameData } from '../session/gameSave';
 import type { SavedGame } from '../session/gameSave';
@@ -135,7 +136,8 @@ export function LocalGameApp({ sample }: { sample: ReactNode }) {
     await run(async () => {
       const chosenSeed = seed.trim() ? Number(seed) : crypto.getRandomValues(new Uint32Array(1))[0];
       if (!Number.isInteger(chosenSeed) || chosenSeed < 0 || chosenSeed > 0xffffffff) throw new Error('Seed must be a whole number from 0 to 4294967295.');
-      const prepared = { id: crypto.randomUUID(), loaded: { data, game: await createFighterGame(data, chosenSeed, heroId(hero)) } };
+      const currentData = gameDataForNewGame(data);
+      const prepared = { id: crypto.randomUUID(), loaded: { data: currentData, game: await createFighterGame(currentData, chosenSeed, heroId(hero)) } };
       // A failed initial write retains this setup and ID for an exact retry.
       setCandidate(prepared);
       await start(prepared);
@@ -228,6 +230,7 @@ export function LocalGameApp({ sample }: { sample: ReactNode }) {
     const saveControls = <div className="save-status" role="status" aria-live="polite">
       <span>{busy ? 'Saving…' : needsSave ? 'Saving failed. Play is paused; export a backup to keep this result.' : 'Saved on this device · resumes after reload'}</span>
       <button className="quiet-button" onClick={exportBackup} disabled={busy}>Export backup</button>
+      {active.game.rulesVersion === LEGACY_RULESET_VERSION && <details><summary>Earlier rules</summary><p>This saved game keeps a maximum Slowing Ray penalty of one action. New games use stacking penalties.</p></details>}
       {needsSave && !busy && <><button className="confirm-button" onClick={() => void retry()}>Retry saving</button>
         <button className="quiet-button" onClick={() => void resume(activeId!)}>Discard unsaved action and load latest save</button></>}
       {error && <p role="alert">{error}</p>}

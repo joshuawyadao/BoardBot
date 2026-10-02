@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { fighterFixture } from '../../src/engine/fixtures/fighterFixture';
+import { RULESET_VERSION } from '../../src/engine/decisionPolicies';
 
 const adapterPage = '/src/session/gameLibrary.ts';
 
@@ -148,7 +149,7 @@ test('legacy current and previous migrate once without changing the old database
     reopened.close();
     return { first, second, migrated, oldSlots, reopenedSlots,
       defaultVersion: defaultData?.interpretationVersion, restoredHero: restored.game.hero.definitionId };
-  }, fighterFixture());
+  }, { ...fighterFixture(), interpretationVersion: 'boardbot-dnd-2026-09-30-v3' });
   expect(result.migrated.current?.token).toBe(result.second.token);
   expect(result.migrated.previous?.token).toBe(result.first.token);
   expect(result.restoredHero).toBe('hero-fighter');
@@ -335,7 +336,7 @@ test('a failed data-cache update aborts without changing the default version', a
     return { failure, defaultVersion: defaultData?.interpretationVersion, failedVersion };
   }, fighterFixture());
   expect(result.failure).toMatch(/Simulated default update failure/);
-  expect(result.defaultVersion).toBe('boardbot-dnd-2026-09-30-v3');
+  expect(result.defaultVersion).toBe(RULESET_VERSION);
   expect(result.failedVersion).toBeUndefined();
 });
 

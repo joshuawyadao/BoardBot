@@ -34,6 +34,8 @@ Wizard relocation prompts distinguish the initial ability roll from a follow-up 
 
 Each committed action and pending choice saves locally before its result appears. After reloading, choose **Resume saved game** beside the adventure you want. **Saved games** returns to the library; **New game** creates another adventure without replacing earlier games. Each saved game has a **Delete** option: confirm the selected adventure to remove it and its recovery save. Other games and base components remain available. **Export backup** downloads a private save; importing it adds a separate game. Failed saves pause play and offer **Retry saving**, preserving the exact result. Each game has Recovery options to restore its own previous save. See [local saves](docs/Local-Saves.md) for storage and recovery details.
 
+New games use stacking Slowing Ray penalties: two accepted penalties mean two fewer actions next turn, with a minimum of zero. Older saved games retain their previous one-action cap and show an **Earlier rules** explanation. Start a new adventure to use the updated rule; older saves remain available.
+
 Component data is stored once per exact version in this browser, separately from each game’s progress. Games keep the version they started with. The private local server provides only the prepared JSON at startup; no game content is uploaded or bundled into public assets. Gameplay needs no external requests. A fresh clone needs its own verified private packet; the synthetic sample and public tests work without one. See [local data preparation](docs/Game-Data-Format.md).
 
 ## Intended first experience
