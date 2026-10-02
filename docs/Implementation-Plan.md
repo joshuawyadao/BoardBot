@@ -1,19 +1,20 @@
 # Plan
 
-Continue the six-task solo-game goal by closing the remaining automated acceptance gaps: complete a victory through ordinary browser controls and verify the production build can start, play, and resume with external network requests blocked. Preserve gameplay and saved-state semantics, then make the remaining human playtest gate explicit.
+Audit the solo game against the verified component evidence and accepted rules, then add independent rule assertions and exercise the app through ordinary browser controls. Reuse the existing complete-game suite, add coverage for concrete gaps, and record actual prepared-data browser evidence separately from synthetic tests.
 
 ## Scope
-- In: Synthetic browser victory coverage for the base Heroes, built-app local-only startup and save/reload checks, accurate milestone/evidence documentation, a concise human playtest checklist, fixes for any reproduced defects, and final save/push.
-- Out: Declaring human play acceptance complete without feedback, changing accepted rules, disconnecting the user's computer, controlling the user's live game, redistributing private content, other Monsters, strategic bots, or PR creation/merging.
+- In: All five solo Heroes, shared actions and Perks, Beholder/Displacer challenges and Monster phases, rule-focused automated tests, isolated real-data browser playthroughs, fixes for reproduced defects, verification documentation, commit and push.
+- Out: New rule interpretations without user input, other Monsters or multiplayer, changing the user's live game, publication of private component text/assets/saves, and claiming exhaustive rules correctness or human acceptance.
 
 ## Action items
-[x] Review the six-task goal, durable work plan, verified rules/data boundaries, existing complete-game engine tests, and current browser coverage.
-[x] Checkpoint the resolved plan on the current feature branch (`4072397`).
-[x] Add synthetic complete-victory browser tests using only ordinary controls, including Item selection, Advance/Defeat, required choices, end-state locking, and exact save/resume.
-[x] Add a production-build acceptance test using an isolated preview and browser, blocking external requests while exercising cached base data, Hero setup, play, pending recovery, and a complete loss path.
-[x] Inspect any failures, fix reproduced defects without guessing rules, and run targeted checks followed by npm run verify and npm run test:e2e plus the production acceptance command. All checks passed; no app defect was reproduced. Keyboard tests wait for controls to become enabled before pressing Enter.
-[x] Reconcile stale implementation-status wording in the canonical rules/data and milestone docs; record supported evidence and add a short owner playthrough checklist without treating automation as human acceptance.
-[x] Prepare the final task-owned save/push and remaining human feedback handoff. Verification: build/typecheck, 101 unit tests, five repository tests, 67 browser tests, and one production acceptance test passed. Human acceptance remains open.
+[x] Read canonical data/rules, architecture and save boundaries; inspect existing tests and delegate separate read-only audits of shared actions and Monster resolution.
+[ ] Checkpoint this plan before implementation.
+[ ] Add focused synthetic rule tests from the audits with expected outcomes anchored in the canonical rules, fixing any reproduced implementation defects with save compatibility considered.
+[ ] Add browser assertions for currently under-tested rule consequences using ordinary actions and choices, including costs, d20 adjustments, and ineligible controls as appropriate.
+[ ] Add an opt-in isolated browser check for the prepared private components and run complete games without modifying the user's browser or committing private output.
+[ ] Run targeted checks, npm run verify, npm run test:e2e, npm run test:production, and the opt-in private check; investigate failures without weakening expectations.
+[ ] Update Verification.md and relevant canonical docs with findings, tested scope, remaining interpretation limits, and any behavior or save compatibility changes.
+[ ] Commit and push the verified task-owned changes and report any remaining user decision.
 
 ## Open questions
-- No implementation blocker. An optional question about whether the owner has finished a full game is pending; until answered, complete human play acceptance stays open. Real private-data victory and OS-level network disconnection have not been demonstrated by the existing tests.
+- None blocking implementation. Existing accepted interpretations remain authoritative; stop for input only if new conflicting evidence requires a rule choice.
