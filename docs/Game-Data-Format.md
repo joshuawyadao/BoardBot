@@ -14,6 +14,8 @@ The command verifies the packet manifest, hashes of the record and both photos, 
 
 The reference stays ignored and is not bundled into Vite build assets. A local development/preview middleware serves only this validated file through `GET /__boardbot/local-game-data`, with an 8 MiB limit, no-store headers, and same-origin loopback restrictions. Direct access to the private `local-data` directory is blocked. Static deployments without this middleware use cached or manually imported data. It contains component descriptions that are private source material. Do not commit, upload, or copy it into a public asset directory. The startup and manual import paths validate the format; the separate engine determines supported effects. Publication rights remain a separate gate.
 
+The executable local-game boundary accepts Monster-card printed IDs 300–321, the event catalog implemented by the solo engine. Citizen events 308–311 and 316–321 also require a valid starting location. These checks apply to imported components, cached components, and data embedded in save backups. Owner-verified references must satisfy the same checks when prepared. A synthetic reference without gameplay support can retain arbitrary IDs and omit event-specific fields for format tests.
+
 ## Version and evidence
 
 `src/data/gameData.ts` defines the format, validator, and conversion boundary. The schema version identifies the JSON shape. The interpretation version identifies BoardBot's accepted rules choices. Source-record version, fingerprint, and component pointers make fields traceable without carrying historical private machine paths into the normalized reference.

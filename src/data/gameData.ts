@@ -1,6 +1,12 @@
 /** Private, JSON-safe component data. The public repository contains no game text. */
 export const GAME_DATA_SCHEMA_VERSION = 2 as const;
 
+/** Printed Monster-card events with executable solo-game resolutions. */
+export const isSupportedMonsterEventId = (printedId: number): boolean =>
+  Number.isSafeInteger(printedId) && printedId >= 300 && printedId <= 321;
+export const isCitizenMonsterEventId = (printedId: number): boolean =>
+  (printedId >= 308 && printedId <= 311) || (printedId >= 316 && printedId <= 321);
+
 export interface GameData {
   schemaVersion: typeof GAME_DATA_SCHEMA_VERSION;
   contentKind: "owner-verified" | "synthetic";
@@ -228,6 +234,9 @@ export function validateGameData(value: unknown): GameData {
     const card = object(value, path);
     string(card.id, `${path}.id`);
     integer(card.printedId, `${path}.printedId`, 1);
+    if (data.contentKind === "owner-verified" && !isSupportedMonsterEventId(card.printedId as number)) {
+      throw new Error(`${path}.printedId has no supported Monster-card event`);
+    }
     string(card.name, `${path}.name`);
     integer(card.quantity, `${path}.quantity`, 1);
     integer(card.itemsDrawn, `${path}.itemsDrawn`);
@@ -237,6 +246,10 @@ export function validateGameData(value: unknown): GameData {
     string(card.event, `${path}.event`);
     if (card.citizenStartingLocation !== undefined) {
       ref(card.citizenStartingLocation, `${path}.citizenStartingLocation`);
+    }
+    if (data.contentKind === "owner-verified" && isCitizenMonsterEventId(card.printedId as number) &&
+      card.citizenStartingLocation === undefined) {
+      throw new Error(`${path}.citizenStartingLocation is required for this Monster-card event`);
     }
     return card;
   });

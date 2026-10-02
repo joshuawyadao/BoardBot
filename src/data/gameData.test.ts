@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { normalizeVerifiedRecord, validateGameData, type GameData } from "./gameData";
+import { validateLocalGameData } from "./localGameData";
 
 const synthetic = (): GameData => ({
   schemaVersion: 2,
@@ -43,6 +44,38 @@ describe("private game-data format", () => {
     const value = validateGameData(synthetic());
     expect(value.capabilities.playableRulesEngine).toBe(false);
     expect(value.board.edges[0].kind).toBe("ordinary");
+  });
+
+  it("keeps arbitrary printed IDs in reference-only synthetic data but rejects unsupported local events", () => {
+    const data = synthetic();
+    expect(validateGameData(data)).toBe(data);
+    expect(() => validateLocalGameData(data)).toThrow(/no supported resolution/);
+    for (const printedId of [299, 322]) {
+      data.monsterCards[0].printedId = printedId;
+      expect(() => validateLocalGameData(data)).toThrow(/no supported resolution/);
+    }
+  });
+
+  it("accepts both boundaries and an interior event in the executable local catalog", () => {
+    const data = synthetic();
+    for (const printedId of [300, 313, 321]) {
+      data.monsterCards[0].printedId = printedId;
+      if (printedId === 321) data.monsterCards[0].citizenStartingLocation = "location-1";
+      expect(validateLocalGameData(data)).toBe(data);
+    }
+  });
+
+  it("requires a real starting location for executable citizen events", () => {
+    const data = synthetic();
+    for (const printedId of [308, 311, 316, 321]) {
+      data.monsterCards[0].printedId = printedId;
+      delete data.monsterCards[0].citizenStartingLocation;
+      expect(() => validateLocalGameData(data)).toThrow(/without a starting location/);
+      data.monsterCards[0].citizenStartingLocation = "location-1";
+      expect(validateLocalGameData(data)).toBe(data);
+    }
+    data.monsterCards[0].citizenStartingLocation = "missing";
+    expect(() => validateLocalGameData(data)).toThrow(/missing location/);
   });
 
   it("rejects unsupported record versions before reading component fields", () => {

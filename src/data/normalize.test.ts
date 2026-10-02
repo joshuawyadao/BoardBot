@@ -25,13 +25,14 @@ function generatedRecord() {
     outcomes: Array.from({ length: 5 }, (_, index) => ({ roll_min: index * 4 + 1, roll_max: index * 4 + 4, effect: "A synthetic result." })),
   }]));
   const cards = Object.fromEntries(Array.from({ length: 22 }, (_, index) => {
-    const cardId = 100 + index;
+    const cardId = 300 + index;
     return [String(cardId), {
       card_id: cardId, name: `Synthetic event ${index + 1}`,
       quantity: index < 8 ? 2 : 1, items_drawn: 1,
       strike_symbols_visual: ["black flame", "blue skull"], movement: 1,
       attack_dice: 1, event: "An invented event.",
-      ...(index === 0 ? { citizen_starting_location: names[9] } : {}),
+      ...(index === 0 || (cardId >= 308 && cardId <= 311) || cardId >= 316
+        ? { citizen_starting_location: names[9] } : {}),
     }];
   }));
   const sourceCounts = Object.fromEntries(Object.entries(cards).map(([id, value]) => [id, value.quantity]));
@@ -171,6 +172,9 @@ describe("v6 normalization", () => {
       { change: data => { data.board.monsterStarts[0].number = 7; }, error: /1–6/ },
       { change: data => { data.items[0].strength = 7; }, error: /strength exceeds/ },
       { change: data => { data.monsterCards[0].attackDice = 4; }, error: /Attack dice exceed/ },
+      { change: data => { data.monsterCards[0].printedId = 299; }, error: /no supported Monster-card event/ },
+      { change: data => { data.monsterCards[0].printedId = 322; }, error: /no supported Monster-card event/ },
+      { change: data => { delete data.monsterCards[8].citizenStartingLocation; }, error: /citizenStartingLocation is required/ },
       { change: data => { data.dice.monsterDice.faceCounts.hit_starburst = 2; data.dice.monsterDice.faceCounts.blank = 3; }, error: /distribution mismatch/ },
       { change: data => { data.board.edges.find(edge => edge.kind === "teleport")!.from = "location-1"; }, error: /two circles/ },
     ];
