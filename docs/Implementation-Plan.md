@@ -1,20 +1,19 @@
 # Plan
 
-Implement the owner's October 2 decision that repeated Slowing Ray penalties stack. Version the new interpretation so new games use cumulative penalties while existing games retain exact replay and their original rules; cover forced penalties, elected penalties, payment, expiry, zero actions, and save recovery.
+Continue the current solo milestone by checking its remaining automated victory gap with the actual prepared components. Find a bounded, legal winning acceptance scenario, run it through ordinary controls in an isolated browser, and keep human play feedback and physical disconnected-play acceptance separate.
 
 ## Scope
-- In: Interpretation v4, repeated Slowing application, compatible v3 replay, current rules for every new-game entry path, a short older-save notice, focused engine/save/browser tests, canonical docs, validation, commit and push.
-- Out: Rewriting existing game history or private component evidence, changing other rays or accepted interpretations, multiplayer, and PR creation/merge.
+- In: One full real-component victory with the selected Monster pair, legal command/replay checks, an opt-in browser regression, exact pending/terminal recovery, updated evidence and remaining-goal status, final commit/push.
+- Out: Changing game data, random outcomes, rules or resource supplies to obtain a win; production hero-playing bots; reading or changing the user's live game; publishing private component data/history/artifacts; claiming balance or human acceptance.
 
 ## Action items
-[x] Inspect Slowing resolution, turn-start cleanup, version checks, save replay, cached/imported data, and canonical rules/saves documentation.
-[x] Checkpoint this plan on the current feature branch (`3a71591`).
-[x] Add versioned cumulative Slowing penalties and retain the legacy cap for existing v3 games; preserve zero-action floors and existing defeat/expiry behavior.
-[x] Start every new game under v4 without mutating cached/base content or older saves, and explain older saves' retained rule in the table.
-[x] Add six integrated/replay tests and four browser cases for repeated penalties, discard responses, zero actions, next-turn clearing, and legacy save compatibility; retain explicit v3 storage-migration coverage.
-[x] Update Rules-Reference, Local-Saves, Game-Data-Checklist/Format, Playtest-Checklist, README, and Verification to record the decision and compatibility boundary.
-[x] Pass targeted checks and all broader commands: build/typecheck, 114 unit tests, five repository checks, 74 public browser tests, one production test, and five prepared-component browser playthroughs.
-[x] Prepare task-owned changes for final save/push and report the behavior and compatibility limit.
+[x] Inspect the goal, durable work plan, rules/evidence boundaries, existing synthetic victories, and prepared-component defeat coverage.
+[ ] Checkpoint this resolved plan.
+[ ] Develop a bounded test-only scenario driver using legal engine actions and the actual data under current rules; verify a winning command history without mutating setup or outcomes.
+[ ] Reproduce the winning scenario using ordinary browser controls, including Item costs, both Monster challenges, required choices, pending reload, and exact victory resume.
+[ ] Run focused prepared tests and relevant broad verification; fix only reproduced defects and stop for new rule decisions if necessary.
+[ ] Record the exact acceptance scope in Verification, Playtest-Checklist, Work-Plan, and Roadmap; retain owner playthrough and physical disconnection gates.
+[ ] Save/push the task-owned changes and report the next required feedback.
 
 ## Open questions
-- None. The owner approved stacking. Earlier saves remain pinned to their recorded rules rather than silently replaying history with different outcomes; new games use the approved rule.
+- None blocking. A winning seeded scenario validates an executable path, not a general strategy, game balance, or human acceptance. If bounded exploration cannot reach a legal victory, record that result without changing rules or supplies.
