@@ -1,21 +1,20 @@
 # Plan
 
-Audit the solo game against the verified component evidence and accepted rules, then add independent rule assertions and exercise the app through ordinary browser controls. Reuse the existing complete-game suite, add coverage for concrete gaps, and record actual prepared-data browser evidence separately from synthetic tests.
+Implement the owner's October 2 decision that repeated Slowing Ray penalties stack. Version the new interpretation so new games use cumulative penalties while existing games retain exact replay and their original rules; cover forced penalties, elected penalties, payment, expiry, zero actions, and save recovery.
 
 ## Scope
-- In: All five solo Heroes, shared actions and Perks, Beholder/Displacer challenges and Monster phases, rule-focused automated tests, isolated real-data browser playthroughs, fixes for reproduced defects, verification documentation, commit and push.
-- Out: New rule interpretations without user input, other Monsters or multiplayer, changing the user's live game, publication of private component text/assets/saves, and claiming exhaustive rules correctness or human acceptance.
+- In: Interpretation v4, repeated Slowing application, compatible v3 replay, current rules for every new-game entry path, a short older-save notice, focused engine/save/browser tests, canonical docs, validation, commit and push.
+- Out: Rewriting existing game history or private component evidence, changing other rays or accepted interpretations, multiplayer, and PR creation/merge.
 
 ## Action items
-[x] Read canonical data/rules, architecture and save boundaries; inspect existing tests and delegate separate read-only audits of shared actions and Monster resolution.
-[x] Checkpoint this plan before implementation (`f8ac056`).
-[x] Add seven focused engine tests for field placement, defeat boundaries, attack timing/retargeting, immediate Terror loss, and atomic rejection; no engine mismatch was reproduced.
-[x] Add three browser tests for Ott overflow/reward closure, exact Mystra payment, draft cancellation, and Displacer field placement through ordinary controls.
-[x] Fix the reproduced Mystra UI confirmation gap using the engine's choice validation, preserving engine semantics and existing saves.
-[x] Add the opt-in prepared-component browser suite and complete a legal defeat game with exact pending/terminal reload for each Hero; the user's browser and private files remain untouched.
-[x] Run targeted checks and all broader commands: build/typecheck, 108 unit tests, five repository tests, 70 public browser tests, one production test, and five prepared-data browser tests pass. Isolate test artifacts and finish config edits before live browser runs to avoid runner interference.
-[x] Update Verification, Rules-Reference, Architecture, README, and Playtest-Checklist with the UI fix, evidence, source limits, and opt-in test command. Repeated Slowing penalties remain unverified; current behavior and saved-game semantics are unchanged.
-[x] Prepare verified task-owned changes for final commit/push and the remaining rule-question handoff.
+[x] Inspect Slowing resolution, turn-start cleanup, version checks, save replay, cached/imported data, and canonical rules/saves documentation.
+[ ] Checkpoint this plan on the current feature branch.
+[ ] Add versioned cumulative Slowing penalties and retain the legacy cap for existing v3 games; preserve zero-action floors and existing defeat/expiry behavior.
+[ ] Start every new game under v4 without mutating cached/base content or older saves, and explain older saves' retained rule in the table.
+[ ] Add focused integrated, replay, and browser regressions for repeated penalties, discard responses, zero actions, next-turn clearing, and legacy save compatibility.
+[ ] Update Rules-Reference, Local-Saves, Game-Data-Checklist/Format, Playtest-Checklist, README, and Verification to record the decision and compatibility boundary.
+[ ] Run targeted checks, npm run verify, npm run test:e2e, npm run test:production, and prepared-component checks if affected; resolve failures without changing unrelated rules.
+[ ] Save and push task-owned changes and report the behavior and compatibility limit.
 
 ## Open questions
-- None for this task. A future change to repeated Slowing Ray penalties needs an owner decision; this audit records the uncertainty without assuming a new interpretation. Human acceptance and real-data victory remain distinct from these automated defeat runs.
+- None. The owner approved stacking. Earlier saves remain pinned to their recorded rules rather than silently replaying history with different outcomes; new games use the approved rule.
