@@ -18,7 +18,7 @@ Report the Hero, outcome, whether reload preserved the pending roll, and any con
 | --- | --- |
 | Interface layout and controls | Owner feedback: looks good so far, October 1 |
 | All five Hero rules paths and legal terminal states | Automated synthetic tests; see Verification |
-| Actual prepared data | All five Heroes have command-driven defeat/replay checks and complete isolated browser defeat games with exact pending/terminal recovery; a complete real-data victory is still unrecorded |
+| Actual prepared data | All five Heroes have command-driven defeat/replay checks and isolated browser defeat games. Fighter also completed a legal browser victory under v4 at seed 8, turn 18, after 103 decisions, with Item conservation, complete state replay, and exact pending/victory recovery |
 | Complete owner game | Pending owner outcome and feedback |
 | Owner validation of the other Hero abilities | Pending full-play feedback; automated coverage exists |
 | Physical internet disconnection on the target Mac | Pending owner-run check; automated tests block external HTTP requests while retaining localhost |
