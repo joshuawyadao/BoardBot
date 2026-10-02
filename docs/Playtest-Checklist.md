@@ -18,11 +18,11 @@ Report the Hero, outcome, whether reload preserved the pending roll, and any con
 | --- | --- |
 | Interface layout and controls | Owner feedback: looks good so far, October 1 |
 | All five Hero rules paths and legal terminal states | Automated synthetic tests; see Verification |
-| Actual prepared data | All five Heroes have command-driven defeat/replay checks and isolated browser defeat games. Fighter also completed a legal browser victory under v4 at seed 8, turn 18, after 103 decisions, with Item conservation, complete state replay, and exact pending/victory recovery |
+| Actual prepared data | All five Heroes have command-driven defeat/replay checks and isolated browser defeat games. Fighter also completed a legal browser victory under v4 and again under v5 at seed 8, turn 18, after 103 decisions, with Item conservation, complete state replay, and exact pending/victory recovery |
 | Complete owner game | Pending owner outcome and feedback |
 | Owner validation of the other Hero abilities | Pending full-play feedback; automated coverage exists |
 | Physical internet disconnection on the target Mac | Pending owner-run check; automated tests block external HTTP requests while retaining localhost |
-| Repeated Slowing Ray penalty | Owner approved cumulative penalties on October 2; new v4 games stack them, while existing v3 saves retain their earlier cap for exact replay |
+| Repeated Slowing Ray penalty | Owner approved cumulative penalties on October 2; new games stack them, while existing v3 saves retain their earlier cap for exact replay |
 | Public distribution of game text/assets | Separate publication-rights gate; private playtests do not grant those rights |
 
-Keep the six-task goal open until the required full-game and target-device evidence is recorded. Do not label an automated scripted run as an owner playthrough. The accepted rules and remaining interpretation limits are in [Rules-Reference.md](Rules-Reference.md); supported checks and their exact scope are in [Verification.md](Verification.md).
+The owner deferred manual acceptance on October 2 and paused the six-task goal. The PR can be reviewed and readied without a full human game now; this checklist remains open until the owner records full-game and target-device evidence. Do not label an automated scripted run as an owner playthrough. The accepted rules and remaining interpretation limits are in [Rules-Reference.md](Rules-Reference.md); supported checks and their exact scope are in [Verification.md](Verification.md).

@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { GameData } from '../data/gameData';
 import { createFighterGame, gameDataForNewGame, getActionReason, getFighterView } from '../engine/horrifiedGame';
-import { LEGACY_RULESET_VERSION } from '../engine/decisionPolicies';
+import { LEGACY_RULESET_VERSION, RULESET_VERSION } from '../engine/decisionPolicies';
 import type { HeroAction } from '../engine/horrifiedRuntime';
 import { decodeGameSave, encodeGameSave, MAX_SAVE_LENGTH, validateLocalGameData } from '../session/gameSave';
 import type { SavedGame } from '../session/gameSave';
@@ -230,7 +230,10 @@ export function LocalGameApp({ sample }: { sample: ReactNode }) {
     const saveControls = <div className="save-status" role="status" aria-live="polite">
       <span>{busy ? 'Saving…' : needsSave ? 'Saving failed. Play is paused; export a backup to keep this result.' : 'Saved on this device · resumes after reload'}</span>
       <button className="quiet-button" onClick={exportBackup} disabled={busy}>Export backup</button>
-      {active.game.rulesVersion === LEGACY_RULESET_VERSION && <details><summary>Earlier rules</summary><p>This saved game keeps a maximum Slowing Ray penalty of one action. New games use stacking penalties.</p></details>}
+      {active.game.rulesVersion !== RULESET_VERSION && <details><summary>Earlier rules</summary>
+        {active.game.rulesVersion === LEGACY_RULESET_VERSION && <p>This saved game keeps a maximum Slowing Ray penalty of one action. New games use stacking penalties.</p>}
+        <p>This saved game keeps the earlier Rogue board-Item rule: take two when available. New games let you choose up to two from the selected location.</p>
+      </details>}
       {needsSave && !busy && <><button className="confirm-button" onClick={() => void retry()}>Retry saving</button>
         <button className="quiet-button" onClick={() => void resume(activeId!)}>Discard unsaved action and load latest save</button></>}
       {error && <p role="alert">{error}</p>}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GameData } from '../data/gameData';
-import { LEGACY_RULESET_VERSION, RULESET_VERSION } from '../engine/decisionPolicies';
+import { LEGACY_RULESET_VERSION, RULESET_VERSION, STACKING_RULESET_VERSION } from '../engine/decisionPolicies';
 import { slowingFixture, SLOWING_SEED } from '../engine/fixtures/slowingFixture';
 import { createFighterGame, dispatchGame, gameDataForNewGame, getActionReason } from '../engine/horrifiedGame';
 import type { FighterGame, HeroAction } from '../engine/horrifiedRuntime';
@@ -27,8 +27,8 @@ function expectTwoRays(state: FighterGame, expected: number[]): void {
 }
 
 describe('Slowing Ray rules and saved interpretations', () => {
-  it('stacks two forced penalties in v4 and preserves the v3 cap', async () => {
-    for (const [version, actions] of [[RULESET_VERSION, 2], [LEGACY_RULESET_VERSION, 3]] as const) {
+  it('stacks two forced penalties in v4/v5 and preserves the v3 cap', async () => {
+    for (const [version, actions] of [[RULESET_VERSION, 2], [STACKING_RULESET_VERSION, 2], [LEGACY_RULESET_VERSION, 3]] as const) {
       const data = slowingFixture(version);
       let state = await createFighterGame(data, SLOWING_SEED);
       expect(state.hero.items).toEqual([]);
@@ -103,8 +103,8 @@ describe('Slowing Ray rules and saved interpretations', () => {
     expect(state.hero.location).toBe(data.board.hospital);
   });
 
-  it('replays pending and completed v3/v4 choices exactly and continues each version', async () => {
-    for (const [version, actions] of [[RULESET_VERSION, 2], [LEGACY_RULESET_VERSION, 3]] as const) {
+  it('replays pending and completed v3/v4/v5 choices exactly and continues each version', async () => {
+    for (const [version, actions] of [[RULESET_VERSION, 2], [STACKING_RULESET_VERSION, 2], [LEGACY_RULESET_VERSION, 3]] as const) {
       const data = slowingFixture(version);
       let state = await createFighterGame(data, SLOWING_SEED);
       state = act(data, state, { kind: 'pick-up', items: state.boardItems.b.slice(0, 2) });
@@ -129,7 +129,7 @@ describe('Slowing Ray rules and saved interpretations', () => {
     }
   });
 
-  it('rejects version tampering and clones legacy data for a new v4 game', async () => {
+  it('rejects version tampering and clones legacy data for a new current-rules game', async () => {
     const currentData = slowingFixture();
     const current = act(currentData, await createFighterGame(currentData, SLOWING_SEED), { kind: 'end-phase' });
     const payload = JSON.parse(encodeGameSave(currentData, current));

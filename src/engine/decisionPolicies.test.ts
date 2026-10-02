@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
+  LEGACY_RULESET_VERSION,
   RULESET_VERSION,
+  STACKING_RULESET_VERSION,
   closeResponseWindow,
   createResponseWindow,
   getOfferedResponse,
+  isSupportedRuleset,
   passResponse,
   refreshResponseWindow,
   resolveD20,
@@ -20,7 +23,7 @@ const options: readonly ResponseOption[] = [
 
 describe('d20 interpretation', () => {
   it('preserves overflow arithmetic while capping only its rule result', () => {
-    expect(RULESET_VERSION).toBe('boardbot-dnd-2026-10-02-v4')
+    expect(RULESET_VERSION).toBe('boardbot-dnd-2026-10-02-v5')
     expect(resolveD20(19, [2])).toEqual({
       base: 19, modifiers: [2], adjustedTotal: 21, effectiveResult: 20,
     })
@@ -28,6 +31,15 @@ describe('d20 interpretation', () => {
     for (const base of [18, 19, 20]) {
       expect(resolveD20(base, [2]).effectiveResult).toBe(20)
     }
+  })
+
+  it('keeps existing rules versions available for exact saved-game replay', () => {
+    expect(STACKING_RULESET_VERSION).toBe('boardbot-dnd-2026-10-02-v4')
+    expect(LEGACY_RULESET_VERSION).toBe('boardbot-dnd-2026-09-30-v3')
+    for (const version of [RULESET_VERSION, STACKING_RULESET_VERSION, LEGACY_RULESET_VERSION]) {
+      expect(isSupportedRuleset(version)).toBe(true)
+    }
+    expect(isSupportedRuleset('boardbot-dnd-2026-10-02-v6')).toBe(false)
   })
 
   it('copies the modifier record and rejects invalid or unsafe arithmetic', () => {

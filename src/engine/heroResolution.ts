@@ -1,6 +1,7 @@
 import { adjacentLocations } from './gamePrimitives.ts';
 import { drawItem } from './horrifiedState.ts';
 import type { EngineContext, Task } from './horrifiedRuntime';
+import { RULESET_VERSION } from './decisionPolicies';
 
 const HERO = 'hero';
 
@@ -113,7 +114,7 @@ export function resolveOtherHeroTask(task: Task, ctx: EngineContext): boolean {
       const location = selected[0];
       const items = state.boardItems[location] ?? [];
       if (items.length) ctx.ask('Choose Items from this one location.', items.map(id => ({ id, label: data.items.find(item => item.id === state.items[id].definitionId)?.name ?? 'Item' })),
-        Math.min(2, items.length), Math.min(2, items.length), { kind: 'rogue:take-board', to: location });
+        state.rulesVersion === RULESET_VERSION ? 0 : Math.min(2, items.length), Math.min(2, items.length), { kind: 'rogue:take-board', to: location });
       return true;
     }
     case 'rogue:take-board': {
