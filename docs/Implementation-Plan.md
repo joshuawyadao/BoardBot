@@ -12,10 +12,13 @@ Address PR #5's Codex findings against the accepted rules and verified component
 [x] Reject unsupported executable Monster event IDs before local gameplay, while retaining generic reference-only synthetic validation; add import/data regressions and update Game-Data-Format.
 [x] Allow zero to two Rogue Items from the selected nearest board location for new adventures; version the correction so existing v3/v4 command histories and pending saves retain exact behavior.
 [x] Add regression coverage for the specific Cleric all-attacks duration, Jarlaxle Hero-Phase expiry, Rogue board/discard distinction, and old/new save recovery. Clarify Rules-Reference and compatibility docs without copying private text.
-[ ] Validate each feedback item, commit/push it separately, and acknowledge the corresponding Codex comment after its fix is pushed.
-[x] Run npm run verify, npm run test:e2e, and production/prepared checks: all passed (125 unit, five repository, 75 browser, one production, six prepared).
-[ ] Wait for fresh CI on the final pushed head; address any reproduced failure.
-[ ] Record review dispositions and final acceptance limits, refresh the PR description/checks/thread state, and leave the PR ready for later manual playtesting and unmerged.
+[x] Validate, commit/push, and acknowledge the two actionable Codex findings; record the two component-timing false positives with regression evidence and resolve all four review threads.
+[x] Run npm run verify, npm run test:e2e, and production/prepared checks: all passed (127 unit, five repository, 75 browser, one production, six prepared).
+[x] Fix the Brooks follow-up for unresolved Citizen references and rerun all local acceptance suites.
+[x] Record review dispositions and deferred manual acceptance in the docs and PR description. Keep the PR unmerged.
+
+## Final external gate
+Report merge readiness only after CI Verify on the final pushed head is green, all review threads are addressed, and GitHub reports no conflicts. The live PR checks hold this status; a passing earlier head does not satisfy it.
 
 ## Open questions
 - None blocking: specific verified component text takes precedence over general summaries. New Rogue board-choice behavior must not silently invalidate existing saves; manual play and physical offline checks remain deferred by the owner.
