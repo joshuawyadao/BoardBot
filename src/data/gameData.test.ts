@@ -60,7 +60,10 @@ describe("private game-data format", () => {
     const data = synthetic();
     for (const printedId of [300, 313, 321]) {
       data.monsterCards[0].printedId = printedId;
-      if (printedId === 321) data.monsterCards[0].citizenStartingLocation = "location-1";
+      if (printedId === 321) {
+        data.monsterCards[0].citizenStartingLocation = "location-1";
+        data.monsterCards[0].name = "Citizen A";
+      }
       expect(validateLocalGameData(data)).toBe(data);
     }
   });
@@ -72,10 +75,23 @@ describe("private game-data format", () => {
       delete data.monsterCards[0].citizenStartingLocation;
       expect(() => validateLocalGameData(data)).toThrow(/without a starting location/);
       data.monsterCards[0].citizenStartingLocation = "location-1";
+      data.monsterCards[0].name = "Citizen A";
       expect(validateLocalGameData(data)).toBe(data);
     }
     data.monsterCards[0].citizenStartingLocation = "missing";
     expect(() => validateLocalGameData(data)).toThrow(/missing location/);
+  });
+
+  it("requires exactly one named Citizen for executable citizen events", () => {
+    const data = synthetic();
+    data.monsterCards[0].printedId = 308;
+    data.monsterCards[0].citizenStartingLocation = "location-1";
+    expect(() => validateLocalGameData(data)).toThrow(/exactly one matching Citizen/);
+    data.monsterCards[0].name = "Citizen A";
+    expect(validateLocalGameData(data)).toBe(data);
+    data.citizens.push({ id: "citizen-b", name: "Citizen A", quantity: 1, safeDestination: "location-2" });
+    expect(validateGameData(data)).toBe(data);
+    expect(() => validateLocalGameData(data)).toThrow(/exactly one matching Citizen/);
   });
 
   it("rejects unsupported record versions before reading component fields", () => {

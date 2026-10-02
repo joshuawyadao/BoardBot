@@ -6,6 +6,8 @@ export const isSupportedMonsterEventId = (printedId: number): boolean =>
   Number.isSafeInteger(printedId) && printedId >= 300 && printedId <= 321;
 export const isCitizenMonsterEventId = (printedId: number): boolean =>
   (printedId >= 308 && printedId <= 311) || (printedId >= 316 && printedId <= 321);
+export const hasUniqueNamedCitizen = (name: string, citizens: readonly { name: string }[]): boolean =>
+  citizens.filter(citizen => citizen.name === name).length === 1;
 
 export interface GameData {
   schemaVersion: typeof GAME_DATA_SCHEMA_VERSION;
@@ -255,6 +257,10 @@ export function validateGameData(value: unknown): GameData {
   });
   unique(cards.map(card => card.id as string), "monster card IDs");
   unique(cards.map(card => String(card.printedId)), "printed card IDs");
+  if (data.contentKind === "owner-verified" && cards.some(card =>
+    isCitizenMonsterEventId(card.printedId as number) && !hasUniqueNamedCitizen(card.name as string, citizens as { name: string }[]))) {
+    throw new Error("Named Citizen Monster-card event must match exactly one Citizen");
+  }
   const perks = arr(data.perks, "perks", (value, path) => {
     const perk = object(value, path);
     string(perk.id, `${path}.id`);

@@ -1,4 +1,4 @@
-import { isCitizenMonsterEventId, isSupportedMonsterEventId, validateGameData } from './gameData.ts';
+import { hasUniqueNamedCitizen, isCitizenMonsterEventId, isSupportedMonsterEventId, validateGameData } from './gameData.ts';
 import type { GameData } from './gameData.ts';
 
 export const MAX_SAVE_LENGTH = 8 * 1024 * 1024;
@@ -11,6 +11,9 @@ export function validateLocalGameData(input: unknown): GameData {
   }
   if (data.monsterCards.some(card => isCitizenMonsterEventId(card.printedId) && !card.citizenStartingLocation)) {
     throw new Error('The imported data contains a citizen Monster-card event without a starting location.');
+  }
+  if (data.monsterCards.some(card => isCitizenMonsterEventId(card.printedId) && !hasUniqueNamedCitizen(card.name, data.citizens))) {
+    throw new Error('The imported data contains a named Citizen Monster-card event without exactly one matching Citizen.');
   }
   const cards = [...data.monsterCards, ...data.perks, ...data.lairTokens.faces];
   if (cards.reduce((sum, card) => sum + card.quantity, 0) > 1000 ||

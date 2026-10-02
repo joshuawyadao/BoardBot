@@ -26,8 +26,9 @@ function generatedRecord() {
   }]));
   const cards = Object.fromEntries(Array.from({ length: 22 }, (_, index) => {
     const cardId = 300 + index;
+    const namedCitizenIndex = cardId >= 308 && cardId <= 311 ? cardId - 308 : cardId >= 316 ? cardId - 312 : null;
     return [String(cardId), {
-      card_id: cardId, name: `Synthetic event ${index + 1}`,
+      card_id: cardId, name: namedCitizenIndex === null ? `Synthetic event ${index + 1}` : `Synthetic citizen ${namedCitizenIndex + 1}`,
       quantity: index < 8 ? 2 : 1, items_drawn: 1,
       strike_symbols_visual: ["black flame", "blue skull"], movement: 1,
       attack_dice: 1, event: "An invented event.",
@@ -175,6 +176,8 @@ describe("v6 normalization", () => {
       { change: data => { data.monsterCards[0].printedId = 299; }, error: /no supported Monster-card event/ },
       { change: data => { data.monsterCards[0].printedId = 322; }, error: /no supported Monster-card event/ },
       { change: data => { delete data.monsterCards[8].citizenStartingLocation; }, error: /citizenStartingLocation is required/ },
+      { change: data => { data.monsterCards[8].name = 'Unknown Citizen'; }, error: /match exactly one Citizen/ },
+      { change: data => { data.citizens[1].name = data.citizens[0].name; }, error: /match exactly one Citizen/ },
       { change: data => { data.dice.monsterDice.faceCounts.hit_starburst = 2; data.dice.monsterDice.faceCounts.blank = 3; }, error: /distribution mismatch/ },
       { change: data => { data.board.edges.find(edge => edge.kind === "teleport")!.from = "location-1"; }, error: /two circles/ },
     ];
