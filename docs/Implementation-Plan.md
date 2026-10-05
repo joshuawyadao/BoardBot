@@ -1,24 +1,21 @@
 # Plan
 
-Address PR #5's Codex findings against the accepted rules and verified component evidence. Fix confirmed import and Rogue board-selection gaps, preserve existing replay behavior, and document why the Cleric and Jarlaxle changes would contradict their specific printed timing.
+Implement the approved illustrated tabletop UI, making the board's names, numbered spaces, terrain and legal connections read as one map. Use the owner's physical-board reference to validate placement, keep the accepted movement graph authoritative, and preserve the existing solo-game and recovery behavior.
 
 ## Scope
-- In: Supported Monster event-ID and required citizen-start validation; optional up-to-two Rogue Items from one nearest board location; versioned save compatibility; focused rule regressions; review replies/reactions, CI, documentation, and PR readiness.
-- Out: Changing Cleric's all-attacks critical effect or Jarlaxle's Hero-Phase limit; making discard selection optional contrary to its component text; publishing private wording; merging/deploying; claiming manual acceptance.
+- In: Physical-board layout validation; original illustrated assets with documented provenance; integrated location lettering and numbered floor markers; terrain-following routes; distinct portals and paired secret passages; tactile pieces; dark panels and brass controls; responsive and keyboard interaction; tests, documentation, branch checkpoints, and a fully reviewed pull request.
+- Out: Animations; new rules or speculative connections; engine/save migrations; multiplayer; publishing the private evidence packet or copied commercial artwork; declaring complete manual gameplay acceptance; merging without the owner's request.
 
 ## Action items
-[x] Inspect all four review threads, canonical Rules-Reference and Game-Data-Checklist, exact verified timing fields, save/replay contracts, and corresponding tests.
-[x] Checkpoint this resolved plan before implementation.
-[x] Reject unsupported executable Monster event IDs before local gameplay, while retaining generic reference-only synthetic validation; add import/data regressions and update Game-Data-Format.
-[x] Allow zero to two Rogue Items from the selected nearest board location for new adventures; version the correction so existing v3/v4 command histories and pending saves retain exact behavior.
-[x] Add regression coverage for the specific Cleric all-attacks duration, Jarlaxle Hero-Phase expiry, Rogue board/discard distinction, and old/new save recovery. Clarify Rules-Reference and compatibility docs without copying private text.
-[x] Validate, commit/push, and acknowledge the two actionable Codex findings; record the two component-timing false positives with regression evidence and resolve all four review threads.
-[x] Run npm run verify, npm run test:e2e, and production/prepared checks: all passed (127 unit, five repository, 75 browser, one production, six prepared).
-[x] Fix the Brooks follow-up for unresolved Citizen references and rerun all local acceptance suites.
-[x] Record review dispositions and deferred manual acceptance in the docs and PR description. Keep the PR unmerged.
-
-## Final external gate
-Report merge readiness only after CI Verify on the final pushed head is green, all review threads are addressed, and GitHub reports no conflicts. The live PR checks hold this status; a passing earlier head does not satisfy it.
+[x] Inspect the approved visual direction, physical-board evidence, accepted Rules-Reference and Game-Data-Checklist, architecture, current board rendering, and existing geometry/browser tests; activate the UI goal and create the feature branch.
+[ ] Validate all 29 physical-board locations and author a board geometry contract in src/ui/boardLayout.ts, preserving the 28 accepted ordinary routes, two passage pairs and teleport network; prevent unrelated-node crossings and misleading neutral junctions.
+[ ] Create original production artwork suited to that geometry and record source/publication provenance before committing assets; keep private photos, component data and concept screenshots ignored.
+[ ] Update GameBoard.tsx and gameBoard.css with integrated names and numbering, coherent roads/bridges, clear portal/passage cues, distinct pieces and accessible hit targets; retain the complete synthetic fallback.
+[ ] Apply the approved charcoal/brass styling to the existing library, phase controls, action tray, independently toggled panels, inventory/perk explanations and persistent roll results.
+[ ] Extend focused geometry/rendering tests and browser checks for map fit, path endpoints, legal selections, keyboard focus, crowded pieces, pending choices and panel toggles; preserve the existing gameplay and recovery assertions.
+[ ] Record the durable design and asset decisions in a focused docs/UI-Design.md; update README.md, Architecture.md, Verification.md, Roadmap.md and Work-Plan.md where implemented behavior or accepted direction changes.
+[ ] Run targeted checks, npm run verify and npm run test:e2e; inspect the actual prepared-game board on the target desktop size, then use production/prepared checks where visual changes leave interaction or recovery risks.
+[ ] Save coherent checkpoints, push the feature branch, and run the full pr-review-cycle through Codex/Brooks feedback, CI and conflict resolution until merge-ready; leave full manual game acceptance and merging to the owner.
 
 ## Open questions
-- None blocking: specific verified component text takes precedence over general summaries. New Rogue board-choice behavior must not silently invalidate existing saves; manual play and physical offline checks remain deferred by the owner.
+- None blocking the approved scope. The generated concept is a visual reference, not evidence of exact geometry or legal paths; implementation must validate those independently against the canonical graph and physical board.
