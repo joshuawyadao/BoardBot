@@ -2,7 +2,8 @@ import type { RefObject } from 'react';
 import { useMemo } from 'react';
 import type { GameData } from '../data/gameData';
 import type { GameView } from '../engine/horrifiedGame';
-import { BOARD_HEIGHT, BOARD_WIDTH, NODE_HEIGHT, NODE_WIDTH, boardPositions, boardRoutes, isPhysicalBoard } from './boardLayout';
+import { BOARD_HEIGHT, BOARD_WIDTH, NODE_HEIGHT, NODE_WIDTH, boardPassages, boardPositions, boardRoutes, hasIllustratedLayout, isPhysicalBoard } from './boardLayout';
+import illustratedBoard from './assets/illustrated-board-v2.png';
 import './gameBoard.css';
 
 interface Props {
@@ -15,11 +16,11 @@ interface Props {
 }
 
 const regions = [
-  { label: 'WATERDEEP', x: 490, y: 42, className: 'waterdeep' },
-  { label: 'ARCANE CHAMBERS', x: 175, y: 367, className: 'arcane' },
-  { label: 'DUNGEON LEVEL', x: 900, y: 360, className: 'dungeon' },
-  { label: 'SKULLPORT', x: 330, y: 735, className: 'skullport' },
-  { label: 'WYLLOWWOOD', x: 835, y: 615, className: 'wyllowwood' },
+  { label: 'WATERDEEP', x: 500, y: 25, className: 'waterdeep' },
+  { label: 'ARCANE CHAMBERS', x: 295, y: 475, className: 'arcane' },
+  { label: 'DUNGEON LEVEL', x: 850, y: 628, className: 'dungeon' },
+  { label: 'SKULLPORT', x: 320, y: 975, className: 'skullport' },
+  { label: 'WYLLOWWOOD', x: 820, y: 684, className: 'wyllowwood' },
 ];
 
 function routePath(points: { x: number; y: number }[]): string {
@@ -34,21 +35,29 @@ export function GameBoard({ data, game, moving, locked, onMove, buttonRefs }: Pr
   const heroName = data.heroes.find(hero => hero.id === game.hero.definitionId)?.name ?? 'Hero';
   const showTeleport = moving && !!current;
   const physical = isPhysicalBoard(data);
+  const illustrated = hasIllustratedLayout(data);
   const wizardDestination = game.pending?.destination ?? null;
+  const passages = new Map<string, string[]>();
+  boardPassages(data).forEach(({ from, to, label }) => {
+    for (const id of [from, to]) passages.set(id, [...passages.get(id) ?? [], label]);
+  });
 
-  return <div className="game-board h-game-board" aria-label="Game board">
+  return <div className={`game-board h-game-board${illustrated ? ' illustrated' : ' schematic'}`} aria-label="Game board">
     <svg className="game-board-svg" viewBox={`0 0 ${BOARD_WIDTH} ${BOARD_HEIGHT}`} preserveAspectRatio="xMidYMid meet" aria-label="Board locations and paths">
       <rect className="game-board-bg" x="1" y="1" width={BOARD_WIDTH - 2} height={BOARD_HEIGHT - 2} rx="22" />
+      {illustrated && <image className="game-board-art" href={illustratedBoard} x="0" y="35" width={BOARD_WIDTH} height={BOARD_HEIGHT} preserveAspectRatio="none" aria-hidden="true" />}
       {physical && <>
-        <path className="game-board-zone waterdeep" d="M16 18 H984 V325 Q780 337 625 337 Q515 345 425 345 L425 450 H255 V345 Q120 340 16 335 Z" />
-        <path className="game-board-zone arcane" d="M16 350 Q130 345 245 350 L245 458 H435 V350 Q530 345 620 350 L590 625 Q330 645 16 625 Z" />
-        <path className="game-board-zone dungeon" d="M628 345 H984 V615 H610 Z" />
-        <path className="game-board-zone skullport" d="M16 640 H595 V833 H16 Z" />
-        <path className="game-board-zone wyllowwood" d="M610 625 H984 V833 H610 Z" />
+        {!illustrated && <>
+          <path className="game-board-zone waterdeep" d="M0 35H1000V332L933 363L865 329L659 364L535 393L403 452L269 409L158 379L0 398Z" />
+          <path className="game-board-zone arcane" d="M0 401L166 379L271 412L405 453L567 409L588 461L556 699L366 735L0 717Z" />
+          <path className="game-board-zone dungeon" d="M623 348L831 337L1000 330V663L802 667L627 651L560 598L575 441Z" />
+          <path className="game-board-zone skullport" d="M0 728L211 683L364 730L542 677L583 1000H0Z" />
+          <path className="game-board-zone wyllowwood" d="M581 698L672 666L837 666L1000 643V1000H583L568 847Z" />
+        </>}
         {regions.map(region => <text key={region.label} className={`game-board-region ${region.className}`} x={region.x} y={region.y} textAnchor="middle">{region.label}</text>)}
       </>}
       <g className="game-board-routes" aria-hidden="true">
-        {routes.filter(route => route.kind !== 'teleport' || (showTeleport && (route.from === current || route.to === current))).map((route, index) => {
+        {routes.filter(route => route.kind === 'ordinary' || (showTeleport && (route.from === current || route.to === current))).map((route, index) => {
           if (!route.points.length) return null;
           const highlighted = moving && !!current && (route.from === current && targets.has(route.to) || route.to === current && targets.has(route.from));
           const kind = route.kind === 'ordinary' ? 'ordinary' : route.kind;
@@ -78,14 +87,23 @@ export function GameBoard({ data, game, moving, locked, onMove, buttonRefs }: Pr
           citizens ? `${citizens} Citizen${citizens === 1 ? '' : 's'}` : null,
           lair ? `${lair.revealed ? 'Revealed' : 'Unrevealed'} Lair` : null,
         ].filter(Boolean) as string[];
-        const displayName = location.kind === 'circle' ? 'Teleport circle' : location.name.replace('The Yawning Portal: ', '').replace('Stairway to Arcane Chambers', 'Stairway');
-        const title = `${location.name}${details.length ? `. ${details.join(', ')}` : ''}${isWizardDestination ? '. Wizard Monster destination' : ''}${canMove ? '. Reachable Move destination' : ''}`;
-        return <foreignObject key={location.id} x={position.x - NODE_WIDTH / 2} y={position.y - NODE_HEIGHT / 2} width={NODE_WIDTH} height={NODE_HEIGHT}>
-          <button type="button" className={`h-location game-board-node ${location.kind}${isCurrent ? ' current' : ''}${canMove ? ' reachable' : ''}${isWizardDestination ? ' wizard-destination' : ''}`}
+        const displayName = location.kind === 'circle'
+          ? location.name.replace(/^Teleportation Circle[: —-]*\s*/i, '').replace(/^\((.*)\)$/, '$1') + ' portal'
+          : location.name.replace('The Yawning Portal: ', 'Yawning Portal · ');
+        const passageLabels = passages.get(location.id)?.join('/');
+        const title = `${location.name}${passageLabels ? `. Secret passage ${passageLabels}` : ''}${details.length ? `. ${details.join(', ')}` : ''}${isWizardDestination ? '. Wizard Monster destination' : ''}${canMove ? '. Reachable Move destination' : ''}`;
+        return <g key={location.id}>
+          <ellipse className={`game-board-floor ${location.kind}${isCurrent ? ' current' : ''}${canMove ? ' reachable' : ''}${isWizardDestination ? ' wizard-destination' : ''}`} cx={position.x} cy={position.y} rx={NODE_WIDTH / 2 - 2} ry={NODE_HEIGHT / 2 - 1} aria-hidden="true" />
+          {location.kind === 'circle' && <ellipse className="game-board-portal-runes" cx={position.x} cy={position.y} rx={NODE_WIDTH / 2 - 7} ry={NODE_HEIGHT / 2 - 6} aria-hidden="true" />}
+          <foreignObject x={position.x - NODE_WIDTH / 2} y={position.y - NODE_HEIGHT / 2} width={NODE_WIDTH} height={NODE_HEIGHT}>
+          <button type="button" className={`h-location game-board-node ${location.kind}${displayName.length > 15 ? ' long-name' : ''}${passageLabels ? ' has-passage' : ''}${isCurrent ? ' current' : ''}${canMove ? ' reachable' : ''}${isWizardDestination ? ' wizard-destination' : ''}`}
+            data-location-id={location.id} data-passage-label={passageLabels}
             ref={element => { if (element) buttonRefs.current.set(location.id, element); else buttonRefs.current.delete(location.id); }}
             aria-label={title} aria-disabled={!canMove} title={title}
             onClick={() => { if (canMove) onMove(location.id); }}>
-            <span className="h-node-name">{location.number ? <b className="game-board-number">{location.number}</b> : null}{displayName}</span>
+            {passageLabels && <span className="game-board-passage-badge" aria-hidden="true">{passageLabels}</span>}
+            {location.number ? <b className="game-board-number" aria-hidden="true">{location.number}</b> : null}
+            <span className="h-node-name">{displayName}</span>
             <span className="game-board-pieces" aria-hidden="true">
               {isCurrent && <span className="piece piece-hero">H</span>}
               {hasBeholder && <span className="piece piece-beholder">B</span>}
@@ -95,12 +113,13 @@ export function GameBoard({ data, game, moving, locked, onMove, buttonRefs }: Pr
               {lair && <span className={`piece piece-lair${lair.revealed ? ' revealed' : ''}`}>L</span>}
             </span>
           </button>
-        </foreignObject>;
+          </foreignObject>
+        </g>;
       })}
     </svg>
     <div className="h-map-key game-board-key" aria-label="Board key">
       <span><i className="key-line" /> Ordinary route</span>
-      <span><i className="key-line passage" /> Passage</span>
+      <span><i className="key-passage">A</i> Paired secret passages</span>
       <span><i className="key-circle" /> Teleport network</span>
       <span><i className="key-current" /> Your Hero</span>
       <span><i className="key-reachable" /> Move destination</span>

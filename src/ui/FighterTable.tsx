@@ -241,7 +241,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
     result: (<section className="h-result-details" aria-label="Action result">
                 {awaitingSavedResult ? <p role="status">Saving your action…</p> : <><RollResult game={game} data={data} /><h3>{feedbackStart === null ? 'Recent events' : 'What happened'}</h3><ol>{recentEvents.map(entry => <li key={entry.id}>{entry.message}</li>)}</ol></>}
               </section>),
-    help: (<section className="h-table-guide"><h3>Playing the {heroClass} table</h3><p>The whole board fits the table. Solid paths connect locations; dashed passages and matching teleport circles identify special routes. Select Move to highlight legal destinations.</p><p>Select another action to review its targets, costs, and roll ranges here. Confirming spends the action. Dice results stay visible beside the panel buttons; Latest result shows the details.</p><p>Inventory, Monsters, Event log, and Latest result can stay open together. Toggle each independently, close it, or move it to the other side with ⇄. Opening information keeps your action selection. Required choices stay open until resolved; Required choice moves keyboard focus back to the decision. Expand a Perk in Inventory to read its effect.</p><p>Use Tab, Enter, and Space to operate controls. End Hero Phase forfeits unused actions; eligible free Perks remain available at zero actions until then.</p></section>),
+    help: (<section className="h-table-guide"><h3>Playing the {heroClass} table</h3><p>The whole board fits the table. Roads connect locations; amber letters pair secret passages and violet portals mark the teleport network. Special route traces appear during a relevant Move. Select Move to highlight legal destinations.</p><p>Select another action to review its targets, costs, and roll ranges here. Confirming spends the action. Dice results stay visible beside the panel buttons; Latest result shows the details.</p><p>Inventory, Monsters, Event log, and Latest result can stay open together. Toggle each independently, close it, or move it to the other side with ⇄. Opening information keeps your action selection. Required choices stay open until resolved; Required choice moves keyboard focus back to the decision. Expand a Perk in Inventory to read its effect.</p><p>Use Tab, Enter, and Space to operate controls. End Hero Phase forfeits unused actions; eligible free Perks remain available at zero actions until then.</p></section>),
     setup: (<section className="h-setup-summary"><h3>Everything is set up</h3><p>Your Hero, both Monsters, the starting Items, and unrevealed Lairs are already placed. Inspect the board, then choose your first action.</p><ul>
         <li><strong>{heroClass}</strong> · {locationName(at)}</li>
         {(Object.keys(MONSTER_NAMES) as (keyof typeof MONSTER_NAMES)[]).map(id => <li key={id}><strong>{MONSTER_NAMES[id]}</strong> · {locationName(game.monsters[id].location)}</li>)}
@@ -253,7 +253,12 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
   return <div className={`app-shell h-table h-workspace-table ${actionsCollapsed ? 'actions-collapsed' : ''}`}>
     <header className="app-header">
       <a className="brand" href="#main"><span className="brand-mark" aria-hidden="true">B</span>BoardBot</a>
-      <div className="header-tools"><span className="prototype-badge">Local {heroClass} game</span><button className="quiet-button" onClick={() => openPanel('help')} aria-expanded={panels.open.includes('help')}>How to play</button><button className="quiet-button" onClick={onReturnToGames} disabled={busy}>Saved games</button></div>
+      <div className="h-workspace-heading">
+        <div><p className="eyebrow">TURN {game.turn} · {game.phase.toUpperCase()} PHASE</p><h2 id="h-board-title" className="sr-only">The city and dungeon</h2></div>
+        <div className="hero"><strong>Local {heroClass} game</strong><span>At {locationName(at)}</span></div>
+        <div className="h-status"><span>Terror <strong>{game.terror}</strong></span><span>Frenzy <strong>{MONSTER_NAMES[game.frenzy]}</strong></span><span>Monster deck <strong>{game.monsterDeckCount}</strong></span></div>
+      </div>
+      <div className="header-tools"><button className="quiet-button" onClick={() => openPanel('help')} aria-expanded={panels.open.includes('help')}>How to play</button><button className="quiet-button" onClick={onReturnToGames} disabled={busy}>Saved games</button></div>
     </header>
     <main id="main">
       <h1 className="sr-only">Horrified {heroClass} table</h1>
@@ -261,11 +266,6 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
       {error && <p className="h-error" role="alert">{error}</p>}
       {terminal && <div className="h-end" role="status"><strong>{game.phase === 'won' ? 'Victory' : 'Defeat'}</strong><span>{game.endReason}</span></div>}
       <section className={`h-workspace board-panel ${visiblePanels.some(id => sideFor(id) === 'left') ? 'has-left-panel' : ''} ${visiblePanels.some(id => sideFor(id) === 'right') ? 'has-right-panel' : ''}`} aria-labelledby="h-board-title">
-        <div className="h-workspace-heading">
-          <div><p className="eyebrow">TURN {game.turn} · {game.phase.toUpperCase()} PHASE</p><h2 id="h-board-title">The city and dungeon</h2></div>
-          <div className="hero"><strong>{hero?.name ?? heroClass}</strong><span>At {locationName(at)}</span></div>
-          <div className="h-status"><span>Terror <strong>{game.terror}</strong></span><span>Frenzy <strong>{MONSTER_NAMES[game.frenzy]}</strong></span><span>Monster deck <strong>{game.monsterDeckCount}</strong></span></div>
-        </div>
         <nav className="h-panel-nav" aria-label="Table panels">
           <button onClick={() => openPanel('inventory')} aria-expanded={panels.open.includes('inventory')}>Inventory <span>{ownedItems.length} Items · {game.hero.perks.length} Perks</span></button>
           <button onClick={() => openPanel('monsters')} aria-expanded={panels.open.includes('monsters')}>Monsters</button>

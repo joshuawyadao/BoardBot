@@ -8,14 +8,20 @@ Implement the approved illustrated tabletop UI, making the board's names, number
 
 ## Action items
 [x] Inspect the approved visual direction, physical-board evidence, accepted Rules-Reference and Game-Data-Checklist, architecture, current board rendering, and existing geometry/browser tests; activate the UI goal and create the feature branch.
-[ ] Validate all 29 physical-board locations and author a board geometry contract in src/ui/boardLayout.ts, preserving the 28 accepted ordinary routes, two passage pairs and teleport network; prevent unrelated-node crossings and misleading neutral junctions.
-[ ] Create original production artwork suited to that geometry and record source/publication provenance before committing assets; keep private photos, component data and concept screenshots ignored.
-[ ] Update GameBoard.tsx and gameBoard.css with integrated names and numbering, coherent roads/bridges, clear portal/passage cues, distinct pieces and accessible hit targets; retain the complete synthetic fallback.
-[ ] Apply the approved charcoal/brass styling to the existing library, phase controls, action tray, independently toggled panels, inventory/perk explanations and persistent roll results.
-[ ] Extend focused geometry/rendering tests and browser checks for map fit, path endpoints, legal selections, keyboard focus, crowded pieces, pending choices and panel toggles; preserve the existing gameplay and recovery assertions.
-[ ] Record the durable design and asset decisions in a focused docs/UI-Design.md; update README.md, Architecture.md, Verification.md, Roadmap.md and Work-Plan.md where implemented behavior or accepted direction changes.
+[x] Validate all 29 physical-board locations and author a board geometry contract in src/ui/boardLayout.ts, preserving the 28 accepted ordinary routes, two passage pairs and teleport network; prevent unrelated-node crossings and misleading neutral junctions.
+[x] Create original production artwork suited to that geometry and record source/publication provenance before committing assets; keep private photos, component data and concept screenshots ignored.
+[x] Update GameBoard.tsx and gameBoard.css with integrated names and numbering, coherent roads/bridges, clear portal/passage cues, distinct pieces and accessible hit targets; retain the complete synthetic fallback.
+[x] Apply the approved charcoal/brass styling to the existing library, phase controls, action tray, independently toggled panels, inventory/perk explanations and persistent roll results.
+[x] Extend focused geometry/rendering tests and browser checks for map fit, path endpoints, legal selections, keyboard focus, crowded pieces, pending choices and panel toggles; preserve the existing gameplay and recovery assertions.
+[x] Record the durable design and asset decisions in a focused docs/UI-Design.md; update README.md, Architecture.md, Verification.md, Roadmap.md and Work-Plan.md where implemented behavior or accepted direction changes.
 [ ] Run targeted checks, npm run verify and npm run test:e2e; inspect the actual prepared-game board on the target desktop size, then use production/prepared checks where visual changes leave interaction or recovery risks.
 [ ] Save coherent checkpoints, push the feature branch, and run the full pr-review-cycle through Codex/Brooks feedback, CI and conflict resolution until merge-ready; leave full manual game acceptance and merging to the owner.
 
 ## Open questions
 - None blocking the approved scope. The generated concept is a visual reference, not evidence of exact geometry or legal paths; implementation must validate those independently against the canonical graph and physical board.
+
+## Validation and review checkpoint
+- Final build/typecheck, 132 unit tests across 24 files and five repository checks pass. Ten focused board browser tests pass; the final complete browser suite is running. The previous complete run passed 78 browser tests, the production acceptance test and six prepared-component scenarios, including Fighter victory.
+- Isolated final visual checks at 1440×900, 1024×768 and 390×844 found no clipped location names, piece markers or passage badges and no browser errors. The owner's live save was not used.
+- Independent Brooks review found long-name clipping with crowded pieces. Separate floor numbers, tighter long-name typography and crowded numbered/connector browser regressions address it; final re-review is pending. Printed passage labels also retain A/B identity under reordered/reversed imports.
+- Implementation checkpoint and final save/push/PR review remain next. Full human play acceptance and animations remain outside this task.

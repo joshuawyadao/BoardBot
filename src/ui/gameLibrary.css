@@ -55,3 +55,119 @@
   .saved-game-actions .confirm-button { flex: 1; }
   .game-library button { min-height: 44px; }
 }
+
+/* The saved-game shelf carries the same ink, brass and ivory as the table. */
+.game-library {
+  min-height: 100dvh;
+  max-width: 1100px;
+  padding: 26px clamp(20px, 4vw, 54px) 50px;
+  color: var(--ink);
+  background: radial-gradient(ellipse at 50% 0, #263842 0, #142229 55%, #10171b 100%);
+  border-inline: 1px solid #58452f;
+  box-shadow: 0 0 0 3px #0b1216, 0 0 70px #0008;
+}
+.game-library .library-header {
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--brass-line);
+  color: #d8c6a6;
+  font-family: Georgia, serif;
+  letter-spacing: .04em;
+}
+.game-library .library-brand {
+  color: #f3d399;
+  font: 500 29px/1 Georgia, serif;
+  letter-spacing: .01em;
+  text-shadow: 0 2px 12px #0009;
+}
+.game-library .library-intro { margin: 44px 0 30px; }
+.game-library .library-eyebrow { color: #e6bd7d; }
+.game-library .library-intro h1 {
+  max-width: 730px;
+  color: #fae9cb;
+  font: 400 clamp(31px, 4vw, 45px)/1.14 Georgia, serif;
+  letter-spacing: -.025em;
+}
+.game-library .library-intro > p:last-child { max-width: 65ch; color: #d2d7d0; }
+.game-library .library-card {
+  border: 1px solid #78603e;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #26343d, #1a2932 75%);
+  box-shadow: inset 0 1px #edc88c3b, 0 8px 18px #0005;
+}
+.game-library .library-card h2,
+.game-library .library-card h3 { color: #f5d8a7; font-family: Georgia, serif; }
+.game-library .library-card p { color: #d9ded6; }
+.game-library .new-game-card {
+  border-left: 5px solid #d7a964;
+  background: linear-gradient(110deg, #34403d, #1b2b35 70%);
+}
+.game-library .saved-games-list { margin-top: 36px; }
+.game-library .saved-games-list > h2 { color: #e8d1a8; font: 400 22px Georgia, serif; }
+.game-library .saved-games-list > h2 > span {
+  border-color: #7c694d;
+  background: #263138;
+  color: #f5d9aa;
+  font: 600 12px system-ui, sans-serif;
+}
+.game-library .library-empty,
+.game-library .saved-game-summary small { color: #bdc9c5; }
+.game-library .saved-game-card details {
+  border-top-color: #63706a;
+  color: #e5e5d8;
+}
+.game-library .saved-game-card summary,
+.game-library .library-import summary { color: #e9c990; }
+.game-library .confirm-button,
+.game-library .library-delete-confirm {
+  border: 1px solid #b7955d;
+  background: linear-gradient(#39706c, #1d4e4f);
+  color: #fff4dc;
+  box-shadow: inset 0 1px #ffffff3b;
+}
+.game-library .confirm-button:hover:not(:disabled) { background: linear-gradient(#4c827c, #28605e); }
+.game-library .quiet-button {
+  border: 1px solid #677472;
+  background: #26363f;
+  color: #e9e2d1;
+}
+.game-library .quiet-button:hover:not(:disabled) { border-color: #b39765; background: #35454a; }
+.game-library .library-delete-button { color: #f3b2a0; border-color: #a97867; }
+.game-library .library-delete-confirm { border-color: #d79772; background: linear-gradient(#9b4439, #6c292c); }
+.game-library button:disabled { opacity: .68; }
+.game-library .hero-setup label { color: #f2d6a6; }
+.game-library .hero-setup select,
+.game-library .hero-setup input {
+  border-color: #9c855f;
+  background: #14242d;
+  color: #f9ebd4;
+}
+.game-library .hero-setup .hero-setup-detail { color: #bfe0d0; }
+.game-library .hero-setup label[for='game-seed'] { color: #cad2cb; }
+.game-library .library-import { border-color: #6f5b3f; }
+.game-library .library-import .local-import-body,
+.game-library .library-import p { color: #d7dcd5; }
+.game-library .library-import input { color: #eee6d7; }
+.game-library .library-error {
+  border: 1px solid #c27c70;
+  background: #4d292a;
+  color: #ffe5d8;
+}
+.game-library .library-notice {
+  border: 1px solid #9c8054;
+  background: #493d2d;
+  color: #f5e1bb;
+}
+.game-library .library-footer { border-top: 1px solid #6d5b40; padding-top: 15px; color: #c4d0c8; }
+.game-library .library-dialog {
+  border: 1px solid #b08b54;
+  background: #1e2d37;
+  color: #f2e9d9;
+  box-shadow: 0 22px 90px #000b;
+}
+.game-library .library-dialog::backdrop { background: #060b0ddb; }
+.game-library .library-dialog h2 { color: #f5d6a2; }
+.game-library .library-dialog .library-delete-summary { color: #c8d3cc; }
+@media (max-width: 600px) {
+  .game-library { padding: 18px 18px 30px; border-inline: 0; }
+  .game-library .library-intro { margin-top: 28px; }
+}

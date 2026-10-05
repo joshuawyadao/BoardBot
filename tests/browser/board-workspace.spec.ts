@@ -24,6 +24,30 @@ function layoutFixture(): GameData {
   return data;
 }
 
+/** Accepted topology with invented component text; no private packet is needed. */
+function illustratedFixture(): GameData {
+  const data = layoutFixture();
+  const pairs = [
+    ['1', '3'], ['3', '5'], ['5', '6'], ['3', '2'], ['2', '4'], ['5', '4'], ['4', '7'],
+    ['4', 'castle-corkscrew'], ['7', '8'], ['8', 'the-yawning-portal-the-well'],
+    ['14', '13'], ['14', 'teleportation-circle-arcane-chambers'], ['13', 'teleportation-circle-arcane-chambers'],
+    ['13', '11'], ['11', '12'], ['11', 'stairway-to-arcane-chambers'],
+    ['stairway-to-arcane-chambers', 'teleportation-circle-dungeon-level'],
+    ['stairway-to-arcane-chambers', 'entry-well'], ['10', 'entry-well'], ['entry-well', '9'],
+    ['15', '16'], ['15', 'skullport-gate'], ['15', 'teleportation-circle-skullport'],
+    ['skullport-gate', '17'], ['17', 'teleportation-circle-skullport'],
+    ['18', '19'], ['19', '20'], ['19', 'teleportation-circle-wyllowwood'],
+  ];
+  data.board.edges = pairs.map(([from, to]) => ({ from: `location-${from}`, to: `location-${to}`, kind: 'ordinary' }));
+  data.board.edges.push(
+    { from: 'location-castle-corkscrew', to: 'location-skullport-gate', kind: 'passage' },
+    { from: 'location-the-yawning-portal-the-well', to: 'location-entry-well', kind: 'passage' },
+  );
+  const circles = data.board.locations.filter(location => location.kind === 'circle').map(location => location.id);
+  circles.forEach((from, index) => circles.slice(index + 1).forEach(to => data.board.edges.push({ from, to, kind: 'teleport' })));
+  return data;
+}
+
 async function load(page: Page, data: GameData, seed = 2, hero = 'Fighter') {
   await page.goto('/');
   await page.getByText('Import game data or backup').click();
@@ -54,6 +78,7 @@ test('all 29 locations fit desktop and smaller windows with panels on either sid
   await load(page, layoutFixture());
   await expect(page.locator('.h-location')).toHaveCount(29);
   await expect(page.locator('.game-board-region')).toHaveCount(5);
+  await expect(page.locator('.game-board-art')).toHaveCount(0); // painted roads would misrepresent this invented graph
   for (const viewport of [{ width: 1440, height: 900 }, { width: 1024, height: 768 }, { width: 800, height: 800 }]) {
     await page.setViewportSize(viewport);
     await expectWholeBoard(page);
@@ -73,6 +98,102 @@ test('all 29 locations fit desktop and smaller windows with panels on either sid
   await page.setViewportSize({ width: 390, height: 844 });
   await expectWholeBoard(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test('illustrated floors, portals and passage pairs retain keyboard movement and recovery', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await load(page, illustratedFixture());
+  const board = page.locator('.h-game-board.illustrated');
+  await expect(board).toBeVisible();
+  const art = board.locator('.game-board-art');
+  await expect(art).toHaveCount(1);
+  const loaded = await art.evaluate(async element => {
+    const image = new Image();
+    image.src = element.getAttribute('href')!;
+    await image.decode();
+    return image.naturalWidth > 500 && image.naturalHeight > 500;
+  });
+  expect(loaded).toBe(true);
+  await expect(board.locator('.game-board-route.ordinary')).toHaveCount(28);
+  await expect(board.locator('.game-board-route.passage, .game-board-route.teleport')).toHaveCount(0);
+  await expect(board.locator('.game-board-portal-runes')).toHaveCount(4);
+  expect((await board.locator('.game-board-passage-badge').allTextContents()).sort()).toEqual(['A', 'A', 'B', 'B']);
+  const floorStyles = await board.locator('.h-location').evaluateAll(elements => elements.map(element => {
+    const style = getComputedStyle(element);
+    return { background: style.backgroundColor, border: style.borderTopWidth, shadow: style.boxShadow };
+  }));
+  expect(floorStyles.every(style => style.background === 'rgba(0, 0, 0, 0)' && style.border === '0px' && style.shadow === 'none')).toBe(true);
+  await page.getByRole('button', { name: 'Move Connected location' }).click();
+  await expect(board.locator('.h-location.reachable')).toHaveCount(2);
+  const target = board.locator('[data-location-id="location-3"]');
+  await target.focus();
+  await expect(target).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(board.locator('.h-location.current')).toHaveAttribute('data-location-id', 'location-3');
+  await expect(page.locator('.h-tray .action-budget')).toContainText('3 / 4');
+  for (const name of [/^Inventory/, /^Latest result$/]) await page.getByRole('button', { name }).click();
+  await expectWholeBoard(page);
+  await page.reload();
+  await page.getByRole('button', { name: 'Resume saved game', exact: true }).click();
+  await expect(board.locator('.h-location.current')).toHaveAttribute('data-location-id', 'location-3');
+  await expect(art).toHaveCount(1);
+  await expect(page.locator('.h-tray .action-budget')).toContainText('3 / 4');
+});
+
+for (const [at, label] of [
+  ['location-2', 'Twilight Watchtower'],
+  ['location-stairway-to-arcane-chambers', 'Stairway to Arcane Chambers'],
+] as const) test(`crowded pieces and the complete ${label} name fit their integrated location`, async ({ page }) => {
+  const data = illustratedFixture();
+  data.heroes.find(hero => hero.id === 'hero-fighter')!.start = at;
+  data.board.locations.find(location => location.id === at)!.name = label;
+  data.board.lairLocations[0] = at;
+  data.setup!.beholderLocation = at;
+  data.setup!.displacerLocation = at;
+  data.board.monsterStarts.forEach(start => { start.location = at; });
+  data.items.forEach(item => { item.locations = Array.from({ length: item.quantity }, () => at); });
+  await load(page, data);
+  const floor = page.locator(`[data-location-id="${at}"]`);
+  await expect(floor.locator('.piece')).toHaveCount(5); // Hero, both Monsters, 12 Items and unrevealed Lair
+  await expect(floor).toHaveAttribute('aria-label', /Beholder, Displacer Beast, 12 Items.*Unrevealed Lair/);
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 1024, height: 768 }]) {
+    await page.setViewportSize(viewport);
+    const bounds = (await floor.boundingBox())!;
+    const name = floor.locator('.h-node-name');
+    await expect(name).toHaveText(label);
+    const nameBounds = (await name.boundingBox())!;
+    expect(nameBounds.y, 'complete name starts inside the hit target').toBeGreaterThanOrEqual(bounds.y - 1);
+    expect(nameBounds.y + nameBounds.height, 'complete name ends inside the hit target').toBeLessThanOrEqual(bounds.y + bounds.height + 1);
+    for (const piece of await floor.locator('.piece').all()) {
+      await expect(piece).toBeVisible();
+      const box = (await piece.boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(bounds.x - 1);
+      expect(box.y).toBeGreaterThanOrEqual(bounds.y - 1);
+      expect(box.x + box.width).toBeLessThanOrEqual(bounds.x + bounds.width + 1);
+      expect(box.y + box.height).toBeLessThanOrEqual(bounds.y + bounds.height + 1);
+    }
+  }
+});
+
+test('paired passages show only the relevant trace and move to their matching endpoint', async ({ page }) => {
+  const data = illustratedFixture();
+  data.heroes.find(hero => hero.id === 'hero-fighter')!.start = 'location-castle-corkscrew';
+  await load(page, data);
+  const start = page.locator('[data-location-id="location-castle-corkscrew"]');
+  const destination = page.locator('[data-location-id="location-skullport-gate"]');
+  for (const endpoint of [start, destination]) {
+    await expect(endpoint).toHaveAttribute('data-passage-label', 'A');
+    await expect(endpoint.locator('.game-board-passage-badge')).toBeVisible();
+    await expect(endpoint).toHaveAttribute('aria-label', /Secret passage A/);
+  }
+  await expect(page.locator('.game-board-route.passage')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Move Connected location' }).click();
+  await expect(page.locator('.game-board-route.passage.highlighted')).toHaveCount(1);
+  await expect(page.locator('.h-location.reachable')).toHaveCount(2);
+  await destination.click();
+  await expect(destination).toHaveClass(/current/);
+  await expect(page.locator('.game-board-route.passage')).toHaveCount(0);
+  await expect(page.locator('.h-tray .action-budget')).toContainText('3 / 4');
 });
 
 test('teleport links appear only for a relevant Move and do not alter the legal graph', async ({ page }) => {

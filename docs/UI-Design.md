@@ -1,0 +1,17 @@
+# Illustrated tabletop
+
+The owner approved the illustrated tabletop direction on October 3, 2026: an immersive colored map, integrated lettering and floor numbering, natural visible connections, tactile components, clear portals and passages, and restrained charcoal/brass controls. Animations remain deferred. The production map uses a flatter overhead view so the illustrated floors can align with the physical layout without perspective ambiguity.
+
+`boardLayout.ts` places the 29 floor anchors on a square 1000-unit canvas. The anchors follow a manual perspective-normalized study of the owner's private photograph; they preserve relative placement rather than copying the printed illustration. Decorative buildings are original generic fantasy landmarks. The checked geometry is an approximation of the photographed floor positions, not a claim of pixel-identical publisher artwork.
+
+Authored waypoints shape the 28 accepted ordinary edges into streets, corridors, harbor bridges and forest trails. They neither add an edge nor authorize movement. Public tests check bounds, distinct hit targets, route endpoints, unrelated-node intersections and neutral junctions. The conservative city paths remain 3–2–4 and 5–4–7; unverified shortcuts remain unimplemented.
+
+`GameBoard` layers an original locally bundled painting, subtle road traces, floor states, native location buttons, lettering and observed pieces. Names are live text rather than rasterized labels or rectangular UI plaques. Each number sits in a small brass floor marker. Full names and observed contents remain available through accessible button labels. Hidden Lair identities never enter the board renderer.
+
+Violet rings identify all four teleport portals. Amber letters identify both endpoints of each secret passage. The printed A/B pair identities are stable under edge reordering or reversal; other imported pairs receive distinct labels. Virtual route traces appear only during a Move from an incident location; they do not read as ordinary streets. Only engine-projected legal destinations become actionable, and the session revalidates every submitted move. Wizard Monster destinations have a separate amber outline without becoming Move targets.
+
+The painting contains ordinary roads, so `hasIllustratedLayout` requires the exact accepted 28 ordinary edges, two passages and six teleport links, independent of their order or direction. An imported graph with different edges uses code-rendered terrain and its own routes, even when it has the same 29 location IDs. Smaller synthetic boards retain the bounded grid fallback. [Asset provenance and publication notice](../src/ui/assets/README.md) records the original guide, prompt and local runtime boundary.
+
+Phase, Hero and Monster status share the top bar on larger windows. The compact action tray and independently toggled information panels preserve the board's remaining height. Panels stay mounted when moved or closed, preserving drafts, choices, Perk disclosures and reading position. Narrow screens stack panels below the fitted board. Native focus rings, keyboard activation, visible unavailable reasons, saved roll arithmetic and persistent required-choice controls remain part of the existing interaction contract.
+
+This design pass changes presentation and geometry only. Engine decisions, data interpretations, command revisions, saves and replay formats remain unchanged. Full human game acceptance is still tracked in the [owner playtest checklist](Playtest-Checklist.md).
