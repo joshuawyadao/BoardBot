@@ -125,17 +125,40 @@ test('a pending Fighter choice stays operable while actions are collapsed', asyn
 
 test('keyboard Move targets a destination and same-tick clicks commit once', async ({ page }) => {
   await loadSyntheticFighter(page);
+  await page.evaluate(async () => {
+    const path = '/src/session/savedSession.ts';
+    const { SavedSession } = await import(path);
+    const submit = SavedSession.prototype.submit;
+    const released = new Promise<void>(resolve => Object.defineProperty(window, 'releaseMoveSave', { value: resolve, configurable: true }));
+    SavedSession.prototype.submit = async function (...args: unknown[]) {
+      SavedSession.prototype.submit = submit;
+      await submit.apply(this, args);
+      // Hold real completion so lock assertions do not race a 300ms display delay.
+      await released;
+    };
+  });
   const move = page.getByRole('button', { name: 'Move Connected location' });
   await move.focus();
   await page.keyboard.press('Enter');
   const destination = page.getByRole('button', { name: /Room 1/ });
   await expect(destination).toBeFocused();
   await destination.evaluate((button: HTMLButtonElement) => { button.click(); button.click(); });
+  await expect(move).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.locator('.h-table .hero span')).toHaveText('At Room 2');
+  await page.evaluate(() => { Reflect.get(window, 'releaseMoveSave')(); Reflect.deleteProperty(window, 'releaseMoveSave'); });
   await expect(page.locator('.h-table .hero span')).toHaveText('At Room 1');
   await expect(page.locator('.h-tray .action-budget')).toContainText('3 / 4');
-  await expect(move).toHaveAttribute('aria-disabled', 'true');
-  await page.waitForTimeout(340);
   await expect(move).toHaveAttribute('aria-disabled', 'false');
+  const state = await page.evaluate(async () => {
+    const path = '/src/session/gameLibrary.ts';
+    const library = await (await import(path)).openGameLibrary();
+    try {
+      const [game] = await library.list();
+      return JSON.parse((await library.game(game.id).read()).current!.payload).state;
+    } finally { library.close(); }
+  });
+  expect(state.commands).toHaveLength(1);
+  expect(state.revision).toBe(1);
 });
 
 test('confirmed special action and Monster Phase run with local requests only', async ({ page }) => {
