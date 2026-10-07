@@ -1,35 +1,31 @@
 # Plan
 
-Implement the approved accessible tabletop renders as live React interfaces, keeping the illustrated board authoritative to the existing geometry and legal graph. Use original code-rendered physical pieces, native readable captions, contextual inspection and decisions, and additive observed-state presentation fields.
+Audit the current website against the accepted rules, keyboard access, readable layouts and save behavior. Fix the reproduced interface defects and add focused accessibility regressions while preserving the engine, public-state boundary and existing saves.
 
 ## Scope
 
-- In: Integrated floor-rim captions at every location; tactile Hero/Monster/Item/Citizen/Lair presentation; quantities versus Strength; location inspection and a named location list; independent panels; persistent phase/actions/Terror/Frenzy/deck status; Beholder attack/dice/ray context and Slowing previews; Wizard outcome and destination selection; accessible controls, focus restoration and responsive layouts; tests, docs, local browser checks, checkpoints and feature-branch push.
-- Out: Rules changes, hidden-state exposure, save migrations, speculative board edges, animations, multiplayer, copied commercial artwork, hosted deployment, PR merging and declaring full human gameplay or assistive-technology acceptance.
+- In: Full existing regression suites; axe and browser checks; keyboard focus recovery; required choices at enlarged text and narrow widths; keyboard scrolling; usable reading space with many panels; accessible unavailable-action explanations; tests, canonical verification/design notes, checkpoints and feature-branch save.
+- Out: New rules, different rule interpretations, save/data migrations, animations, copied artwork, deployment, PR merging, and claiming complete WCAG or human gameplay acceptance.
 
 ## Action items
 
-[x] Map the existing UI, projection privacy boundary, canonical component/rule references and affected unit/browser tests; checkpoint this resolved plan on codex/illustrated-tabletop-ui.
-[x] Add cloned presentation-only attack/current-card/next-phase information and explicit pending-choice context to the public GameView; test privacy, conditional Slowing previews, legacy interpretation and Wizard choice distinctions.
-[x] Build original reusable SVG standees, miniatures, item illustrations and dice with tactile bases and clear quantity badges; document their provenance and preserve decorative/accessible separation.
-[x] Update GameBoard.tsx and gameBoard.css with live rim captions, distinct crowded pieces, native inspection and engine-projected Wizard selection; preserve all 29 anchors and accepted routes, synthetic fallback and hidden Lairs.
-[x] Implement the cream location inspector, named location list, supplies/progress panel and item cards in FighterTable; preserve independent panel toggles/drafts and restore focus to invoking controls.
-[x] Implement Beholder attack context and complete engine-driven responses, next-phase penalty previews, readable Hero range tables/results and map-or-name Wizard destination selection with explicit confirmation.
-[x] Extend focused rendering/projection/browser tests for inspection without spending actions, draft preservation, keyboard focus/return, effective20 outcomes, conditional penalties, enlarged text, narrow layouts, control sizes and save recovery.
-[x] Update README.md, docs/UI-Design.md, docs/Architecture.md, docs/Verification.md and the original-art notice to describe implemented behavior and remaining manual checks; retain the durable Work-Plan/Roadmap baseline.
-[x] Run targeted checks, npm run verify, npm run test:e2e and production/prepared acceptance where applicable; inspect the running local app using an isolated game; save coherent checkpoints and push the feature branch.
+[x] Read the canonical rules/data, UI design and verification docs; map tests and diagnose reproduced failures before changing code.
+[ ] Checkpoint this resolved plan on codex/illustrated-tabletop-ui.
+[ ] Make action cancellation/confirmation and required-choice return focus a visible, useful control or result; associate action explanations with their controls.
+[ ] Keep many open panels readable with scrollable panel space and explicit keyboard access, preserving mounted drafts, disclosures, reading positions and the fitted board.
+[ ] Correct repeated result semantics and manually resolve automated contrast checks that cannot evaluate gradients or artwork.
+[ ] Add focused browser regressions and repeat automated accessibility checks across setup, ordinary actions, required decisions, inspection, deletion confirmation and enlarged/narrow layouts.
+[ ] Update docs/UI-Design.md and docs/Verification.md with implemented fixes, current evidence and remaining human/VoiceOver acceptance; preserve Work-Plan and Roadmap requirements.
+[ ] Run npm run verify, npm run test:e2e and affected production/prepared acceptance; review the final diff, commit and push the feature branch.
 
 ## Open questions
 
-- None blocking implementation. The approved images guide styling; native UI derives all game values from the public projection. The existing local Vite app is the live target. Manual VoiceOver, physical disconnection and the owner's full-game acceptance remain separate.
+- None blocking. This is an audit and scoped UI correction using the existing accepted rule contracts. Full human play and VoiceOver experience remain manual acceptance gates.
 
 ## Discovery notes
 
-- Read README, AGENTS, Architecture, UI-Design, Game-Data-Checklist, Rules-Reference and Verification; reviewed GameBoard, FighterTable, RollResult, current fixtures and browser checks.
-- Existing open PR9 already contains the illustrated-board foundation on codex/illustrated-tabletop-ui; this task continues that branch and does not merge it.
-- The engine first asks discard versus penalty, then asks which Item to discard. Keep those commands and save/replay semantics; improve the decision presentation without combining commands speculatively.
-- SVG pieces are original project artwork. Do not bundle private component text, photographs, saved games or the generated concept screenshots.
-
-## Implementation checkpoint
-
-- Live board, observed projections, original SVG pieces, inspector/panels, native destination alternatives and focus handoffs are implemented. Build/typecheck, 140 unit tests and 83 public browser tests passed before the final ray-effect rendering refinement; the added focused inspector/ray rendering cases also pass. Production recovery and six prepared-component scenarios passed, including Fighter victory; all 83 public browser cases and the focused visible-focus recheck passed. The final checkpoint includes canonical docs, original-art provenance and the completed checklist.
+- Baseline passed: 142 unit tests in 26 files, five repository checks, 83 public browser cases, one production case and six prepared-component cases (all five Heroes plus Fighter victory).
+- Browser probes reproduce focus falling to BODY after named Move and action cancellation; at 320 CSS pixels with 200% text the required-choice heading remains below the viewport; nine open panels reduce the choice options viewport to 4px.
+- Axe identifies unfocusable scroll regions and duplicate named roll landmarks. Automated contrast checks require manual gradient/artwork inspection; no contrast conclusion is inferred from an incomplete result.
+- The full-game test controller checks integration and deterministic replay using engine-provided legal options; independent boundary tests and canonical source evidence establish the narrower supported-rule contracts.
+- Private packet, user saves, audit screenshots/logs and temporary test-library downloads stay outside public commits. Continue the existing PR9 feature branch without merging it.
