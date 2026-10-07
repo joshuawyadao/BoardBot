@@ -10,13 +10,13 @@ Audit the current website against the accepted rules, keyboard access, readable 
 ## Action items
 
 [x] Read the canonical rules/data, UI design and verification docs; map tests and diagnose reproduced failures before changing code.
-[ ] Checkpoint this resolved plan on codex/illustrated-tabletop-ui.
-[ ] Make action cancellation/confirmation and required-choice return focus a visible, useful control or result; associate action explanations with their controls.
-[ ] Keep many open panels readable with scrollable panel space and explicit keyboard access, preserving mounted drafts, disclosures, reading positions and the fitted board.
-[ ] Correct repeated result semantics and manually resolve automated contrast checks that cannot evaluate gradients or artwork.
-[ ] Add focused browser regressions and repeat automated accessibility checks across setup, ordinary actions, required decisions, inspection, deletion confirmation and enlarged/narrow layouts.
-[ ] Update docs/UI-Design.md and docs/Verification.md with implemented fixes, current evidence and remaining human/VoiceOver acceptance; preserve Work-Plan and Roadmap requirements.
-[ ] Run npm run verify, npm run test:e2e and affected production/prepared acceptance; review the final diff, commit and push the feature branch.
+[x] Checkpoint this resolved plan on codex/illustrated-tabletop-ui (9c4c276).
+[x] Make action cancellation/confirmation and required-choice return focus a visible, useful control or result; associate action explanations with their controls.
+[x] Keep many open panels readable with scrollable panel space and explicit keyboard access, preserving mounted drafts, disclosures, reading positions and the fitted board.
+[x] Correct repeated result semantics and manually resolve automated contrast checks that cannot evaluate gradients or artwork; patch the compatible source-map-js advisory surfaced when installing the audit library.
+[x] Add focused browser regressions and repeat automated accessibility checks across setup, ordinary actions, required decisions, inspection, deletion confirmation and enlarged/narrow layouts.
+[x] Update docs/UI-Design.md and docs/Verification.md with implemented fixes, current evidence and remaining human/VoiceOver acceptance; preserve Work-Plan and Roadmap requirements.
+[x] Run npm run verify, npm run test:e2e and affected production/prepared acceptance; review the final diff and save on the feature branch.
 
 ## Open questions
 
@@ -29,3 +29,9 @@ Audit the current website against the accepted rules, keyboard access, readable 
 - Axe identifies unfocusable scroll regions and duplicate named roll landmarks. Automated contrast checks require manual gradient/artwork inspection; no contrast conclusion is inferred from an incomplete result.
 - The full-game test controller checks integration and deterministic replay using engine-provided legal options; independent boundary tests and canonical source evidence establish the narrower supported-rule contracts.
 - Private packet, user saves, audit screenshots/logs and temporary test-library downloads stay outside public commits. Continue the existing PR9 feature branch without merging it.
+
+## Completion evidence
+
+- Final verification passed: 142 Vitest cases, five repository checks, 91 public browser cases, one production case and six prepared-component scenarios. The 22 focused board/accessibility cases also passed after the final responsive correction.
+- Eight new browser regressions cover the reproduced defects. Seven app states have no automated axe violations; manual contrast inspection corrected the passage marker to 5.31:1. Short windows and enlarged text keep required choices readable.
+- No confirmed supported-rule regression was found. Full human gameplay, VoiceOver and other browser/device acceptance remain separate checks, as documented in docs/Verification.md.

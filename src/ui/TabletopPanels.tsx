@@ -63,8 +63,8 @@ export function AttackPanel({ data, game, locationName }: Shared) {
   const ray = attack.monster === 'beholder' ? game.pending?.ray ?? (result === undefined ? null
     : [...data.monsters.beholder.rays.front, ...data.monsters.beholder.rays.back].find(entry => result >= entry.min && result <= entry.max)) : null;
   const damaged = result !== undefined && data.monsters.beholder.eyestalks.some(eye => result >= eye.min && result <= eye.max && game.damagedEyes.includes(eye.min));
-  return <section className="h-attack" aria-label="Current attack"><h3>{attack.monster === 'beholder' ? 'Beholder' : 'Displacer Beast'} attack</h3><p>Target: {target} · {locationName(attack.target === game.hero.definitionId || attack.target === 'hero' ? game.hero.location : game.citizens[attack.target]?.location)}</p>
-    <div className="h-attack-dice" aria-label="Attack dice">{attack.faces.map((face, index) => <div key={index}><DieArtwork face={face} /><strong>{face === 'hit' ? 'HIT' : face === 'power' ? 'POW' : 'Blank'}</strong></div>)}</div>
+  return <section className="h-attack" tabIndex={0} aria-label="Current attack"><h3>{attack.monster === 'beholder' ? 'Beholder' : 'Displacer Beast'} attack</h3><p>Target: {target} · {locationName(attack.target === game.hero.definitionId || attack.target === 'hero' ? game.hero.location : game.citizens[attack.target]?.location)}</p>
+    <div className="h-attack-dice" role="group" aria-label="Attack dice">{attack.faces.map((face, index) => <div key={index}><DieArtwork face={face} /><strong>{face === 'hit' ? 'HIT' : face === 'power' ? 'POW' : 'Blank'}</strong></div>)}</div>
     <p>Resolve POW first · {attack.remainingPowers} POW remaining · {attack.remainingHits} HIT remaining</p>
     {ray && <p>Current ray: {damaged ? 'Antimagic eye (damaged eyestalk)' : `${ray.name} (${ray.min}–${ray.max})`}</p>}
     {ray && !damaged && <p>{ray.effect}</p>}

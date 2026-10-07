@@ -50,8 +50,8 @@ export function GameBoard({ data, game, moving, locked, onMove, buttonRefs, onIn
     for (const id of [from, to]) passages.set(id, [...passages.get(id) ?? [], label]);
   });
 
-  return <div className={`game-board h-game-board${illustrated ? ' illustrated' : ' schematic'}`} aria-label="Game board">
-    <svg className="game-board-svg" viewBox={`0 0 ${BOARD_WIDTH} ${BOARD_HEIGHT}`} preserveAspectRatio="xMidYMid meet" aria-label="Board locations and paths">
+  return <div className={`game-board h-game-board${illustrated ? ' illustrated' : ' schematic'}`} role="group" aria-label="Game board">
+    <svg className="game-board-svg" role="group" viewBox={`0 0 ${BOARD_WIDTH} ${BOARD_HEIGHT}`} preserveAspectRatio="xMidYMid meet" aria-label="Board locations and paths">
       <rect className="game-board-bg" x="1" y="1" width={BOARD_WIDTH - 2} height={BOARD_HEIGHT - 2} rx="22" />
       {illustrated && <image className="game-board-art" href={illustratedBoard} x="0" y="35" width={BOARD_WIDTH} height={BOARD_HEIGHT} preserveAspectRatio="none" aria-hidden="true" />}
       {physical && <>

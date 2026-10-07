@@ -432,3 +432,41 @@
 .h-workspace-table .h-tray .action-budget strong { font-size: 1.125rem; }
 .h-workspace-table .app-header .h-workspace-heading .h-status { font-size: .75rem; }
 .h-workspace-table .h-context-body .h-pending { font-size: inherit; }
+.h-workspace-table .h-context-body .h-info-card,
+.h-workspace-table .h-context-body .h-action-editor,
+.h-workspace-table .h-context-body .h-pending p { font-size: inherit; }
+.h-workspace-table .h-context-body .h-eyes,
+.h-workspace-table .h-context-body .h-rays,
+.h-workspace-table .h-context-body .h-displacement-grid small { font-size: .875rem; }
+
+/* Open panels get reading space; the board keeps its own fitted center column. */
+.h-play-area { grid-template-columns: var(--left-panel, 0px) minmax(0, 1fr) calc(var(--right-panel, 0px) + 16px); }
+.h-board-fit { position: relative; z-index: 2; }
+.h-panel-layer {
+  grid-column: 1 / -1;
+  grid-row: 1 / 61;
+  display: grid;
+  grid-template-columns: var(--left-panel, 0px) minmax(0, 1fr) var(--right-panel, 0px);
+  column-gap: 8px;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  scrollbar-color: #9a865f #17242d;
+  z-index: 1;
+}
+.h-panel-layer[hidden] { display: none; }
+.h-panel-layer:focus-visible { outline: 3px solid #e8b74e; outline-offset: -3px; }
+/* Short windows and larger user text may scroll the page instead of clipping decisions. */
+@media (min-width: 701px) {
+  .h-workspace-table.h-table { min-height: max(100dvh, calc(30rem + 240px)); }
+}
+.h-workspace-table .h-context-body:focus-visible,
+.h-workspace-table .h-action-editor:focus-visible,
+.h-workspace-table .h-choice-scroll:focus-visible,
+.h-workspace-table .roll-result:focus-visible,
+.h-workspace-table .action-help:focus-visible { outline: 3px solid #e8b74e; outline-offset: -3px; }
+@media (max-width: 700px) {
+  .h-panel-layer { display: flex; flex-direction: column; height: auto; overflow: visible; }
+}

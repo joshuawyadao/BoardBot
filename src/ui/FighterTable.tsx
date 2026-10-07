@@ -59,10 +59,10 @@ function PendingChoicePanel({ pending, busy, onAction, reasonFor, visible, focus
   confirmRef: RefObject<HTMLButtonElement | null>;
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
-  useEffect(() => { if (visible) headingRef.current?.focus({ preventScroll: true }); }, [visible, focusRequest]);
+  useEffect(() => { if (visible) headingRef.current?.focus(); }, [visible, focusRequest, pending.id]);
   const reason = reasonFor({ kind: 'choose', choiceId: pending.id, selected });
   return <section className="h-pending" aria-labelledby="pending-title">
-    <div className="h-choice-scroll">
+    <div className="h-choice-scroll" tabIndex={0} role="group" aria-label="Required choice options">
     <h2 id="pending-title" ref={headingRef} tabIndex={-1}>{pending.title}</h2>
     {pending.description && <p className="h-choice-description">{pending.description}</p>}
     {pending.kind === 'slowing-response' && pending.slowing && <div className="h-slowing-detail"><p>{pending.slowing.ownerName}'s existing next-phase penalties: {pending.slowing.existingPenalties}.</p>{pending.slowing.skipped ? <p>The upcoming Hero Phase is already skipped. Both choices leave that skip in place; its penalties clear when the skipped turn ends.</p> : <p>Discard an Item: next Hero Phase {pending.slowing.discardAllowance} actions. Accept a penalty: next Hero Phase {pending.slowing.acceptAllowance} actions ({pending.slowing.acceptPenalties} penalties total).</p>}</div>}
@@ -108,6 +108,12 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
   const inspectorOpener = useRef<HTMLElement | null>(null);
   const choiceConfirmRef = useRef<HTMLButtonElement>(null);
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
+  const actionEditorRef = useRef<HTMLDivElement>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  const endPhaseRef = useRef<HTMLButtonElement>(null);
+  const terminalRef = useRef<HTMLDivElement>(null);
+  const actionButtons = useRef(new Map<TrayId, HTMLButtonElement>());
+  const actionFocus = useRef<{ revision: number; kind: HeroAction['kind']; destination?: string } | null>(null);
   const focusConfirmAfterMap = useRef(false);
   const focusResultAfterChoice = useRef(false);
   const [contextSide, setContextSide] = useState<Side>('right');
@@ -156,10 +162,16 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
 
   function commit(action: HeroAction) {
     if (selectionLocked || reasonFor(action)) return;
+    actionFocus.current = { revision: game.revision, kind: action.kind, ...(action.kind === 'move' ? { destination: action.destination } : {}) };
     setFeedbackStart(game.entries.length);
     onAction(action);
     setSelected(null);
     if (action.kind !== 'move' && action.kind !== 'end-phase') showPanel('result');
+  }
+
+  function cancelAction() {
+    if (selected) actionButtons.current.get(selected)?.focus();
+    setSelected(null);
   }
 
   const inspectionEvents = (id: TrayId) => ({
@@ -201,6 +213,18 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
       resultHeadingRef.current?.focus();
     }
   }, [panels.open, pending]);
+  useEffect(() => {
+    const target = actionFocus.current;
+    if (!target || busy) return;
+    if (error) { actionFocus.current = null; errorRef.current?.focus(); return; }
+    if (game.revision === target.revision) return;
+    actionFocus.current = null;
+    if (pending) return; // The required-choice panel owns focus until its response resolves.
+    if (terminal) terminalRef.current?.focus();
+    else if (target.destination) mapButtons.current.get(target.destination)?.focus();
+    else if (target.kind === 'end-phase') endPhaseRef.current?.focus();
+    else if (panels.open.includes('result')) resultHeadingRef.current?.focus();
+  }, [busy, error, game.revision, pending, panels.open, terminal]);
   const context: ContextPanel | null = pending ? 'choice'
     : selected ? 'action'
     : setupOpen && game.revision === 0 ? 'setup' : null;
@@ -223,12 +247,12 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
     showPanel('inspector');
   }
   function closePanel(id: PanelId) {
-    if (id === 'action') setSelected(null);
+    if (id === 'action') cancelAction();
     else if (id === 'setup') setSetupOpen(false);
     else if (id !== 'choice') {
       setPanels(current => ({ ...current, open: current.open.filter(panel => panel !== id) }));
-      if (id === 'inspector') inspectorOpener.current?.focus({ preventScroll: true });
-      else panelOpeners.current.get(id)?.focus({ preventScroll: true });
+      if (id === 'inspector') inspectorOpener.current?.focus();
+      else panelOpeners.current.get(id)?.focus();
     }
   }
   function sideFor(id: PanelId): Side {
@@ -240,21 +264,20 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
   }
   const visiblePanels: PanelId[] = [...(context ? [context] : []), ...panels.open];
   const panelStyles: Partial<Record<PanelId, CSSProperties>> = {};
+  let panelRows = 0;
   for (const side of ['left', 'right'] as const) {
     const ids = visiblePanels.filter(id => sideFor(id) === side);
-    const weight = (id: PanelId) => id === 'choice' || id === 'action' ? 2 : 1;
-    const total = ids.reduce((sum, id) => sum + weight(id), 0);
-    let offset = 0;
+    panelRows = Math.max(panelRows, ids.length);
     ids.forEach((id, index) => {
-      const first = Math.round(offset / total * 60) + 1;
-      offset += weight(id);
-      panelStyles[id] = { gridColumn: side === 'left' ? 1 : 3, gridRow: `${first} / ${index === ids.length - 1 ? 61 : Math.round(offset / total * 60) + 1}` };
+      panelStyles[id] = { gridColumn: side === 'left' ? 1 : 3, gridRow: index + 1 };
     });
   }
+  const panelLayerStyle: CSSProperties = { gridTemplateRows: Array.from({ length: panelRows }, (_, index) =>
+    `minmax(min(${index === 0 && context === 'choice' ? 440 : index === 0 && context === 'action' ? 360 : 240}px, 100%), 1fr)`).join(' ') };
 
   const panelContents: Record<PanelId, ReactNode> = {
     choice: (<div className="h-choice-panel">{pending && <>{game.currentAttack && <AttackPanel data={data} game={game} locationName={locationName} />}{visiblePanels.length <= 2 && <RollResult game={game} data={data} compact={!game.currentRoll} />}<PendingChoicePanel pending={pending} busy={busy} onAction={onAction} reasonFor={reasonFor} visible={context === 'choice'} focusRequest={choiceFocus} selected={pendingSelected} setSelected={setPendingSelected} confirmRef={choiceConfirmRef} /></>}</div>),
-    action: (<div className="h-action-panel">            {selected && <div className="h-action-editor" aria-live="polite">
+    action: (<div className="h-action-panel">            {selected && <div className="h-action-editor" ref={actionEditorRef} tabIndex={0} role="group" aria-label="Review action details" aria-live="polite">
               {selected === 'move' && <div><h3>Move from {locationName(at)}</h3><p>Select a highlighted board destination to move immediately, or choose a named destination below and confirm.</p><label className="h-choice-select-label">Move destination<select aria-label="Move destination" value={moveDestination} disabled={selectionLocked} onChange={event => setMoveDestination(event.target.value)}><option value="">Choose a destination</option>{data.board.locations.filter(location => moveTargets.has(location.id)).map(location => <option key={location.id} value={location.id}>{location.number ? `${location.number} · ` : ''}{location.name}</option>)}</select></label><button className="confirm-button" disabled={!moveDestination || selectionLocked || !!reasonFor(moveAction(moveDestination))} onClick={() => commit(moveAction(moveDestination))}>Move to selected location</button>{companions.length > 0 && <fieldset disabled={selectionLocked}><legend>Escort Citizens</legend>{companions.map(([id]) => <label className="h-check-row" key={id}><input type="checkbox" checked={escorts.includes(id)} onChange={() => setEscorts(current => toggle(current, id))} />{data.citizens.find(citizen => citizen.id === id)?.name ?? 'Citizen'}</label>)}</fieldset>}</div>}
               {selected === 'guide' && <div><h3>Guide a Citizen</h3>{game.guideOptions.length ? <fieldset disabled={selectionLocked}><legend>Available destinations</legend>{game.guideOptions.map((option, index) => <label className="h-check-row" key={`${option.citizen}-${option.destination}`}><input type="radio" name="guide-option" checked={selectedGuide === index} onChange={() => setSelectedGuide(index)} />{data.citizens.find(citizen => citizen.id === option.citizen)?.name ?? 'Citizen'} → {locationName(option.destination)}</label>)}</fieldset> : <p>No eligible guidance at this location.</p>}</div>}
               {selected === 'pick-up' && <div><h3>Pick Up Items</h3>{boardItems.length ? <fieldset disabled={selectionLocked}><legend>At {locationName(at)}</legend>{boardItems.map(id => <label className="h-check-row h-art-choice" key={id}><input type="checkbox" checked={pickedItems.includes(id)} onChange={() => setPickedItems(current => toggle(current, id))} /><ItemArtwork name={game.visibleItems[id]?.name ?? 'Item'} color={game.visibleItems[id]?.color ?? 'gray'} /><span>{itemSummary(id)}</span></label>)}</fieldset> : <p>There are no Items here.</p>}</div>}
@@ -265,7 +288,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
               {selected === 'perks' && <div><h3>Your Perks</h3>{game.perkOptions.length ? <fieldset disabled={selectionLocked}><legend>Owned cards</legend>{game.perkOptions.map(option => <label className="h-check-row h-art-choice" key={option.id}><input type="radio" name="perk-option" checked={selectedPerk === option.id} onChange={() => setSelectedPerk(option.id)} /><PieceArtwork kind="perk" /><span>{game.visiblePerks[option.id]?.name ?? 'Perk'}{option.reason ? ` · ${option.reason}` : ''}</span></label>)}</fieldset> : <p>No Perks in hand.</p>}{selectedPerkOption && <p>{game.visiblePerks[selectedPerkOption.id]?.effect}</p>}</div>}
               {selected && selected !== 'move' && selected !== 'share' && <p className="h-preview">{currentReason ?? (currentAction ? 'Review your selection, then confirm.' : 'Choose an option to continue.')}</p>}
             </div>}
-            <p className="h-cost-review">{selected ? `${cards.find(card => card.id === selected)?.label} · ${cards.find(card => card.id === selected)?.cost}` : ''}</p><div className="tray-controls h-controls"><button className="clear-button" disabled={selectionLocked || !selected} onClick={() => setSelected(null)}>Clear selection</button><button className="confirm-button" disabled={!canConfirm} onClick={() => { if (currentAction) commit(currentAction); }}>{selected === 'special' ? 'Roll special action' : 'Confirm action'}</button></div>
+            <p className="h-cost-review">{selected ? `${cards.find(card => card.id === selected)?.label} · ${cards.find(card => card.id === selected)?.cost}` : ''}</p><div className="tray-controls h-controls"><button className="clear-button" disabled={selectionLocked || !selected} onClick={cancelAction}>Clear selection</button><button className="confirm-button" disabled={!canConfirm} onClick={() => { if (currentAction) commit(currentAction); }}>{selected === 'special' ? 'Roll special action' : 'Confirm action'}</button></div>
 </div>),
     inventory: (<div>          <section className="h-info-card"><h2>{heroClass} inventory</h2>{ownedItems.length ? <ul className="h-art-list">{ownedItems.map(id => <li key={id}><ItemArtwork name={game.visibleItems[id]?.name ?? 'Item'} color={game.visibleItems[id]?.color ?? 'gray'} /><span>{itemSummary(id)}</span></li>)}</ul> : <p>No Items held.</p>}<h3>Perks</h3>{game.hero.perks.length ? <ul>{game.hero.perks.map(id => <li key={id}><details className="h-inventory-perk"><summary><PieceArtwork kind="perk" />{game.visiblePerks[id]?.name ?? 'Perk'}</summary><p>{game.visiblePerks[id]?.effect ?? 'No description available.'}</p></details></li>)}</ul> : <p>No Perks held.</p>}</section>
           <details className="h-reveal"><summary>Reveal a Lair <span>1 action · choose Items</span></summary><div className="h-reveal-body"><div><strong>Reveal a Lair</strong><p>At a Lair location, choose Items to spend. Confirming commits the reveal.</p><fieldset disabled={selectionLocked}><legend>Items to spend</legend>{ownedItems.map(id => <label className="h-check-row" key={id}><input type="checkbox" checked={revealItems.includes(id)} onChange={() => setRevealItems(current => toggle(current, id))} />{itemSummary(id)}</label>)}</fieldset><p>{reasonFor(revealAction) ?? 'Ready to reveal this Lair.'}</p><button type="button" className="clear-button" disabled={selectionLocked || revealItems.length === 0} onClick={() => setRevealItems([])}>Clear reveal selection</button></div><button type="button" className="end-button" disabled={selectionLocked || !!reasonFor(revealAction)} title={reasonFor(revealAction) ?? undefined} onClick={() => { commit(revealAction); setRevealItems([]); }}>Confirm reveal</button></div></details></div>),
@@ -304,8 +327,8 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
     <main id="main">
       <h1 className="sr-only">Horrified {heroClass} table</h1>
       <div className="notice"><strong>Local game in progress.</strong>{saveControls}</div>
-      {error && <p className="h-error" role="alert">{error}</p>}
-      {terminal && <div className="h-end" role="status"><strong>{game.phase === 'won' ? 'Victory' : 'Defeat'}</strong><span>{game.endReason}</span></div>}
+      {error && <p className="h-error" role="alert" ref={errorRef} tabIndex={-1}>{error}</p>}
+      {terminal && <div className="h-end" role="status" ref={terminalRef} tabIndex={-1}><strong>{game.phase === 'won' ? 'Victory' : 'Defeat'}</strong><span>{game.endReason}</span></div>}
       <section className={`h-workspace board-panel ${visiblePanels.some(id => sideFor(id) === 'left') ? 'has-left-panel' : ''} ${visiblePanels.some(id => sideFor(id) === 'right') ? 'has-right-panel' : ''}`} aria-labelledby="h-board-title">
         <nav className="h-panel-nav" aria-label="Table panels">
           <button onClick={event => openPanel('inventory', event.currentTarget)} aria-expanded={panels.open.includes('inventory')}>Inventory <span>{ownedItems.length} Items · {game.hero.perks.length} Perks</span></button>
@@ -314,6 +337,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
           <button onClick={event => openPanel('locations', event.currentTarget)} aria-expanded={panels.open.includes('locations')}>Locations</button>
           <button onClick={event => openPanel('decks', event.currentTarget)} aria-expanded={panels.open.includes('decks')}>Decks &amp; progress</button>
           <button onClick={event => openPanel('result', event.currentTarget)} aria-expanded={panels.open.includes('result')}>Latest result</button>
+          {selected && !pending && <button onClick={() => actionEditorRef.current?.focus()} aria-expanded={context === 'action'}>Review action</button>}
           {pending && <button className="h-choice-return" onClick={() => setChoiceFocus(value => value + 1)} aria-expanded={context === 'choice'}>Required choice</button>}
           {(game.currentRoll || game.rolls.length > 0) && <div className="h-roll-peek"><RollResult data={data} game={game} compact /></div>}
         </nav>
@@ -323,25 +347,28 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
             choiceDestinations={pending?.kind === 'wizard-hero-destination' ? pending.options.map(option => option.id) : []}
             chosenDestination={pending?.kind === 'wizard-hero-destination' ? pendingSelected[0] ?? null : null}
             onChooseDestination={(id: string) => { focusConfirmAfterMap.current = true; setPendingSelected([id]); }} /></div>
+          <div className="h-panel-layer" hidden={visiblePanels.length === 0} style={panelLayerStyle} tabIndex={0} role="group" aria-label="Open table panels">
           {(Object.keys(panelContents) as PanelId[]).map(id => <aside key={id} data-panel={id} className={`h-context-panel h-panel-${id}`} hidden={!visiblePanels.includes(id)} style={panelStyles[id]} aria-label={`${panelTitles[id]} panel`}>
             <div className="h-context-heading"><h2>{panelTitles[id]}</h2><div>
               <button className="quiet-button" onClick={() => movePanel(id)} aria-label={`Move ${panelTitles[id]} panel to ${sideFor(id) === 'right' ? 'left' : 'right'}`} title="Move this panel to the other side">⇄</button>
               {id !== 'choice' && <button className="quiet-button" onClick={() => closePanel(id)} aria-label={`Close ${panelTitles[id]}`}>×</button>}
             </div></div>
-            <div className="h-context-body">{panelContents[id]}</div>
+            <div className="h-context-body" tabIndex={0} role="group" aria-label={`${panelTitles[id]} contents`}>{panelContents[id]}</div>
           </aside>)}
+          </div>
         </div>
         <ActionTray className="h-tray" title={busy ? 'Resolving…' : pending ? 'Choice required' : terminal ? 'Game complete' : game.phase === 'monster' ? 'Monster Phase' : 'Your Hero Phase'}
           titleId="h-turn-title" busy={busy} collapsed={actionsCollapsed}
           onToggle={() => { setActionsCollapsed(value => !value); setSelected(null); setInspected(null); setHovered(null); setFocused(null); }}
           budget={<div className="action-budget"><span>Actions remaining</span><strong>{game.hero.actions} <span>/ {game.hero.allowance}</span></strong></div>}
-          phaseControl={<>{selected === 'move' && <button className="clear-button" onClick={() => setSelected(null)}>Cancel move</button>}<button className="end-button" disabled={selectionLocked || !!reasonFor(endAction)} title={reasonFor(endAction) ?? 'Forfeit any unused actions and begin the Monster Phase.'} aria-description="Forfeits any unused actions and begins the Monster Phase." onClick={() => commit(endAction)}>End Hero Phase</button></>}>
+          phaseControl={<>{selected === 'move' && <button className="clear-button" onClick={cancelAction}>Cancel move</button>}<button className="end-button" ref={endPhaseRef} disabled={selectionLocked || !!reasonFor(endAction)} title={reasonFor(endAction) ?? 'Forfeit any unused actions and begin the Monster Phase.'} aria-description="Forfeits any unused actions and begins the Monster Phase." onClick={() => commit(endAction)}>End Hero Phase</button></>}>
           <div className="action-options">{cards.map(card => <div className="action-option" key={card.id}><button type="button" className={`action-card ${card.id === 'perks' ? 'free-action' : ''}`}
-            aria-disabled={selectionLocked || !!unavailable(card.id)} aria-pressed={selected === card.id}
+            ref={element => { if (element) actionButtons.current.set(card.id, element); else actionButtons.current.delete(card.id); }}
+            aria-disabled={selectionLocked || !!unavailable(card.id)} aria-pressed={selected === card.id} aria-describedby={`h-action-${card.id}-description`}
             {...inspectionEvents(card.id)} onClick={() => chooseCard(card.id)}>
             <span className="card-top"><span className="action-icon" aria-hidden="true">{card.icon}</span><span className="cost">{card.cost}</span></span><strong>{card.label}</strong><small>{card.caption}</small>
-          </button></div>)}</div>
-          <div className="action-help" role="note" aria-label="Action details"><strong>{inspectedCard?.label ?? 'Choose an action'}</strong><p>{inspectedCard?.description ?? 'Select an action below the board. Details open when you need them.'}</p><p className="unavailable-reason">{inspectedCard ? unavailable(inspectedCard.id) ?? (selected === 'move' ? 'Choose a highlighted destination on the board.' : 'Available now.') : 'End Hero Phase forfeits unused actions. Eligible Perks remain available until then.'}</p></div>
+          </button><span className="sr-only" id={`h-action-${card.id}-description`}>{card.description} {unavailable(card.id) ?? (selectionLocked ? 'Finish the required choice before taking another action.' : 'Available now.')}</span></div>)}</div>
+          <div className="action-help" tabIndex={0} role="note" aria-label="Action details"><strong>{inspectedCard?.label ?? 'Choose an action'}</strong><p>{inspectedCard?.description ?? 'Select an action below the board. Details open when you need them.'}</p><p className="unavailable-reason">{inspectedCard ? unavailable(inspectedCard.id) ?? (selected === 'move' ? 'Choose a highlighted destination on the board.' : 'Available now.') : 'End Hero Phase forfeits unused actions. Eligible Perks remain available until then.'}</p></div>
         </ActionTray>
       </section>
     </main>

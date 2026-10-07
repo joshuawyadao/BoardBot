@@ -208,3 +208,41 @@ New projection tests cover cloned public attack/card facts, current-card Citizen
 Validation on Node 26.10.0 passed build/typecheck, 142 unit tests in 26 files and five repository tests. The public Chromium suite has 83 cases, including full synthetic victory for all five Heroes. The production recovery/game check passed. Prepared-component acceptance passed all five Hero setup/play/defeat/recovery scenarios and the Fighter victory scenario (seed 8, turn 18, 103 legal decisions) with Item conservation and exact replay. The first prepared run stopped five scenarios at legacy board-key selectors; restoring the piece-type classes allowed all five to pass. This was a rendering-hook regression, not a rule or save failure.
 
 An isolated prepared-game preview at 1600×1000 showed 29 live captions, original pieces, independently open Inventory/inspection panels and no JavaScript errors. The owner's existing browser game was resumed and inspected without committing gameplay. Screenshots, component data, browser profiles and prepared-run traces remain ignored or temporary. This pass does not modify rules, data interpretations, command/save formats or future-deck visibility. Manual VoiceOver, physical internet-disconnection, human gameplay acceptance and final visual feedback remain open; automated geometry/text checks are not an accessibility certification.
+
+
+## October 7 website rules, accessibility and usability audit
+
+The audit ran the existing rule, save/recovery and browser suites, compared the supported contracts with Rules-Reference, and inspected rendered keyboard behavior and accessibility semantics. It found no confirmed regression in the supported rule decisions. Independent boundary assertions cover overflow/effective roll limits, legal costs, eligible responses, Wizard relocation, cumulative versus legacy Slowing, effect timing and terminal locks. Complete-game controllers additionally exercise integration and deterministic replay using engine-provided legal options; they do not independently certify every printed rule or unresolved interpretation.
+
+Reproduced interface failures were corrected: focus fell to BODY after ordinary action cancellation/confirmation; enlarged or short layouts could place required decisions offscreen or leave only 9px for options; eight information panels plus a decision squeezed bodies; some scroll regions were not keyboard-focusable; action reasons were disconnected from their controls; repeated Roll result landmarks were indistinguishable. The shared scrolling panel layer preserves mounted drafts/disclosures and the fitted center board. Explicit Review action and Required choice controls return to the working panel without resetting selections. Short windows and 200% user text permit vertical page scrolling instead of clipping decisions.
+
+`tests/browser/accessibility.spec.ts` adds eight synthetic regressions covering cancellation, named Move, Pick Up results, phase-end focus, 320px/200% pending recovery, nine-panel reading space and preserved drafts, short/enlarged desktop choices, unavailable Share descriptions, keyboard scrolling, and axe scans. The scanner applies WCAG 2 A/AA, 2.1 and 2.2 AA tags plus best practices across home, Hero setup, game setup, information, action review, required choice and deletion confirmation. Those scanned states have no automated violations. Incomplete contrast results are attached as manual-review annotations rather than counted as passes.
+
+Rendered-color inspection checked the actual foreground against solid backgrounds and opaque gradient stops for the home, information/action and required-choice states. It found the passage-key letter at 4.06:1; its darker backing now measures 5.31:1. Other checked text combinations exceed their applicable thresholds, with the lowest normal-text combination above 5:1. Floor captions use opaque cream/violet backings; art and dice are decorative with named alternatives. This is a bounded color/style inspection, not a certification of every pixel or theme state. [W3C contrast guidance](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html) defines the 4.5:1 normal-text and 3:1 large-text thresholds; [W3C focus guidance](https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum.html) informs the visible-focus checks.
+
+Final validation: build/typecheck, 142 Vitest cases in 26 files, five repository checks, 91 public Chromium browser cases, one production startup/recovery/complete-game case and six prepared-component scenarios. Prepared acceptance again covers all five Heroes' complete defeats and Fighter victory at seed 8, turn 18, 103 legal decisions, with exact pending/terminal recovery and Item conservation. The final responsive-only correction also passed all 22 focused board/accessibility cases; it preserves the default 1280×720 prepared-test layout. All gameplay audits use isolated test games. Existing user games, raw private components, screenshots and test logs remain outside public commits. The compatible source-map-js patch surfaced during test-library installation also leaves npm audit with zero reported advisories.
+
+### Brooks-Lint Review
+
+**Mode:** Test Quality Review
+**Scope:** All suites executed; source diagnosis sampled rule boundaries, public projections, storage/recovery, and changed UI/browser contracts across the 26 Vitest files and 13 public browser specifications.
+**Health Score:** 100/100 for remaining diagnosed test-decay findings; this is not an accessibility or rules-certification score.
+
+The missing keyboard visibility and crowded-panel assertions now have regression coverage. Existing fixtures are synthetic and deterministic, real storage failures and stale writes are asserted, and complete-game checks have a stated integration/replay purpose.
+
+Test Suite Map:
+
+```text
+Focused unit/render/data:       10 files, 51 cases
+Engine/session integration:    16 files, 91 cases
+Public browser:                13 files, 91 cases
+Production browser:             1 file,   1 case
+Prepared-component browser:     2 files,  6 cases
+Repository checks:              5 cases
+```
+
+The first two groups classify the same 142 Vitest cases by test purpose. The browser-heavy portion is intentional for native storage, focus, layout, autosave and five-Hero end-to-end behavior; the public suite completes in roughly two minutes. No systematic obscurity, refactor coupling, redundant scenario, mock-only assertion, unresolved change-coverage gap or slow-feedback mismatch was found in the inspected scope.
+
+**Findings:** No unaddressed T1–T6 findings in the inspected scope. Full-game results are still tied to the accepted evidence grades and focused contracts. This is the first Test Quality Review entry, so there is no same-mode trend.
+
+Actual VoiceOver output, Safari/WebKit and Firefox execution, touch-device experience and the owner's complete human game acceptance remain manual or separate checks. Only Chromium is installed in this local test environment. Automated success and accessible DOM structure do not establish universal usability or full WCAG conformance.

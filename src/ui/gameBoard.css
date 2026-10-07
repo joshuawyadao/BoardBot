@@ -53,7 +53,7 @@
 .game-board-key span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .game-board-key i { display: inline-block; flex: none; }
 .game-board-key .key-line { width: 16px; height: 0; border-top: 3px solid #cbb48a; }
-.game-board-key .key-passage { width: 12px; height: 12px; background: #a56920; border: 1px solid #ffeeaa; border-radius: 3px; color: #fff2cd; font: 800 10px/12px Georgia, serif; text-align: center; }
+.game-board-key .key-passage { width: 12px; height: 12px; background: #895a22; border: 1px solid #ffeeaa; border-radius: 3px; color: #fff2cd; font: 800 10px/12px Georgia, serif; text-align: center; }
 .game-board-key .key-circle { width: 11px; height: 11px; border: 2px solid #c4a1fa; border-radius: 50%; background: #553c79; }
 .game-board-key .key-current { width: 11px; height: 11px; border: 2px solid #307052; border-radius: 50%; background: #f3edcc; }
 .game-board-key .key-reachable { width: 11px; height: 11px; border: 2px solid #256a59; border-radius: 50%; background: #e4ffe2; }

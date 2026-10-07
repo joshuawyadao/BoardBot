@@ -49,11 +49,11 @@ export function RollResult({ game, data, compact = false }: { game: GameView; da
 
   const hero = data.heroes.find(candidate => candidate.id === game.hero.definitionId);
   const effect = matchingSpecialOutcome(hero, roll.reason, roll.result);
-  return <section className={`roll-result${compact ? ' roll-result-compact' : ''}`} aria-label="Roll result" data-testid="roll-result">
+  return <div className={`roll-result${compact ? ' roll-result-compact' : ''}`} role="group" aria-label={compact ? 'Roll summary' : 'Roll result'} tabIndex={compact ? undefined : 0} data-testid="roll-result">
     <div className="roll-result-heading">
       <div><strong data-testid="roll-status">{pending ? 'Awaiting response' : 'Last roll'}</strong>
         <span className="roll-result-reason">{roll.reason} · Turn {roll.turn}</span></div>
-      <span className="roll-result-value" aria-label={`Effective result ${roll.result.effectiveResult}`}>
+      <span className="roll-result-value" role="img" aria-label={`Effective result ${roll.result.effectiveResult}`}>
         <DieArtwork face={roll.result.effectiveResult} />
         <span className="sr-only" data-testid="roll-effective">{roll.result.effectiveResult}</span>
       </span>
@@ -68,5 +68,5 @@ export function RollResult({ game, data, compact = false }: { game: GameView; da
       <strong>{pending ? 'If kept: ' : 'Outcome: '}</strong>{effect}
     </p>}
     {!compact && effect && hero && <SpecialActionGuide hero={hero} result={roll.result.effectiveResult} />}
-  </section>;
+  </div>;
 }
