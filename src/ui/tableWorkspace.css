@@ -357,3 +357,78 @@
   .h-workspace-table .app-header .h-workspace-heading .hero { max-width: 60%; justify-content: flex-end; }
   .h-workspace-table .app-header .h-workspace-heading .h-status { margin: 0; width: 100%; }
 }
+
+/* Table controls remain one compact row so inspection does not steal board height. */
+.h-workspace-table { min-width: 0; overflow-x: clip; }
+.h-workspace-table .h-panel-nav { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: thin; }
+.h-workspace-table .h-panel-nav > button { flex: none; min-height: 2.75rem; font-size: .875rem; }
+.h-workspace-table .app-header button, .h-workspace-table .h-tray .tray-tools button,
+.h-workspace-table .h-tray .tray-controls button, .h-workspace-table .h-tray .end-button,
+.h-workspace-table .notice button { min-height: 44px; }
+.h-workspace-table .h-panel-nav > button span { font-size: .75rem; }
+.h-workspace-table .h-context-body { font-size: 1rem; line-height: 1.45; }
+.h-workspace-table .h-context-body, .h-workspace-table .h-context-heading { overflow-wrap: anywhere; }
+.h-workspace-table .h-context-heading .quiet-button { min-width: 44px; min-height: 44px; }
+.h-workspace-table .h-context-body .h-check-row { min-height: 44px; }
+.h-workspace-table .h-context-body button, .h-workspace-table .h-context-body select { min-height: 44px; }
+.h-workspace-table button:focus-visible, .h-workspace-table select:focus-visible,
+.h-workspace-table input:focus-visible, .h-workspace-table summary:focus-visible {
+  outline: 3px solid #e8b74e; outline-offset: 2px;
+}
+.h-workspace-table .h-panel-inspector { background: #f5ead5; border-color: #a47d47; color: #292923; }
+.h-workspace-table .h-panel-inspector .h-context-heading { background: #e8d8bb; border-bottom-color: #ad9674; }
+.h-workspace-table .h-panel-inspector .h-context-heading h2,
+.h-workspace-table .h-panel-inspector .h-context-heading .quiet-button,
+.h-workspace-table .h-panel-inspector .h-context-body,
+.h-workspace-table .h-panel-inspector .h-context-body h3 { color: #292923; }
+.h-inspector h2 { font: 700 clamp(1.3rem, 2vw, 1.8rem)/1.15 Georgia, serif; margin: 0 0 4px; }
+.h-inspector-count { margin: 0 0 12px; font-weight: 700; }
+.h-inspector h3 { border-top: 1px solid #c8b89d; padding-top: 10px; }
+.h-art-list { list-style: none; margin: 0; padding: 0; }
+.h-art-list li { display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 5px 0; border-bottom: 1px solid #98887355; overflow-wrap: anywhere; }
+.h-art-list svg, .h-art-choice svg, .h-special-card > svg { flex: none; width: 52px; height: 52px; }
+.h-art-list li > span { min-width: 0; }
+.h-art-list strong, .h-art-list small { display: block; }
+.h-art-list small { font-size: .9em; }
+.h-art-choice { display: flex; align-items: center; gap: 7px; overflow-wrap: anywhere; }
+.h-art-choice > span { min-width: 0; }
+.h-inventory-perk summary { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.h-inventory-perk summary svg { width: 38px; height: 38px; }
+.h-special-card { display: flex; align-items: flex-start; gap: 8px; }
+.h-special-card .roll-guide { min-width: 0; }
+.h-read-only { padding: 10px; border-radius: 6px; background: #e9dcc5; color: #31372e; }
+.h-locations-list ul { list-style: none; margin: 0; padding: 0; }
+.h-locations-list li { margin: 4px 0; }
+.h-locations-list button { width: 100%; text-align: left; padding: 8px 10px; border: 1px solid #6b7c79; border-radius: 6px; background: #223740; color: #fff1d3; font: inherit; }
+.h-locations-list button[aria-current='location'] { border-color: #e8b74e; background: #3b565b; }
+.h-decks dl { margin: 0; }
+.h-decks dl > div { padding: 8px 0; border-bottom: 1px solid #59625c; }
+.h-decks dt { color: #f4d7a3; font-weight: 700; }
+.h-decks dd { margin: 2px 0 0; }
+.h-attack { border-bottom: 1px solid #846942; padding-bottom: 8px; }
+.h-choice-panel > .h-attack { flex: none; max-height: 38%; overflow-y: auto; }
+.h-attack-dice { display: flex; flex-wrap: wrap; gap: 10px; }
+.h-attack-dice > div { display: grid; justify-items: center; }
+.h-attack-dice svg { width: 56px; height: 56px; }
+.h-attack-dice strong { font-size: 13px; }
+.h-choice-select-label { display: grid; gap: 5px; font-weight: 700; }
+.h-choice-select-label select { width: 100%; max-width: 100%; padding: 6px; font: inherit; }
+.h-slowing-detail { padding: 8px; background: #30414b; border: 1px solid #9b8055; border-radius: 6px; }
+.h-slowing-detail p { margin: 4px 0; }
+@media (max-width: 700px) {
+  .h-workspace-table .h-panel-nav > button { font-size: 14px; }
+  .h-workspace-table .h-context-panel { max-width: calc(100vw - 30px); }
+  .h-workspace-table .app-header .h-workspace-heading .hero { max-width: 100%; }
+}
+
+/* Larger user text grows controls and flows through panel bodies. */
+.h-workspace-table .h-context-body .h-choice-description { font-size: 1em; }
+.h-workspace-table .roll-guide { font-size: 1rem; }
+.h-workspace-table .h-tray .action-card { min-height: 2.875rem; height: auto; }
+.h-workspace-table .h-tray .action-card strong { font-size: .8125rem; }
+.h-workspace-table .h-tray .action-card small { font-size: .6875rem; }
+.h-workspace-table .h-tray .action-help strong, .h-workspace-table .h-tray .action-help p { font-size: .75rem; }
+.h-workspace-table .h-tray .action-budget { font-size: .875rem; }
+.h-workspace-table .h-tray .action-budget strong { font-size: 1.125rem; }
+.h-workspace-table .app-header .h-workspace-heading .h-status { font-size: .75rem; }
+.h-workspace-table .h-context-body .h-pending { font-size: inherit; }

@@ -24,12 +24,15 @@ describe('game board pieces', () => {
 
     expect(locationButton).toBeDefined();
     expect(locationButton).toContain('Test Hero, Beholder, Displacer Beast, 2 Items, 1 Citizen');
-    expect(locationButton).toContain('class="piece piece-hero">H</span>');
-    expect(locationButton).toContain('class="piece piece-beholder">B</span>');
-    expect(locationButton).toContain('class="piece piece-displacer">D</span>');
-    expect(locationButton).toContain('class="piece piece-item">I2</span>');
-    expect(locationButton).toContain('class="piece piece-citizen">C1</span>');
-    expect(locationButton).toContain('class="piece piece-lair">L</span>');
+    for (const kind of ['hero', 'beholder', 'displacer', 'item', 'citizen', 'lair']) {
+      expect(locationButton).toContain(`class="piece piece-${kind}`);
+      expect(locationButton).toContain(`tabletop-art--${kind}`);
+    }
+    expect(locationButton).toContain('data-count="2"');
+    expect(locationButton).toContain('×2');
+    expect(locationButton).toContain('aria-hidden="true"');
+    expect(html).toContain(`data-caption-for="${location}"`);
+    expect(html).toContain('>Room 2</span>');
     expect(locationButton).toContain('Unrevealed Lair');
     expect(html).not.toContain('hidden-face-must-not-leak');
     expect(html).toContain('Beholder');

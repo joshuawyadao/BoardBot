@@ -14,7 +14,7 @@
 .roll-result-value { flex: none; font: 700 24px/1 Georgia, serif; }
 .roll-result-math, .roll-result-effect { margin: 4px 0 0; line-height: 1.4; }
 .roll-result-math { font-variant-numeric: tabular-nums; }
-.roll-result-bound { white-space: nowrap; }
+.roll-result-bound { white-space: normal; overflow-wrap: anywhere; }
 .roll-result-effect { border-top: 1px solid #d2dfc8; padding-top: 5px; }
 .roll-result-compact { padding: 7px 10px; }
 .roll-result-compact .roll-result-value { font-size: 20px; }
@@ -56,3 +56,12 @@
 .h-workspace-table .roll-guide th { color: #f2d29c; }
 .h-workspace-table .roll-guide-match { background: #305751; }
 .h-workspace-table .roll-guide-note { color: #c7d6d1; }
+.h-workspace-table .roll-result-value { position: relative; border: 0; background: transparent; box-shadow: none; font-size: 0; padding: 0; width: 52px; height: 52px; }
+.h-workspace-table .roll-result-value svg { width: 100%; height: 100%; }
+.h-workspace-table .roll-result-compact .roll-result-value { width: 36px; height: 36px; }
+.h-workspace-table .roll-result { font-size: 16px; }
+.h-workspace-table .h-roll-peek .roll-result { font-size: 13px; }
+.h-workspace-table .roll-guide { font-size: 16px; }
+.roll-guide-applied { display: inline; color: #f8de84; }
+.h-workspace-table .roll-guide-match { background: #27565a; box-shadow: inset 3px 0 #efc55d; }
+.h-workspace-table .roll-result-math { overflow-wrap: anywhere; }

@@ -42,6 +42,8 @@ test('two Slowing penalties reduce the new turn by two and survive a pending rel
   await page.getByRole('button', { name: 'Confirm action', exact: true }).click();
   await expect(page.getByRole('button', { name: 'End Hero Phase' })).toBeEnabled();
   await page.getByRole('button', { name: 'End Hero Phase' }).click();
+  await expect(page.locator('.h-attack')).toContainText('Resolve POW first');
+  await expect(page.locator('.h-slowing-detail')).toContainText('Discard an Item: next Hero Phase 4 actions. Accept a penalty: next Hero Phase 3 actions');
   await acceptPenalty(page, 2);
   const pending = await state(page);
   expect(pending.hero.penalties.fewerActions).toBe(1);
@@ -50,6 +52,8 @@ test('two Slowing penalties reduce the new turn by two and survive a pending rel
   await page.reload();
   await page.getByRole('button', { name: 'Resume saved game' }).click();
   expect(await state(page)).toEqual(pending);
+  await expect(page.locator('.h-slowing-detail')).toContainText('existing next-phase penalties: 1');
+  await expect(page.locator('.h-slowing-detail')).toContainText('Discard an Item: next Hero Phase 3 actions. Accept a penalty: next Hero Phase 2 actions');
   await acceptPenalty(page, 3);
   await expect(page.getByRole('button', { name: 'End Hero Phase' })).toBeEnabled();
   const next = await state(page);

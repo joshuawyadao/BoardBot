@@ -48,7 +48,9 @@ for (const hero of ['Fighter', 'Bard', 'Cleric', 'Rogue', 'Wizard']) {
       const panel = page.locator('.h-pending');
       const keep = panel.getByRole('radio', { name: /Keep this result|Keep these dice/ });
       if (await keep.count()) await keep.check();
-      else {
+      else if (await panel.getByLabel('Wizard destination', { exact: true }).count()) {
+        await panel.getByLabel('Wizard destination', { exact: true }).selectOption(state.pending.options[0].id);
+      } else {
         const inputs = panel.locator('input');
         for (let index = 0; index < state.pending.min; index++) await inputs.nth(index).check();
       }

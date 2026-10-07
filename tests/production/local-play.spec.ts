@@ -32,6 +32,7 @@ async function resolveChoices(page: Page) {
     const panel = page.locator('.h-pending');
     const keep = panel.getByRole('radio', { name: /Keep this result|Keep these dice/ });
     if (await keep.count()) await keep.check();
+    else if (await panel.getByLabel('Wizard destination', { exact: true }).count()) await panel.getByLabel('Wizard destination', { exact: true }).selectOption(state.pending.options[0].id);
     else for (let index = 0; index < state.pending.min; index++) await panel.locator('input').nth(index).check();
     const confirm = panel.getByRole('button', { name: 'Confirm choice', exact: true });
     await expect(confirm).toBeEnabled();

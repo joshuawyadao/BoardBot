@@ -159,11 +159,14 @@ for (const [at, label] of [
   for (const viewport of [{ width: 1440, height: 900 }, { width: 1024, height: 768 }]) {
     await page.setViewportSize(viewport);
     const bounds = (await floor.boundingBox())!;
-    const name = floor.locator('.h-node-name');
+    const name = page.locator(`[data-caption-for="${at}"] .h-node-name`);
     await expect(name).toHaveText(label);
     const nameBounds = (await name.boundingBox())!;
-    expect(nameBounds.y, 'complete name starts inside the hit target').toBeGreaterThanOrEqual(bounds.y - 1);
-    expect(nameBounds.y + nameBounds.height, 'complete name ends inside the hit target').toBeLessThanOrEqual(bounds.y + bounds.height + 1);
+    const boardBounds = (await page.locator('.game-board-svg').boundingBox())!;
+    expect(nameBounds.y, 'caption sits on the lower rim outside the pieces').toBeGreaterThan(bounds.y + bounds.height / 2);
+    expect(nameBounds.x).toBeGreaterThanOrEqual(boardBounds.x);
+    expect(nameBounds.x + nameBounds.width).toBeLessThanOrEqual(boardBounds.x + boardBounds.width);
+    expect(nameBounds.y + nameBounds.height).toBeLessThanOrEqual(boardBounds.y + boardBounds.height);
     for (const piece of await floor.locator('.piece').all()) {
       await expect(piece).toBeVisible();
       const box = (await piece.boundingBox())!;
@@ -342,7 +345,7 @@ test('Wizard destination 17 explains relocating a Monster already on the board a
   await expect(choice).toContainText('initial roll 5');
   await expect(choice).toContainText('destination roll 17');
   await expect(page.locator('.h-location.wizard-destination')).toHaveAttribute('aria-label', /Test room 17/);
-  await expect(page.locator('.h-location.wizard-destination')).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.locator('.h-location.wizard-destination')).toHaveAttribute('data-move-enabled', 'false');
   await page.reload();
   await page.getByRole('button', { name: 'Resume saved game' }).click();
   await expect(choice).toContainText('initial roll 5');
@@ -354,4 +357,140 @@ test('Wizard destination 17 explains relocating a Monster already on the board a
   await page.getByRole('button', { name: 'Confirm choice', exact: true }).click();
   await expect(page.getByRole('button', { name: /^Test room 17\. Displacer Beast/ })).toBeVisible();
   await expect(page.locator('.h-location .piece-displacer')).toHaveCount(1);
+});
+
+async function readSavedState(page: Page) {
+  return page.evaluate(async () => {
+    const path = '/src/session/gameLibrary.ts';
+    const library = await (await import(path)).openGameLibrary();
+    try {
+      const [entry] = await library.list();
+      return JSON.parse((await library.game(entry.id).read()).current!.payload).state;
+    } finally { library.close(); }
+  });
+}
+
+test('inspection preserves a Pick Up draft, shows Strength, and restores keyboard focus', async ({ page }) => {
+  const data = illustratedFixture();
+  data.items.forEach(item => { item.locations = Array.from({ length: item.quantity }, () => 'location-2'); });
+  await load(page, data);
+  await page.getByRole('button', { name: 'Pick Up Items' }).click();
+  const item = page.locator('.h-action-editor input[type=checkbox]').first();
+  await item.check();
+  const before = await readSavedState(page);
+  const floor = page.locator('[data-location-id="location-2"]');
+  await floor.focus();
+  await page.keyboard.press('Enter');
+  const inspector = page.locator('[data-panel="inspector"]');
+  await expect(inspector).toContainText('12 Items');
+  await expect(inspector).toContainText('Strength');
+  await expect(inspector).toContainText('does not spend an action');
+  await expect(item).toBeChecked();
+  expect(await readSavedState(page)).toEqual(before);
+  await page.getByRole('button', { name: 'Move Location inspector panel to left' }).click();
+  await expect(item).toBeChecked();
+  await page.getByRole('button', { name: 'Close Location inspector', exact: true }).click();
+  await expect(floor).toBeFocused();
+  await expect(item).toBeChecked();
+  await page.getByRole('button', { name: 'Confirm action', exact: true }).click();
+  await expect.poll(async () => (await readSavedState(page)).revision).toBe(before.revision + 1);
+  expect((await readSavedState(page)).hero.items).toHaveLength(1);
+});
+
+test('named locations and supplies are independent, readable, and accessible in narrow layouts', async ({ page }) => {
+  const data = illustratedFixture();
+  await load(page, data);
+  await page.getByRole('button', { name: 'Ready to play' }).click();
+  const before = await readSavedState(page);
+  const locationsToggle = page.getByRole('button', { name: 'Locations', exact: true });
+  await locationsToggle.click();
+  const locations = page.locator('[data-panel="locations"]');
+  const rows = locations.locator('.h-locations-list button');
+  await expect(rows).toHaveCount(29);
+  const sizes = await rows.evaluateAll(elements => elements.map(element => ({ height: element.getBoundingClientRect().height, font: parseFloat(getComputedStyle(element).fontSize) })));
+  expect(sizes.every(size => size.height >= 44 && size.font >= 16)).toBe(true);
+  await rows.nth(1).press('Enter');
+  await expect(page.locator('[data-panel="inspector"]')).toBeVisible();
+  await page.getByRole('button', { name: 'Close Location inspector', exact: true }).click();
+  await expect(rows.nth(1)).toBeFocused();
+  const decksToggle = page.getByRole('button', { name: 'Decks & progress', exact: true });
+  await decksToggle.click();
+  await expect(page.locator('[data-panel="decks"]')).toContainText('Upcoming Hero Phase');
+  await expect(locations).toBeVisible();
+  await page.getByRole('button', { name: 'Close Decks & progress', exact: true }).click();
+  await expect(decksToggle).toBeFocused();
+  await page.getByRole('button', { name: 'Close Locations', exact: true }).click();
+  await expect(locationsToggle).toBeFocused();
+  for (const viewport of [{ width: 640, height: 480 }, { width: 320, height: 740 }]) {
+    await page.setViewportSize(viewport);
+    await locationsToggle.click();
+    await rows.last().press('Enter');
+    await expect(page.locator('[data-panel="inspector"]')).toContainText(data.board.locations.at(-1)!.name);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+    await page.getByRole('button', { name: 'Close Location inspector', exact: true }).click();
+    await expect(rows.last()).toBeFocused();
+    await page.getByRole('button', { name: 'Close Locations', exact: true }).click();
+  }
+  expect(await readSavedState(page)).toEqual(before);
+});
+
+test('Wizard map and named selection share a draft and require confirmation after recovery', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await load(page, heroFixture(), 65, 'Wizard');
+  await page.getByRole('button', { name: 'Special Action Hero ability' }).click();
+  await page.getByRole('button', { name: 'Roll special action' }).click();
+  await page.getByRole('radio', { name: 'Keep this result' }).check();
+  await page.getByRole('button', { name: 'Confirm choice', exact: true }).click();
+  const before = await readSavedState(page);
+  expect(before.hero.location).toBe('b');
+  const select = page.getByLabel('Wizard destination', { exact: true });
+  await expect(select).toBeEnabled();
+  const confirm = page.getByRole('button', { name: 'Confirm choice', exact: true });
+  await expect(confirm).toBeDisabled();
+  const target = page.locator('[data-location-id="room-17"]');
+  await target.press('Enter');
+  await expect(select).toHaveValue('room-17');
+  await expect(confirm).toBeFocused();
+  await expect(target).toHaveAttribute('aria-label', /Selected destination, awaiting confirmation/);
+  await expect(confirm).toBeEnabled();
+  expect(await readSavedState(page)).toEqual(before);
+  await select.selectOption('room-18');
+  await expect(page.locator('[data-location-id="room-18"]')).toHaveAttribute('aria-label', /Selected destination/);
+  await expect(target).not.toHaveAttribute('aria-label', /Selected destination/);
+  await page.getByRole('button', { name: /^Inventory/ }).click();
+  await expect(select).toHaveValue('room-18');
+  await expect(page.getByRole('button', { name: 'End Hero Phase' })).toBeDisabled();
+  await page.reload();
+  await page.getByRole('button', { name: 'Resume saved game', exact: true }).click();
+  expect(await readSavedState(page)).toEqual(before);
+  await expect(select).toHaveValue('');
+  await select.selectOption('room-17');
+  await confirm.click();
+  await expect.poll(async () => (await readSavedState(page)).revision).toBe(before.revision + 1);
+  expect((await readSavedState(page)).hero.location).toBe('room-17');
+  await expect(page.locator('[data-panel="result"] h3')).toBeFocused();
+  await expect(page.locator('.h-location.current')).toHaveAttribute('data-location-id', 'room-17');
+});
+
+
+test('named Move controls and enlarged panel text work without relying on tiny map targets', async ({ page }) => {
+  await load(page, illustratedFixture());
+  await page.getByRole('button', { name: 'Move Connected location' }).click();
+  const before = await readSavedState(page);
+  const destination = page.getByLabel('Move destination', { exact: true });
+  await destination.selectOption('location-3');
+  expect(await readSavedState(page)).toEqual(before);
+  await page.getByRole('button', { name: 'Move to selected location', exact: true }).press('Enter');
+  await expect.poll(async () => (await readSavedState(page)).revision).toBe(before.revision + 1);
+  expect((await readSavedState(page)).hero.location).toBe('location-3');
+  await page.setViewportSize({ width: 640, height: 480 });
+  await page.addStyleTag({ content: ':root { font-size: 200%; }' });
+  await page.getByRole('button', { name: 'Locations', exact: true }).click();
+  const row = page.locator('.h-locations-list button').last();
+  expect(await row.evaluate(element => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(32);
+  await row.press('Enter');
+  await expect(page.locator('[data-panel="inspector"]')).toBeVisible();
+  await page.getByRole('button', { name: 'Close Location inspector' }).press('Enter');
+  await expect(row).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(640);
 });
