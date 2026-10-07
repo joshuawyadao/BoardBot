@@ -17,7 +17,7 @@ jobs:
   verify:
     name: CI Verify
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -34,9 +34,9 @@ jobs:
         run: npm ci
       - name: Typecheck, build and test game rules and sessions
         run: npm run build && npm test
-      - name: Install browser for interaction tests
-        run: npx playwright install --with-deps chromium
-      - name: Test game interactions in Chromium
+      - name: Install browsers for interaction tests
+        run: npx playwright install --with-deps chromium webkit
+      - name: Test game interactions in Chromium and WebKit
         run: npm run test:e2e
       - name: Test production startup and recovery without external services
         run: npm run test:production

@@ -59,19 +59,37 @@ async function load(page: Page, data: GameData, seed = 2, hero = 'Fighter') {
 }
 
 async function expectWholeBoard(page: Page) {
-  const fit = await page.locator('.h-board-fit').boundingBox();
-  expect(fit).not.toBeNull();
+  const measured = await page.locator('.h-board-fit').evaluate(element => {
+    const rect = (node: Element) => {
+      const { x, y, width, height } = node.getBoundingClientRect();
+      return { x, y, width, height };
+    };
+    return {
+      fit: rect(element),
+      fits: element.scrollWidth <= element.clientWidth && element.scrollHeight <= element.clientHeight,
+      nodes: Array.from(element.querySelectorAll('.h-location'), node => ({
+        box: rect(node),
+        markers: Array.from(node.querySelectorAll('.game-board-number, .game-board-passage-badge, .piece-count, .game-board-selected'), rect),
+      })),
+    };
+  });
+  const { fit } = measured;
   const viewport = page.viewportSize()!;
-  expect(fit!.y).toBeGreaterThanOrEqual(0);
-  expect(fit!.y + fit!.height).toBeLessThanOrEqual(viewport.height);
-  for (const node of await page.locator('.h-location').all()) {
-    const box = (await node.boundingBox())!;
-    expect(box.x).toBeGreaterThanOrEqual(fit!.x);
-    expect(box.x + box.width).toBeLessThanOrEqual(fit!.x + fit!.width);
-    expect(box.y).toBeGreaterThanOrEqual(fit!.y);
-    expect(box.y + box.height).toBeLessThanOrEqual(fit!.y + fit!.height);
+  expect(fit.y).toBeGreaterThanOrEqual(0);
+  expect(fit.y + fit.height).toBeLessThanOrEqual(viewport.height);
+  for (const { box, markers } of measured.nodes) {
+    expect(box.x).toBeGreaterThanOrEqual(fit.x);
+    expect(box.x + box.width).toBeLessThanOrEqual(fit.x + fit.width);
+    expect(box.y).toBeGreaterThanOrEqual(fit.y);
+    expect(box.y + box.height).toBeLessThanOrEqual(fit.y + fit.height);
+    for (const marker of markers) {
+      expect(marker.x, 'piece counts and floor markers belong to their floor').toBeGreaterThanOrEqual(box.x - 1);
+      expect(marker.y).toBeGreaterThanOrEqual(box.y - 1);
+      expect(marker.x + marker.width).toBeLessThanOrEqual(box.x + box.width + 1);
+      expect(marker.y + marker.height).toBeLessThanOrEqual(box.y + box.height + 1);
+    }
   }
-  expect(await page.locator('.h-board-fit').evaluate(element => element.scrollWidth <= element.clientWidth && element.scrollHeight <= element.clientHeight)).toBe(true);
+  expect(measured.fits).toBe(true);
 }
 
 test('all 29 locations fit desktop and smaller windows with panels on either side', async ({ page }) => {
@@ -98,6 +116,25 @@ test('all 29 locations fit desktop and smaller windows with panels on either sid
   await page.setViewportSize({ width: 390, height: 844 });
   await expectWholeBoard(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test('pieces never block inspection of another illustrated floor when actions are hidden', async ({ page }) => {
+  test.setTimeout(120_000); // Normal pointer inspection and focus restoration at all 29 floors.
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  const data = illustratedFixture();
+  data.heroes.find(hero => hero.id === 'hero-fighter')!.start = 'location-10';
+  await load(page, data, 8);
+  await page.getByRole('button', { name: 'Ready to play', exact: true }).click();
+  await page.getByRole('button', { name: /Hide actions/ }).click();
+  const before = await readSavedState(page);
+  for (const location of data.board.locations) {
+    const floor = page.locator(`[data-location-id="${location.id}"]`);
+    await floor.click();
+    await expect(page.locator('[data-panel="inspector"]')).toContainText(location.name);
+    await page.getByRole('button', { name: 'Close Location inspector', exact: true }).click();
+    await expect(floor).toBeFocused();
+  }
+  expect(await readSavedState(page)).toEqual(before);
 });
 
 test('illustrated floors, portals and passage pairs retain keyboard movement and recovery', async ({ page }) => {
@@ -245,8 +282,12 @@ test('special ranges and confirmation stay visible, then a saved response displa
   await expect(page.getByRole('radio', { name: 'Keep this result' })).toBeChecked();
   await page.reload();
   await page.getByRole('button', { name: 'Resume saved game' }).click();
-  await expect(context.getByTestId('roll-effective')).toHaveText(value);
-  await expect(context.getByTestId('roll-status')).toHaveText('Awaiting response');
+  await expect(page.locator('[data-panel="inventory"]')).toBeVisible();
+  await expect(context.getByTestId('roll-effective')).toHaveCount(0); // Restored panels keep the compact summary instead of duplicating the roll.
+  await expect(summary.getByTestId('roll-effective')).toHaveText(value);
+  await expect(summary.getByTestId('roll-status')).toHaveText('Awaiting response');
+  await expect(summary).toBeInViewport();
+  await expect(page.getByRole('radio', { name: 'Keep this result' })).not.toBeChecked();
   await page.locator('.h-pending').getByRole('radio').last().check();
   await expect(page.getByRole('button', { name: 'Confirm choice', exact: true })).toBeInViewport();
   await page.getByRole('radio', { name: 'Keep this result' }).check();

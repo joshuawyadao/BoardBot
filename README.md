@@ -28,11 +28,15 @@ The whole illustrated board fits the desktop table, with floor positions followi
 
 Special Action opens the selected Hero’s roll ranges and effects before **Roll special action**. A persistent roll summary shows the value; **Latest result** shows its arithmetic, outcome, and recent events. Pending rolls are labeled **Awaiting response** until adjustments are finished.
 
+The table remembers open information panels, their sides, the action/decision panel side, and Hide/Show actions for this browser across solo adventures. **Reset layout** restores the default panel arrangement and expanded tray while keeping your current draft and required choice. Inspection contents and unconfirmed choices remain temporary; layout preferences are separate from game progress and backups. If preference storage is unavailable, you can still play and save normally.
+
 Required choices validate the complete selection before enabling **Confirm choice**. For example, Mystra explains when the selected Items do not total exactly seven strength.
 
 Wizard relocation prompts distinguish the initial ability roll from a follow-up destination roll. A Monster destination is highlighted, and each choice names the existing Monster’s current location and where it will move. This moves a piece already on the board; it is not an additional setup step.
 
 Each committed action and pending choice saves locally before its result appears. After reloading, choose **Resume saved game** beside the adventure you want. **Saved games** returns to the library; **New game** creates another adventure without replacing earlier games. Each saved game has a **Delete** option: confirm the selected adventure to remove it and its recovery save. Other games and base components remain available. **Export backup** downloads a private save; importing it adds a separate game. Failed saves pause play and offer **Retry saving**, preserving the exact result. Each game has Recovery options to restore its own previous save. See [local saves](docs/Local-Saves.md) for storage and recovery details.
+
+Save, import, recovery and deletion failures focus a visible message with the available next steps. Invalid imports offer a direct return to the appropriate file control. Retrying a failed write keeps its already-resolved outcome; loading the latest save explicitly clears stale drafts and restores the remembered table layout.
 
 New games use stacking Slowing Ray penalties: two accepted penalties mean two fewer actions next turn, with a minimum of zero. Older saved games retain their previous one-action cap and show an **Earlier rules** explanation. Start a new adventure to use the updated rule; older saves remain available.
 
@@ -55,12 +59,12 @@ To check a contribution, install Git, Python 3.9 or newer, and Node.js 26. From 
 
 ```sh
 npm run verify
-npx playwright install chromium
+npx playwright install chromium webkit
 npm run test:e2e
 npm run test:production
 ```
 
-The first command typechecks, builds, runs sample, data, and game-engine tests, and runs repository checks. The browser tests use Playwright Chromium. `test:production` builds the app and checks startup, pending-save recovery, cached components, and a complete synthetic defeat against an isolated preview on port 4180, with external HTTP requests blocked. `./scripts/verify-repository.sh` remains available for repository checks alone. The shell script works on macOS and Linux; Windows contributors can use WSL. These are contributor prerequisites, not supported platforms for a finished game. No API keys are needed. See [verification](docs/Verification.md) for coverage and limits, and the [owner playtest checklist](docs/Playtest-Checklist.md) for the remaining human acceptance.
+The first command typechecks, builds, runs sample, data, and game-engine tests, and runs repository checks. Public browser tests run in Playwright Chromium and WebKit; use `npm run test:e2e -- --project=chromium` or `--project=webkit` for one engine. `test:production` builds the app and checks startup, pending-save recovery, cached components, and a complete synthetic defeat in both engines against an isolated preview on port 4180, with external HTTP requests blocked. WebKit automation is additional browser-engine evidence, not Safari or VoiceOver certification. `./scripts/verify-repository.sh` remains available for repository checks alone. The shell script works on macOS and Linux; Windows contributors can use WSL. These are contributor prerequisites, not supported platforms for a finished game. No API keys are needed. See [verification](docs/Verification.md) for coverage and limits, and the [owner playtest checklist](docs/Playtest-Checklist.md) for the remaining human acceptance.
 
 With the verified private packet prepared, `npm run test:private` additionally runs isolated browser games for all five Heroes using those actual components. It requires the ignored prepared JSON (or `BOARDBOT_PRIVATE_DATA`), uses port 4182, and keeps artifacts in the system temporary directory. It is opt-in and excluded from public CI; keep any output private.
 

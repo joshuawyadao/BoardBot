@@ -9,12 +9,14 @@ import { GameBoard } from './GameBoard';
 import { RollResult, SpecialActionGuide } from './RollResult';
 import { AttackPanel, DecksPanel, LocationInspector, LocationsPanel } from './TabletopPanels';
 import { ItemArtwork, PieceArtwork } from './TabletopPieces';
+import { defaultTablePreferences, readTablePreferences, writeTablePreferences } from './tablePreferences';
+import type { PersistentPanel, TableSide } from './tablePreferences';
 import './tableWorkspace.css';
 
 type InfoPanel = 'inventory' | 'monsters' | 'log' | 'result' | 'help' | 'locations' | 'decks' | 'inspector';
 type ContextPanel = 'choice' | 'action' | 'setup';
 type PanelId = InfoPanel | ContextPanel;
-type Side = 'left' | 'right';
+type Side = TableSide;
 
 type TrayId = 'move' | 'guide' | 'pick-up' | 'share' | 'advance' | 'defeat' | 'special' | 'perks';
 type ActionReason = (action: HeroAction) => string | null;
@@ -87,7 +89,8 @@ function PendingChoicePanel({ pending, busy, onAction, reasonFor, visible, focus
 
 export function FighterTable({ data, game, onAction, reasonFor, busy, error, onReturnToGames, saveControls }: Props) {
   const heroClass = game.hero.definitionId.replace('hero-', '').replace(/^./, letter => letter.toUpperCase());
-  const [actionsCollapsed, setActionsCollapsed] = useState(false);
+  const [initialLayout] = useState(readTablePreferences);
+  const [actionsCollapsed, setActionsCollapsed] = useState(initialLayout.actionsCollapsed);
   const [selected, setSelected] = useState<TrayId | null>(null);
   const [inspected, setInspected] = useState<TrayId | null>(null);
   const [hovered, setHovered] = useState<TrayId | null>(null);
@@ -103,8 +106,9 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
   const [selectedPerk, setSelectedPerk] = useState<string | null>(null);
   const [pendingSelected, setPendingSelected] = useState<string[]>([]);
   const [inspectedLocation, setInspectedLocation] = useState<string | null>(null);
-  const [panels, setPanels] = useState<{ open: InfoPanel[]; sides: Partial<Record<InfoPanel, Side>> }>({ open: [], sides: {} });
+  const [panels, setPanels] = useState<{ open: InfoPanel[]; sides: Partial<Record<InfoPanel, Side>> }>({ open: initialLayout.open, sides: initialLayout.sides });
   const panelOpeners = useRef(new Map<InfoPanel, HTMLElement>());
+  const panelButtons = useRef(new Map<InfoPanel, HTMLButtonElement>());
   const inspectorOpener = useRef<HTMLElement | null>(null);
   const choiceConfirmRef = useRef<HTMLButtonElement>(null);
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -116,7 +120,8 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
   const actionFocus = useRef<{ revision: number; kind: HeroAction['kind']; destination?: string } | null>(null);
   const focusConfirmAfterMap = useRef(false);
   const focusResultAfterChoice = useRef(false);
-  const [contextSide, setContextSide] = useState<Side>('right');
+  const [contextSide, setContextSide] = useState<Side>(initialLayout.contextSide);
+  const [layoutStatus, setLayoutStatus] = useState('');
   const [setupOpen, setSetupOpen] = useState(game.revision === 0);
   const [choiceFocus, setChoiceFocus] = useState(0);
   const [feedbackStart, setFeedbackStart] = useState<number | null>(null);
@@ -141,6 +146,11 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
   const pending = game.pending;
   const terminal = game.phase === 'won' || game.phase === 'lost';
   const selectionLocked = busy || !!pending || terminal;
+
+  useEffect(() => {
+    writeTablePreferences({ version: 1, open: panels.open.filter((id): id is PersistentPanel => id !== 'inspector'),
+      sides: panels.sides, contextSide, actionsCollapsed });
+  }, [panels, contextSide, actionsCollapsed]);
 
   function chooseCard(id: TrayId) {
     setInspected(id);
@@ -240,7 +250,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
       return { open: [...current.open, next], sides: { ...current.sides, [next]: current.sides[next] ?? (right > left ? 'left' : 'right') } };
     });
   }
-  function openPanel(next: InfoPanel, opener?: HTMLElement) { if (opener) panelOpeners.current.set(next, opener); setSetupOpen(false); showPanel(next, true); }
+  function openPanel(next: InfoPanel, opener?: HTMLElement) { if (opener) panelOpeners.current.set(next, opener); setSetupOpen(false); setLayoutStatus(''); showPanel(next, true); }
   function inspectLocation(id: string, opener?: HTMLElement) {
     if (opener) inspectorOpener.current = opener;
     setInspectedLocation(id);
@@ -251,9 +261,18 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
     else if (id === 'setup') setSetupOpen(false);
     else if (id !== 'choice') {
       setPanels(current => ({ ...current, open: current.open.filter(panel => panel !== id) }));
-      if (id === 'inspector') inspectorOpener.current?.focus();
-      else panelOpeners.current.get(id)?.focus();
+      const opener = id === 'inspector' ? inspectorOpener.current : panelOpeners.current.get(id);
+      const fallback = id === 'inspector' ? mapButtons.current.get(inspectedLocation ?? '') ?? panelButtons.current.get('locations') : panelButtons.current.get(id);
+      (opener?.isConnected && opener.getClientRects().length ? opener : fallback)?.focus();
     }
+  }
+  function resetLayout() {
+    const defaults = defaultTablePreferences();
+    setPanels({ open: defaults.open, sides: defaults.sides });
+    setContextSide(defaults.contextSide);
+    setActionsCollapsed(defaults.actionsCollapsed);
+    setInspectedLocation(null);
+    setLayoutStatus('Table layout reset.');
   }
   function sideFor(id: PanelId): Side {
     return id === 'choice' || id === 'action' || id === 'setup' ? contextSide : panels.sides[id] ?? 'right';
@@ -322,7 +341,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
         <div className="hero"><strong>Local {heroClass} game</strong><span>At {locationName(at)}</span></div>
         <div className="h-status"><span>Terror <strong>{game.terror}</strong></span><span>Frenzy <strong>{MONSTER_NAMES[game.frenzy]}</strong></span><span>Monster deck <strong>{game.monsterDeckCount}</strong></span></div>
       </div>
-      <div className="header-tools"><button className="quiet-button" onClick={event => openPanel('help', event.currentTarget)} aria-expanded={panels.open.includes('help')}>How to play</button><button className="quiet-button" onClick={onReturnToGames} disabled={busy}>Saved games</button></div>
+      <div className="header-tools"><button className="quiet-button" ref={element => { if (element) panelButtons.current.set('help', element); else panelButtons.current.delete('help'); }} onClick={event => openPanel('help', event.currentTarget)} aria-expanded={panels.open.includes('help')}>How to play</button><button className="quiet-button" onClick={onReturnToGames} disabled={busy}>Saved games</button></div>
     </header>
     <main id="main">
       <h1 className="sr-only">Horrified {heroClass} table</h1>
@@ -331,12 +350,13 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
       {terminal && <div className="h-end" role="status" ref={terminalRef} tabIndex={-1}><strong>{game.phase === 'won' ? 'Victory' : 'Defeat'}</strong><span>{game.endReason}</span></div>}
       <section className={`h-workspace board-panel ${visiblePanels.some(id => sideFor(id) === 'left') ? 'has-left-panel' : ''} ${visiblePanels.some(id => sideFor(id) === 'right') ? 'has-right-panel' : ''}`} aria-labelledby="h-board-title">
         <nav className="h-panel-nav" aria-label="Table panels">
-          <button onClick={event => openPanel('inventory', event.currentTarget)} aria-expanded={panels.open.includes('inventory')}>Inventory <span>{ownedItems.length} Items · {game.hero.perks.length} Perks</span></button>
-          <button onClick={event => openPanel('monsters', event.currentTarget)} aria-expanded={panels.open.includes('monsters')}>Monsters</button>
-          <button onClick={event => openPanel('log', event.currentTarget)} aria-expanded={panels.open.includes('log')}>Event log</button>
-          <button onClick={event => openPanel('locations', event.currentTarget)} aria-expanded={panels.open.includes('locations')}>Locations</button>
-          <button onClick={event => openPanel('decks', event.currentTarget)} aria-expanded={panels.open.includes('decks')}>Decks &amp; progress</button>
-          <button onClick={event => openPanel('result', event.currentTarget)} aria-expanded={panels.open.includes('result')}>Latest result</button>
+          <button ref={element => { if (element) panelButtons.current.set('inventory', element); else panelButtons.current.delete('inventory'); }} onClick={event => openPanel('inventory', event.currentTarget)} aria-expanded={panels.open.includes('inventory')}>Inventory <span>{ownedItems.length} Items · {game.hero.perks.length} Perks</span></button>
+          <button ref={element => { if (element) panelButtons.current.set('monsters', element); else panelButtons.current.delete('monsters'); }} onClick={event => openPanel('monsters', event.currentTarget)} aria-expanded={panels.open.includes('monsters')}>Monsters</button>
+          <button ref={element => { if (element) panelButtons.current.set('log', element); else panelButtons.current.delete('log'); }} onClick={event => openPanel('log', event.currentTarget)} aria-expanded={panels.open.includes('log')}>Event log</button>
+          <button ref={element => { if (element) panelButtons.current.set('locations', element); else panelButtons.current.delete('locations'); }} onClick={event => openPanel('locations', event.currentTarget)} aria-expanded={panels.open.includes('locations')}>Locations</button>
+          <button ref={element => { if (element) panelButtons.current.set('decks', element); else panelButtons.current.delete('decks'); }} onClick={event => openPanel('decks', event.currentTarget)} aria-expanded={panels.open.includes('decks')}>Decks &amp; progress</button>
+          <button ref={element => { if (element) panelButtons.current.set('result', element); else panelButtons.current.delete('result'); }} onClick={event => openPanel('result', event.currentTarget)} aria-expanded={panels.open.includes('result')}>Latest result</button>
+          <button type="button" onClick={resetLayout}>Reset layout</button><span className="h-layout-status" role="status">{layoutStatus}</span>
           {selected && !pending && <button onClick={() => actionEditorRef.current?.focus()} aria-expanded={context === 'action'}>Review action</button>}
           {pending && <button className="h-choice-return" onClick={() => setChoiceFocus(value => value + 1)} aria-expanded={context === 'choice'}>Required choice</button>}
           {(game.currentRoll || game.rolls.length > 0) && <div className="h-roll-peek"><RollResult data={data} game={game} compact /></div>}

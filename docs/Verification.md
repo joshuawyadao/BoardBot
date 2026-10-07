@@ -2,7 +2,7 @@
 
 ## Local command
 
-Requirements for the app checks: Git, Python 3.9 or newer, Node.js 26 with its bundled npm, and a POSIX shell on macOS or Linux (or WSL on Windows). The Playwright browser test also requires Chromium. No credentials are required.
+Requirements for the app checks: Git, Python 3.9 or newer, Node.js 26 with its bundled npm, and a POSIX shell on macOS or Linux (or WSL on Windows). Public and production Playwright checks require Chromium and WebKit. No credentials are required.
 
 The supported Node major is recorded in `.nvmrc` and `package.json`. If using nvm, run `nvm install` and `nvm use` from the checkout, then confirm `node --version` reports `v26.x` before installing dependencies. When moving from Node 24, run `npm ci` again under Node 26 to refresh installed packages, including native tooling.
 
@@ -11,7 +11,7 @@ From a checkout, run:
 ```sh
 npm ci
 npm run verify
-npx playwright install chromium
+npx playwright install chromium webkit
 npm run test:e2e
 npm run test:production
 ```
@@ -43,7 +43,7 @@ The Fighter integration adds public synthetic tests for the complete command/eff
 
 ## GitHub CI
 
-The `CI Verify` workflow runs repository checks, the locked npm install, build, engine tests, Chromium interaction tests, and the isolated production acceptance check on pushes to `main`, pull requests, and manual dispatch. It selects Node 26 from `.nvmrc` and uses pinned checkout and Node setup actions, read-only repository permissions, disabled persisted checkout credentials, a short timeout, and cancellation of superseded runs. Dependabot checks GitHub Actions and npm dependencies weekly; major `@types/node` updates are excluded so a future runtime upgrade can change `.nvmrc`, the package engine requirement, and types together. Minor and patch type updates remain enabled. Repository rules require a pull request for `main`; direct pushes are blocked.
+The `CI Verify` workflow runs repository checks, the locked npm install, build, engine tests, Chromium/WebKit interaction tests, and isolated production acceptance in both engines on pushes to `main`, pull requests, and manual dispatch. It selects Node 26 from `.nvmrc` and uses pinned checkout and Node setup actions, read-only repository permissions, disabled persisted checkout credentials, a 20-minute timeout, and cancellation of superseded runs. Dependabot checks GitHub Actions and npm dependencies weekly; major `@types/node` updates are excluded so a future runtime upgrade can change `.nvmrc`, the package engine requirement, and types together. Minor and patch type updates remain enabled. Repository rules require a pull request for `main`; direct pushes are blocked.
 
 ## Acceptance checks for the solo game
 
@@ -245,4 +245,17 @@ The first two groups classify the same 142 Vitest cases by test purpose. The bro
 
 **Findings:** No unaddressed T1–T6 findings in the inspected scope. Full-game results are still tied to the accepted evidence grades and focused contracts. This is the first Test Quality Review entry, so there is no same-mode trend.
 
-Actual VoiceOver output, Safari/WebKit and Firefox execution, touch-device experience and the owner's complete human game acceptance remain manual or separate checks. Only Chromium is installed in this local test environment. Automated success and accessible DOM structure do not establish universal usability or full WCAG conformance.
+At the time of that audit, actual VoiceOver output, Safari/WebKit and Firefox execution, touch-device experience and the owner's complete human game acceptance remained manual or separate checks; only Chromium was installed locally. The finishing pass below adds WebKit execution. Automated success and accessible DOM structure do not establish universal usability or full WCAG conformance.
+
+
+## October 7 tabletop finishing improvements
+
+The table now keeps a small validated presentation record separate from IndexedDB game saves. Optional panels, their sides, contextual panel side and tray collapse restore across reload, library navigation and new adventures. Reset restores defaults without committing commands or clearing an action draft/required-choice selection. Inspector contents remain temporary. Six unit cases cover validation, known panel/side values, deduplication and invalid or blocked storage; browser cases cover persistence, focus on restored panel close, reset during drafts/choices and nonfatal storage denial.
+
+Save, import, recovery and competing-tab failures now focus a visible alert with operation-specific guidance, separate from polite saving/saved status. Repeated failures regain focus. Tests inject real IndexedDB transaction aborts, retain the exact resolved roll for export/retry, preserve prior records, retain valid imported adventures after a failed initial write and protect newer competing-tab saves. A real engine rejection before saving gives accurate unchanged-progress guidance and allows a subsequent legal action. Invalid base/backup imports return focus to their file input. Recovery remounts stale drafts and focuses the saved status or authoritative required choice. Deletion cancel/Escape returns focus to the explicit Delete opener in both engines.
+
+Public and production browser projects now run in Chromium and WebKit, with compatible installations in CI. Public tests use two workers to limit competing browser load and a one-minute per-scenario budget for both engines. The all-floor inspection case allows two minutes for 29 pointer/focus round trips. Full-game cases allow three minutes for many legal UI decisions; their victory, replay and terminal assertions are unchanged. Board measurements are read in one DOM snapshot instead of hundreds of individual browser calls. On macOS WebKit, the sample's reverse button navigation uses Option-Shift-Tab; other projects retain Shift-Tab. This follows [Apple's Safari keyboard guidance](https://support.apple.com/guide/safari/cpsh003/mac) and a direct native-navigation check, without changing the owner's system settings. [Playwright browser documentation](https://playwright.dev/docs/browsers#webkit) describes the engine coverage and its distinction from installed Safari.
+
+The new engine coverage reproduced both a floor hit-testing failure and misplaced painted markers. Floor controls and marker/count overlays now use static grid layout within SVG foreignObject, decorative layers do not intercept clicks, and nested piece SVGs avoid the CSS drop-shadow filter that WebKit painted at unrelated coordinates. The all-floor inspection regression uses normal pointer clicks. A fresh isolated prepared-game WebKit preview confirms 29 captions, correctly placed pieces/numbers and restored Inventory/tray preferences without JavaScript errors. Private screenshots and components remain ignored; the owner's saves are untouched.
+
+Final verification is pending. Actual Safari/VoiceOver output, Firefox and touch-device experience, physical internet-disconnection and complete owner human-game acceptance remain separate checks. These changes preserve engine rules, data interpretations, command/save formats and hidden information.

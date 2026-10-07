@@ -211,7 +211,7 @@ test('small screens keep the board, tray, and log within the viewport', async ({
   }
 });
 
-test('unavailable cards explain themselves without shifting controls or executing actions', async ({ page }) => {
+test('unavailable cards explain themselves without shifting controls or executing actions', async ({ page, browserName }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Try sample table' }).click();
   const move = page.getByRole('button', { name: 'Move Connected location' });
@@ -238,7 +238,8 @@ test('unavailable cards explain themselves without shifting controls or executin
   await expect(page.getByTestId('action-budget')).toHaveText('3 / 3');
   await guide.focus();
   await expect(help).toContainText('no citizens');
-  await page.keyboard.press('Shift+Tab');
+  // WebKit on macOS uses Option-Tab for all controls unless full keyboard navigation is enabled.
+  await page.keyboard.press(browserName === 'webkit' && process.platform === 'darwin' ? 'Alt+Shift+Tab' : 'Shift+Tab');
   await expect(move).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('button', { name: 'Crossroads', exact: true })).toBeFocused();

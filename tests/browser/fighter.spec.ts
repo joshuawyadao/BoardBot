@@ -205,6 +205,7 @@ test('narrow Fighter layout has no document overflow with actions shown or hidde
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     await loadSyntheticFighter(page);
+    await page.getByRole('button', { name: 'Reset layout', exact: true }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     await page.getByRole('button', { name: 'Hide actions' }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);

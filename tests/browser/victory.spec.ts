@@ -60,7 +60,8 @@ function defeatCost(data: GameData, state: FighterGame, monster: 'beholder' | 'd
 
 for (const hero of ['Fighter', 'Bard', 'Cleric', 'Rogue', 'Wizard']) {
   test(`${hero} completes both Monster challenges and retains victory after reload`, async ({ page }) => {
-    test.setTimeout(120_000);
+    // Complete legal games involve many UI decisions; allow both browser engines to finish.
+    test.setTimeout(180_000);
     const data = victoryFixture();
     await load(page, data, hero);
     let reloadedChallenge = false;

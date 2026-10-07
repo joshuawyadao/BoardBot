@@ -167,6 +167,15 @@
 .game-library .library-dialog::backdrop { background: #060b0ddb; }
 .game-library .library-dialog h2 { color: #f5d6a2; }
 .game-library .library-dialog .library-delete-summary { color: #c8d3cc; }
+.local-error-recovery { min-width: 0; max-width: 100%; }
+.local-error-recovery [role='alert'] { padding: 12px 14px; border-radius: 7px; overflow-wrap: anywhere; }
+.local-error-recovery [role='alert'] p { margin: 0; line-height: 1.5; font-size: 1rem; color: inherit; }
+.local-error-recovery [role='alert'] p + p { margin-top: 7px; }
+.local-error-recovery [role='alert']:focus { outline: 3px solid #e8b74e; outline-offset: 3px; }
+.local-error-recovery > button { margin-top: 8px; }
+.save-status .local-error-recovery { flex-basis: 100%; }
+.save-error { border: 1px solid #c27c70; background: #4d292a; color: #ffe5d8; }
+.save-status [role='status']:focus { outline: 3px solid #e8b74e; outline-offset: 3px; }
 @media (max-width: 600px) {
   .game-library { padding: 18px 18px 30px; border-inline: 0; }
   .game-library .library-intro { margin-top: 28px; }

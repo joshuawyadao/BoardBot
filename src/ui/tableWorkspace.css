@@ -458,6 +458,7 @@
 }
 .h-panel-layer[hidden] { display: none; }
 .h-panel-layer:focus-visible { outline: 3px solid #e8b74e; outline-offset: -3px; }
+.h-layout-status { color: #f0d49e; font-size: .875rem; }
 /* Short windows and larger user text may scroll the page instead of clipping decisions. */
 @media (min-width: 701px) {
   .h-workspace-table.h-table { min-height: max(100dvh, calc(30rem + 240px)); }

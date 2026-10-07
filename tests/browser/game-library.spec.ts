@@ -119,6 +119,8 @@ test('a failed initial save retries the same setup once without creating a secon
   });
   await page.getByRole('button', { name: 'Start game', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Retry saving new game' })).toBeVisible();
+  await expect(page.getByRole('alert')).toBeFocused();
+  await expect(page.getByRole('alert')).toContainText('exact setup');
   expect(await records(page)).toEqual([]);
   await page.getByRole('button', { name: 'Retry saving new game' }).click();
   await expect(page.getByText('Local Cleric game')).toBeVisible();
@@ -226,6 +228,8 @@ test('failed deletion keeps the saved game and shows a retryable error', async (
   const confirmation = page.getByRole('dialog');
   await confirmation.getByRole('button', { name: 'Delete game', exact: true }).click();
   await expect(confirmation.getByRole('alert')).toContainText('Simulated delete failure');
+  await expect(confirmation.getByRole('alert')).toBeFocused();
+  await expect(confirmation.getByRole('alert')).toBeInViewport({ ratio: 1 });
   expect(await records(page)).toEqual(before);
   await expect(confirmation.getByRole('button', { name: 'Delete game', exact: true })).toBeEnabled();
   await confirmation.getByRole('button', { name: 'Delete game', exact: true }).click();
@@ -249,6 +253,7 @@ test('a stale deletion cannot remove newer progress and an open tab cannot recre
   const confirmation = page.getByRole('dialog');
   await confirmation.getByRole('button', { name: 'Delete game', exact: true }).click();
   await expect(confirmation.getByRole('alert')).toContainText('changed or was removed in another tab');
+  await expect(confirmation.getByRole('alert')).toBeFocused();
   expect(await records(page)).toEqual(latest);
   await confirmation.getByRole('button', { name: 'Cancel', exact: true }).click();
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
@@ -257,6 +262,7 @@ test('a stale deletion cannot remove newer progress and an open tab cannot recre
   await other.getByRole('button', { name: 'Move Connected location' }).click();
   await other.getByRole('button', { name: /Room 2/ }).click();
   await expect(other.getByRole('alert')).toContainText('deleted in another tab');
+  await expect(other.getByRole('alert')).toBeFocused();
   await expect(other.getByRole('button', { name: 'Retry saving', exact: true })).toBeVisible();
   expect(await records(page)).toEqual([]);
   await other.close();
