@@ -12,12 +12,12 @@ Implement the approved accessible tabletop renders as live React interfaces, kee
 [x] Map the existing UI, projection privacy boundary, canonical component/rule references and affected unit/browser tests; checkpoint this resolved plan on codex/illustrated-tabletop-ui.
 [x] Add cloned presentation-only attack/current-card/next-phase information and explicit pending-choice context to the public GameView; test privacy, conditional Slowing previews, legacy interpretation and Wizard choice distinctions.
 [x] Build original reusable SVG standees, miniatures, item illustrations and dice with tactile bases and clear quantity badges; document their provenance and preserve decorative/accessible separation.
-[x] Update GameBoard.tsx and gameBoard.css with live rim captions, distinct crowded pieces, native inspection and engine-projected Wizard selection; preserve all29 anchors and accepted routes, synthetic fallback and hidden Lairs.
+[x] Update GameBoard.tsx and gameBoard.css with live rim captions, distinct crowded pieces, native inspection and engine-projected Wizard selection; preserve all 29 anchors and accepted routes, synthetic fallback and hidden Lairs.
 [x] Implement the cream location inspector, named location list, supplies/progress panel and item cards in FighterTable; preserve independent panel toggles/drafts and restore focus to invoking controls.
 [x] Implement Beholder attack context and complete engine-driven responses, next-phase penalty previews, readable Hero range tables/results and map-or-name Wizard destination selection with explicit confirmation.
 [x] Extend focused rendering/projection/browser tests for inspection without spending actions, draft preservation, keyboard focus/return, effective20 outcomes, conditional penalties, enlarged text, narrow layouts, control sizes and save recovery.
 [x] Update README.md, docs/UI-Design.md, docs/Architecture.md, docs/Verification.md and the original-art notice to describe implemented behavior and remaining manual checks; retain the durable Work-Plan/Roadmap baseline.
-[ ] Run targeted checks, npm run verify, npm run test:e2e and production/prepared acceptance where applicable; inspect the running local app using an isolated game; save coherent checkpoints and push the feature branch.
+[x] Run targeted checks, npm run verify, npm run test:e2e and production/prepared acceptance where applicable; inspect the running local app using an isolated game; save coherent checkpoints and push the feature branch.
 
 ## Open questions
 
@@ -32,4 +32,4 @@ Implement the approved accessible tabletop renders as live React interfaces, kee
 
 ## Implementation checkpoint
 
-- Live board, observed projections, original SVG pieces, inspector/panels, native destination alternatives and focus handoffs are implemented. Build/typecheck, 140 unit tests and 83 public browser tests passed before the final ray-effect rendering refinement; the added focused inspector/ray rendering cases also pass. Production/prepared acceptance and final save remain.
+- Live board, observed projections, original SVG pieces, inspector/panels, native destination alternatives and focus handoffs are implemented. Build/typecheck, 140 unit tests and 83 public browser tests passed before the final ray-effect rendering refinement; the added focused inspector/ray rendering cases also pass. Production recovery and six prepared-component scenarios passed, including Fighter victory; all 83 public browser cases and the focused visible-focus recheck passed. The final checkpoint includes canonical docs, original-art provenance and the completed checklist.

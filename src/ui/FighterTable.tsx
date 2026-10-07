@@ -192,13 +192,13 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
   useEffect(() => {
     if (focusConfirmAfterMap.current && pendingSelected.length && !busy) {
       focusConfirmAfterMap.current = false;
-      choiceConfirmRef.current?.focus({ preventScroll: true });
+      choiceConfirmRef.current?.focus();
     }
   }, [pendingSelected, busy]);
   useEffect(() => {
     if (focusResultAfterChoice.current && !pending && panels.open.includes('result')) {
       focusResultAfterChoice.current = false;
-      resultHeadingRef.current?.focus({ preventScroll: true });
+      resultHeadingRef.current?.focus();
     }
   }, [panels.open, pending]);
   const context: ContextPanel | null = pending ? 'choice'

@@ -451,6 +451,7 @@ test('Wizard map and named selection share a draft and require confirmation afte
   await target.press('Enter');
   await expect(select).toHaveValue('room-17');
   await expect(confirm).toBeFocused();
+  await expect(confirm).toBeInViewport({ ratio: 1 });
   await expect(target).toHaveAttribute('aria-label', /Selected destination, awaiting confirmation/);
   await expect(confirm).toBeEnabled();
   expect(await readSavedState(page)).toEqual(before);
@@ -469,6 +470,7 @@ test('Wizard map and named selection share a draft and require confirmation afte
   await expect.poll(async () => (await readSavedState(page)).revision).toBe(before.revision + 1);
   expect((await readSavedState(page)).hero.location).toBe('room-17');
   await expect(page.locator('[data-panel="result"] h3')).toBeFocused();
+  await expect(page.locator('[data-panel="result"] h3')).toBeInViewport({ ratio: 1 });
   await expect(page.locator('.h-location.current')).toHaveAttribute('data-location-id', 'room-17');
 });
 

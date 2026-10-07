@@ -138,12 +138,12 @@ export function GameBoard({ data, game, moving, locked, onMove, buttonRefs, onIn
       <span><i className="key-current" /> Your Hero</span>
       <span><i className="key-reachable" /> Move destination</span>
       {wizardDestination && <span><i className="key-wizard-destination" /> Wizard destination</span>}
-      <span><i className="piece"><PieceArtwork kind="hero" /></i> Hero</span>
-      <span><i className="piece"><PieceArtwork kind="beholder" /></i> Beholder</span>
-      <span><i className="piece"><PieceArtwork kind="displacer" /></i> Displacer Beast</span>
-      <span><i className="piece"><PieceArtwork kind="item" /></i> Items × quantity</span>
-      <span><i className="piece"><PieceArtwork kind="citizen" /></i> Citizens</span>
-      <span><i className="piece"><PieceArtwork kind="lair" /></i> Lair</span>
+      <span><i className="piece piece-hero"><PieceArtwork kind="hero" /></i> Hero</span>
+      <span><i className="piece piece-beholder"><PieceArtwork kind="beholder" /></i> Beholder</span>
+      <span><i className="piece piece-displacer"><PieceArtwork kind="displacer" /></i> Displacer Beast</span>
+      <span><i className="piece piece-item"><PieceArtwork kind="item" /></i> Items × quantity</span>
+      <span><i className="piece piece-citizen"><PieceArtwork kind="citizen" /></i> Citizens</span>
+      <span><i className="piece piece-lair"><PieceArtwork kind="lair" /></i> Lair</span>
     </div>
   </div>;
 }

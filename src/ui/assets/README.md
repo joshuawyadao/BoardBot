@@ -9,3 +9,7 @@ This original terrain asset, guide and prompt are distributed under BoardBot's [
 The renderer places the square image at y=35 in its 1000-unit canvas; this aligns the generated clear floors with the checked floor anchors and leaves a narrow title band. This positioning does not alter the image's pixels. Use the painted layer only for the exact accepted topology; other imports use code-rendered terrain and their supplied edges.
 
 The PNG is bundled locally by Vite. It requires no remote image service, font, runtime AI request or account.
+
+## Original physical-piece illustrations
+
+`../TabletopPieces.tsx` and `../tabletopPieces.css` contain original code-native SVG illustrations made for BoardBot on October 7, 2026: Hero and Citizen standees, Monster miniatures, Item bags and keyword-based illustrations, Lair/Perk tokens and dice. They use geometric paths authored for this project, contain no publisher scans or external assets, and are distributed under the project's MIT License. They are decorative and carry no hidden identity, Strength, legality or command behavior; live labels and public state supply those facts. SVGs use no shared IDs, so repeated pieces cannot collide.
