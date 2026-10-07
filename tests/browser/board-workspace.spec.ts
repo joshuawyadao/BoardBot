@@ -280,6 +280,14 @@ test('special ranges and confirmation stay visible, then a saved response displa
   await expect(summary.getByTestId('roll-status')).toHaveText('Awaiting response');
   await expect(summary).toBeInViewport();
   await expect(page.getByRole('radio', { name: 'Keep this result' })).toBeChecked();
+  // Panel controls may overflow; the public roll must stay visible beside them.
+  for (const viewport of [{ width: 800, height: 800 }, { width: 1024, height: 768 }]) {
+    await page.setViewportSize(viewport);
+    await page.getByRole('button', { name: 'Required choice', exact: true }).click();
+    await expect(page.locator('.h-pending h2')).toBeFocused();
+    await expect(summary).toBeInViewport({ ratio: 1 });
+    expect(await summary.evaluate(element => element.scrollWidth <= element.clientWidth), 'roll text and die fit inside the visible summary').toBe(true);
+  }
   await page.reload();
   await page.getByRole('button', { name: 'Resume saved game' }).click();
   await expect(page.locator('[data-panel="inventory"]')).toBeVisible();

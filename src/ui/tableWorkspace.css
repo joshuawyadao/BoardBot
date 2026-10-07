@@ -358,9 +358,16 @@
   .h-workspace-table .app-header .h-workspace-heading .h-status { margin: 0; width: 100%; }
 }
 
-/* Table controls remain one compact row so inspection does not steal board height. */
+/* Only panel controls scroll; the committed roll keeps its own readable space. */
 .h-workspace-table { min-width: 0; overflow-x: clip; }
-.h-workspace-table .h-panel-nav { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: thin; }
+.h-table-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; min-width: 0; border-block: 1px solid #604e35; background: #121f28; }
+.h-workspace-table .h-panel-nav { flex-wrap: nowrap; overflow-x: auto; min-width: 0; max-width: 100%; border: 0; scrollbar-width: thin; }
+.h-table-controls .h-roll-peek { width: clamp(15rem, 30vw, 20rem); margin: 0; padding: 5px 12px 5px 0; }
+.h-table-controls .roll-result-heading > div { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 700px) {
+  .h-table-controls { grid-template-columns: minmax(0, 1fr); }
+  .h-table-controls .h-roll-peek { width: auto; padding: 0 7px 5px; }
+}
 .h-workspace-table .h-panel-nav > button { flex: none; min-height: 2.75rem; font-size: .875rem; }
 .h-workspace-table .app-header button, .h-workspace-table .h-tray .tray-tools button,
 .h-workspace-table .h-tray .tray-controls button, .h-workspace-table .h-tray .end-button,

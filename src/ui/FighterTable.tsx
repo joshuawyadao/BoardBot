@@ -349,6 +349,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
       {error && <p className="h-error" role="alert" ref={errorRef} tabIndex={-1}>{error}</p>}
       {terminal && <div className="h-end" role="status" ref={terminalRef} tabIndex={-1}><strong>{game.phase === 'won' ? 'Victory' : 'Defeat'}</strong><span>{game.endReason}</span></div>}
       <section className={`h-workspace board-panel ${visiblePanels.some(id => sideFor(id) === 'left') ? 'has-left-panel' : ''} ${visiblePanels.some(id => sideFor(id) === 'right') ? 'has-right-panel' : ''}`} aria-labelledby="h-board-title">
+        <div className="h-table-controls">
         <nav className="h-panel-nav" aria-label="Table panels">
           <button ref={element => { if (element) panelButtons.current.set('inventory', element); else panelButtons.current.delete('inventory'); }} onClick={event => openPanel('inventory', event.currentTarget)} aria-expanded={panels.open.includes('inventory')}>Inventory <span>{ownedItems.length} Items · {game.hero.perks.length} Perks</span></button>
           <button ref={element => { if (element) panelButtons.current.set('monsters', element); else panelButtons.current.delete('monsters'); }} onClick={event => openPanel('monsters', event.currentTarget)} aria-expanded={panels.open.includes('monsters')}>Monsters</button>
@@ -359,8 +360,9 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
           <button type="button" onClick={resetLayout}>Reset layout</button><span className="h-layout-status" role="status">{layoutStatus}</span>
           {selected && !pending && <button onClick={() => actionEditorRef.current?.focus()} aria-expanded={context === 'action'}>Review action</button>}
           {pending && <button className="h-choice-return" onClick={() => setChoiceFocus(value => value + 1)} aria-expanded={context === 'choice'}>Required choice</button>}
-          {(game.currentRoll || game.rolls.length > 0) && <div className="h-roll-peek"><RollResult data={data} game={game} compact /></div>}
         </nav>
+        {(game.currentRoll || game.rolls.length > 0) && <div className="h-roll-peek"><RollResult data={data} game={game} compact /></div>}
+        </div>
         <div className="h-play-area">
           <div className="h-board-fit"><GameBoard data={data} game={game} moving={selected === 'move' && !pending} locked={busy || terminal} onMove={destination => commit(moveAction(destination))} buttonRefs={mapButtons}
             onInspect={(id: string) => inspectLocation(id, mapButtons.current.get(id))} inspectedLocation={inspectedLocation}
