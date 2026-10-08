@@ -1,4 +1,4 @@
-import { expect, test, type Page } from './test';
+import { expect, setAvailableFile, test, type Page } from './test';
 import type { GameData } from '../../src/data/gameData';
 import { heroFixture } from '../../src/engine/fixtures/heroFixture';
 
@@ -51,7 +51,7 @@ function illustratedFixture(): GameData {
 async function load(page: Page, data: GameData, seed = 2, hero = 'Fighter') {
   await page.goto('/');
   await page.getByText('Import game data or backup').click();
-  await page.locator('#game-data-file').setInputFiles({ name: 'synthetic-layout.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
+  await setAvailableFile(page.locator('#game-data-file'), { name: 'synthetic-layout.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
   await page.getByLabel('Hero', { exact: true }).selectOption(hero);
   await page.getByLabel('Seed (optional, for a repeatable setup)').fill(String(seed));
   await page.getByRole('button', { name: 'Start game', exact: true }).click();
@@ -534,6 +534,7 @@ test('named Move controls and enlarged panel text work without relying on tiny m
   await page.getByRole('button', { name: 'Move to selected location', exact: true }).press('Enter');
   await expect.poll(async () => (await readSavedState(page)).revision).toBe(before.revision + 1);
   expect((await readSavedState(page)).hero.location).toBe('location-3');
+  await expect(page.locator('[data-location-id="location-3"]')).toBeFocused();
   await page.setViewportSize({ width: 640, height: 480 });
   await page.addStyleTag({ content: ':root { font-size: 200%; }' });
   await page.getByRole('button', { name: 'Locations', exact: true }).click();
@@ -544,6 +545,46 @@ test('named Move controls and enlarged panel text work without relying on tiny m
   await page.getByRole('button', { name: 'Close Location inspector' }).press('Enter');
   await expect(row).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(640);
+});
+
+test('Move completion preserves deliberate information focus during a pending save', async ({ page }) => {
+  await load(page, illustratedFixture());
+  await page.evaluate(async () => {
+    const path = '/src/session/savedSession.ts';
+    const { SavedSession } = await import(path);
+    const submit = SavedSession.prototype.submit;
+    const held = new Promise<void>(resolve => Object.defineProperty(window, 'releaseInspectedMove', { value: resolve, configurable: true }));
+    SavedSession.prototype.submit = async function (...args: unknown[]) {
+      SavedSession.prototype.submit = submit;
+      await submit.apply(this, args);
+      await held;
+    };
+  });
+  const move = page.getByRole('button', { name: 'Move Connected location' });
+  await move.click();
+  const before = await readSavedState(page);
+  await page.getByLabel('Move destination', { exact: true }).selectOption('location-3');
+  await page.getByRole('button', { name: 'Move to selected location', exact: true }).press('Enter');
+  await expect.poll(async () => (await readSavedState(page)).revision).toBe(before.revision + 1);
+  await expect(move).toHaveAttribute('aria-disabled', 'true');
+  await page.getByRole('button', { name: 'Locations', exact: true }).click();
+  const row = page.locator('.h-locations-list button').last();
+  await row.press('Enter');
+  const inspector = page.locator('[data-panel="inspector"]');
+  await expect(inspector).toBeVisible();
+  const close = page.getByRole('button', { name: 'Close Location inspector', exact: true });
+  await close.focus();
+  await expect(close).toBeFocused();
+  await page.evaluate(() => { Reflect.get(window, 'releaseInspectedMove')(); Reflect.deleteProperty(window, 'releaseInspectedMove'); });
+  await expect(move).toHaveAttribute('aria-disabled', 'false');
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(inspector).toBeHidden();
+  await expect(row).toBeFocused();
+  const after = await readSavedState(page);
+  expect(after.hero.location).toBe('location-3');
+  expect(after.revision).toBe(before.revision + 1);
+  expect(after.commands).toHaveLength(before.commands.length + 1);
 });
 
 test.describe('touch-sized tabletop controls', () => {

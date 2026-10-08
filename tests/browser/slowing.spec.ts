@@ -1,4 +1,4 @@
-import { expect, test, type Page } from './test';
+import { expect, setAvailableFile, test, type Page } from './test';
 import { slowingFixture, SLOWING_SEED } from '../../src/engine/fixtures/slowingFixture';
 import { LEGACY_RULESET_VERSION, RULESET_VERSION } from '../../src/engine/decisionPolicies';
 import { createFighterGame } from '../../src/engine/horrifiedGame';
@@ -78,7 +78,7 @@ for (const source of ['cached', 'imported']) {
     } else {
       await page.goto('/');
       await page.getByText('Import game data or backup').click();
-      await page.locator('#game-data-file').setInputFiles({ name: 'old-components.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
+      await setAvailableFile(page.locator('#game-data-file'), { name: 'old-components.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
     }
     await start(page, source === 'cached');
     const [game] = await saves(page);
@@ -102,7 +102,7 @@ test('an older backup keeps capped penalties while a new adventure from its comp
   const backup = encodeGameSave(data, initial);
   await page.goto('/');
   await page.getByText('Import game data or backup').click();
-  await page.locator('#game-save-file').setInputFiles({ name: 'old-game.json', mimeType: 'application/json', buffer: Buffer.from(backup) });
+  await setAvailableFile(page.locator('#game-save-file'), { name: 'old-game.json', mimeType: 'application/json', buffer: Buffer.from(backup) });
   await expect(page.getByText('Local game in progress.')).toBeVisible();
   expect(await state(page)).toEqual(initial);
   await page.getByText('Earlier rules', { exact: true }).click();

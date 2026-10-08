@@ -117,7 +117,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
   const endPhaseRef = useRef<HTMLButtonElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
   const actionButtons = useRef(new Map<TrayId, HTMLButtonElement>());
-  const actionFocus = useRef<{ revision: number; kind: HeroAction['kind']; destination?: string } | null>(null);
+  const actionFocus = useRef<{ revision: number; kind: HeroAction['kind']; initiator: Element | null; destination?: string } | null>(null);
   const focusConfirmAfterMap = useRef(false);
   const focusResultAfterChoice = useRef(false);
   const [contextSide, setContextSide] = useState<Side>(initialLayout.contextSide);
@@ -172,7 +172,8 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
 
   function commit(action: HeroAction) {
     if (selectionLocked || reasonFor(action)) return;
-    actionFocus.current = { revision: game.revision, kind: action.kind, ...(action.kind === 'move' ? { destination: action.destination } : {}) };
+    actionFocus.current = { revision: game.revision, kind: action.kind, initiator: document.activeElement,
+      ...(action.kind === 'move' ? { destination: action.destination } : {}) };
     setFeedbackStart(game.entries.length);
     onAction(action);
     setSelected(null);
@@ -230,8 +231,11 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
     if (game.revision === target.revision) return;
     actionFocus.current = null;
     if (pending) return; // The required-choice panel owns focus until its response resolves.
-    if (terminal) terminalRef.current?.focus();
-    else if (target.destination) mapButtons.current.get(target.destination)?.focus();
+    if (terminal) { terminalRef.current?.focus(); return; }
+    const active = document.activeElement;
+    // A player may inspect information while the save resolves. Follow their new focus, not the action's default target.
+    if (active && active !== target.initiator && active !== document.body && active !== document.documentElement && active.isConnected) return;
+    if (target.destination) mapButtons.current.get(target.destination)?.focus();
     else if (target.kind === 'end-phase') endPhaseRef.current?.focus();
     else if (panels.open.includes('result')) resultHeadingRef.current?.focus();
   }, [busy, error, game.revision, pending, panels.open, terminal]);

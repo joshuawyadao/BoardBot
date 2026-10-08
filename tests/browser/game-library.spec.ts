@@ -1,4 +1,4 @@
-import { expect, test, type Page } from './test';
+import { expect, setAvailableFile, test, type Page } from './test';
 import { heroFixture } from '../../src/engine/fixtures/heroFixture';
 
 async function records(page: Page) {
@@ -20,6 +20,33 @@ async function start(page: Page, hero: string) {
   await expect(page.getByRole('heading', { name: `Horrified ${hero} table`, exact: true })).toBeAttached();
   await expect(page.getByText('Local game in progress.')).toBeVisible();
 }
+
+test('file import waits for the available control while startup components are still loading', async ({ page }) => {
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  let requested!: () => void;
+  const started = new Promise<void>(resolve => { requested = resolve; });
+  await page.route('**/__boardbot/local-game-data', async route => {
+    requested();
+    await gate;
+    await route.fulfill({ status: 404, body: '' });
+  });
+  await page.goto('/');
+  await started;
+  await page.getByText('Import game data or backup').click();
+  const input = page.locator('#game-data-file');
+  await expect(input).toBeDisabled();
+  // Keep startup pending during the initial file attempt; a native picker cannot use this input yet.
+  const timer = setTimeout(release, 1500);
+  try {
+    await setAvailableFile(input, { name: 'synthetic.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(heroFixture())) });
+    await expect(page.getByLabel('Hero', { exact: true })).toBeVisible();
+    await page.getByLabel('Hero', { exact: true }).selectOption('Wizard');
+    await page.getByRole('button', { name: 'Start game', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Horrified Wizard table', exact: true })).toBeVisible();
+    expect(await records(page)).toHaveLength(1);
+  } finally { clearTimeout(timer); release(); }
+});
 
 test('prepared base game starts after Hero selection and preserves independent adventures', async ({ page }) => {
   await page.route('**/__boardbot/local-game-data', route => route.fulfill({ json: heroFixture() }));
@@ -72,7 +99,7 @@ test('a fresh clone offers one-time import and a sample, then remembers the base
   await expect(page.getByRole('region', { name: 'The training grounds' })).toBeVisible();
   await page.getByRole('button', { name: 'Saved games', exact: true }).click();
   await page.getByText('Import game data or backup', { exact: true }).click();
-  await page.locator('#game-data-file').setInputFiles({ name: 'synthetic.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(heroFixture())) });
+  await setAvailableFile(page.locator('#game-data-file'), { name: 'synthetic.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(heroFixture())) });
   await expect(page.getByRole('heading', { name: 'Choose your Hero' })).toBeVisible();
   expect(await records(page)).toEqual([]);
   await page.reload();

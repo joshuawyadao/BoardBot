@@ -1,11 +1,11 @@
-import { expect, test, type Page } from './test';
+import { expect, setAvailableFile, test, type Page } from './test';
 import { fighterFixture } from '../../src/engine/fixtures/fighterFixture';
 
 async function loadSyntheticFighter(page: Page, seed = 17, data = fighterFixture()) {
   await page.goto('/');
   await page.getByText('Import game data or backup').click();
   await expect(page.locator('#game-data-file')).toBeEnabled();
-  await page.locator('#game-data-file').setInputFiles({
+  await setAvailableFile(page.locator('#game-data-file'), {
     name: 'synthetic-game-data.json', mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(data)),
   });

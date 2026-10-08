@@ -1,4 +1,4 @@
-import { expect, test, type Page } from './test';
+import { expect, setAvailableFile, test, type Page } from './test';
 import { fighterFixture } from '../../src/engine/fixtures/fighterFixture';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
@@ -13,7 +13,7 @@ async function expectFocusedError(page: Page) {
 async function loadGame(page: Page, data = fighterFixture()) {
   await page.goto('/');
   await page.getByText('Import game data or backup').click();
-  await page.locator('#game-data-file').setInputFiles({ name: 'synthetic.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
+  await setAvailableFile(page.locator('#game-data-file'), { name: 'synthetic.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
   await page.getByLabel('Seed (optional, for a repeatable setup)').fill('17');
   await page.getByRole('button', { name: 'Start game', exact: true }).click();
   await expect(page.getByText('Local game in progress.')).toBeVisible();
@@ -113,7 +113,7 @@ test('restores the exact pending d20 response and exports a locally usable backu
       return originalPut.apply(this, args);
     };
   });
-  await page.locator('#game-save-file').setInputFiles({ name: 'boardbot-save.json', mimeType: 'application/json', buffer: Buffer.from(before) });
+  await setAvailableFile(page.locator('#game-save-file'), { name: 'boardbot-save.json', mimeType: 'application/json', buffer: Buffer.from(before) });
   await expectFocusedError(page);
   await expect(page.getByRole('alert')).toContainText('exact imported adventure');
   await expect(page.getByRole('button', { name: 'Choose another backup', exact: true })).toHaveCount(0);
@@ -187,7 +187,7 @@ test('invalid imports retain the save and a damaged current payload can recover 
   const original = await savedPayload(page);
   await page.getByRole('button', { name: 'Saved games' }).click();
   await page.getByText('Import game data or backup').click();
-  await page.locator('#game-save-file').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{broken') });
+  await setAvailableFile(page.locator('#game-save-file'), { name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{broken') });
   await expect(page.getByRole('alert')).toContainText('malformed');
   await expectFocusedError(page);
   await page.getByText('Import game data or backup', { exact: true }).click();
@@ -196,7 +196,7 @@ test('invalid imports retain the save and a damaged current payload can recover 
   await expect(page.locator('.library-import')).toHaveAttribute('open', '');
   await expect(page.locator('#game-save-file')).toBeFocused();
   await expect(page.locator('#game-save-file')).toBeInViewport({ ratio: 1 });
-  await page.locator('#game-save-file').setInputFiles({ name: 'still-bad.json', mimeType: 'application/json', buffer: Buffer.from('{broken') });
+  await setAvailableFile(page.locator('#game-save-file'), { name: 'still-bad.json', mimeType: 'application/json', buffer: Buffer.from('{broken') });
   await expectFocusedError(page);
   expect(await savedPayload(page)).toBe(original);
   await damageCurrent(page, false);
@@ -346,7 +346,7 @@ test('invalid base-data import focuses its guidance and returns to the file cont
   await page.goto('/');
   await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
   await page.getByText('Import game data or backup').click();
-  await page.locator('#game-data-file').setInputFiles({ name: 'invalid.json', mimeType: 'application/json', buffer: Buffer.from('{}') });
+  await setAvailableFile(page.locator('#game-data-file'), { name: 'invalid.json', mimeType: 'application/json', buffer: Buffer.from('{}') });
   await expectFocusedError(page);
   await expect(page.getByRole('alert')).toContainText('existing games and base components are kept');
   const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice']).analyze();

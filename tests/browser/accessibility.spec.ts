@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from './test';
+import { expect, setAvailableFile, test, type Page } from './test';
 import { heroFixture } from '../../src/engine/fixtures/heroFixture';
 
 async function importGame(page: Page, hero = 'Fighter', seed = 17) {
@@ -7,7 +7,7 @@ async function importGame(page: Page, hero = 'Fighter', seed = 17) {
   data.perks = data.perks.filter(perk => perk.id === 'perk-ott-steeltoes');
   await page.goto('/');
   await page.getByText('Import game data or backup').click();
-  await page.locator('#game-data-file').setInputFiles({
+  await setAvailableFile(page.locator('#game-data-file'), {
     name: 'synthetic-accessibility.json', mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(data)),
   });
@@ -197,7 +197,7 @@ test('home, setup, game, panels, action, choice and delete dialog have no automa
   await expect(page.getByRole('button', { name: 'Try sample table' })).toBeEnabled();
   await scan(page, 'home');
   await page.getByText('Import game data or backup').click();
-  await page.locator('#game-data-file').setInputFiles({
+  await setAvailableFile(page.locator('#game-data-file'), {
     name: 'synthetic-accessibility.json', mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(data)),
   });

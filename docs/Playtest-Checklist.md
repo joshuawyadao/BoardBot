@@ -19,10 +19,9 @@ Use the latest successful [verification evidence](Verification.md#reduced-manual
 
 ## Small remaining human review
 
-1. During normal play, judge whether location names, pieces, routes and action/result wording are comfortable and clear. Note confusing steps or hard-to-read combinations; axe cannot fully judge text against painted terrain. There is no separate mandatory setup/reload exercise for each Hero.
-2. On the target Mac, briefly try the keyboard flow with actual Safari and VoiceOver: open information, review a named Move, and reach a required choice when available. Check the spoken names/status, reading order and focus visibility. Automated DOM/engine checks cannot establish the actual assistive experience. Physical touch hardware is a separate spot check when a touch device is a delivery target.
+1. When time permits, finish one owner game and report the Hero, outcome and any confusing or apparently incorrect step. During that same play, judge whether names, pieces, routes and action/result wording are comfortable and clear; axe cannot fully judge text against painted terrain. This retains the established full-game human acceptance gate. There is no separate mandatory setup/reload exercise for each Hero; additional ability feedback can be collected during later normal play.
+2. On the target Mac, briefly try the keyboard flow with actual Safari and VoiceOver: open information, review a named Move, and reach a required choice when available. Check spoken names/status, reading order and focus visibility. Automated DOM/engine checks cannot establish the actual assistive experience. Physical touch hardware is a separate spot check when a touch device is a delivery target.
 3. For physical disconnected-play acceptance, turn off internet after setup while keeping the local server running. Open the same local URL, play, and save/resume; reconnect afterward. The proxy already checks missing external services, but does not exercise the Mac's network settings.
-4. When time permits, finish one owner game and report the Hero, outcome and any confusing or apparently incorrect step. This remains the established full-game human acceptance gate; additional Hero feedback can be collected during later normal play rather than repeating the automated matrix by hand.
 
 A short description with the displayed action/result is enough to investigate. Save backups contain private component data and should stay local.
 
