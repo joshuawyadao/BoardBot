@@ -14,7 +14,7 @@ Finish the illustrated tabletop with remembered presentation preferences, access
 [x] Add focused unit/browser regressions for preference restoration/reset, malformed or unavailable preference storage, retained drafts and pending choices, and keyboard error recovery without rerolling or overwriting saves.
 [x] Add WebKit to public and production browser configuration and CI, install the compatible engine, and address reproduced browser differences without weakening valid tests.
 [x] Update README, UI-Design, Local-Saves, Architecture and Verification to describe implemented behavior, browser coverage and remaining manual acceptance.
-[ ] Run focused tests, npm run verify, npm run test:e2e and npm run test:production; inspect the resulting UI and final diff, commit coherent slices and push the feature branch.
+[x] Run focused tests, npm run verify, npm run test:e2e and npm run test:production; inspect the resulting UI and final diff, commit coherent slices and push the feature branch. Final executable checkpoint 4865c80 passes CI Verify: 148 unit cases, 198 public browser cases and two production cases, with five repository checks. Local follow-up passed 52 board/accessibility/layout cases and four strengthened import-recovery cases across both engines, plus the final production smoke tests and isolated prepared-board WebKit inspection.
 
 ## Open questions
 - None blocking. Layout is a preference for this browser origin across solo games; malformed/unavailable preference storage falls back to defaults and must not block saving. Ephemeral drafts and selected location contents remain unpersisted. WebKit coverage does not imply Safari or VoiceOver certification.
