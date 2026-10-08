@@ -1,6 +1,6 @@
 # Architecture direction
 
-This records the agreed boundaries for the first Horrified: Dungeons & Dragons game and the current synthetic interaction prototype. The React app runs locally with Vite and TypeScript. The prototype targets Node.js 26 with matching Node 26 type definitions and pinned npm package versions; local game storage uses IndexedDB; Chromium is the current automated browser target.
+This records the agreed boundaries for the first Horrified: Dungeons & Dragons game and the current synthetic interaction prototype. The React app runs locally with Vite and TypeScript. The prototype targets Node.js 26 with matching Node 26 type definitions and pinned npm package versions; local game storage uses IndexedDB; automated browser targets are Chromium, WebKit and Firefox, with separate Linux jobs and native macOS M1 WebKit CI.
 
 ## Current prototype
 
@@ -80,7 +80,7 @@ Reject malformed or incompatible saves without replacing the current session. In
 
 ## Offline and portability
 
-Bundle required runtime code and authorized assets locally. Gameplay must not depend on external fonts, remote images, cloud AI, or network APIs. Verify disconnected operation after initial setup with the local server running. Size and piece-count validation lives in `src/data/localGameData.ts`, shared by import/save loading and the server without loading the rules engine into the server configuration. The private startup endpoint is provided by `scripts/localGameData.ts` for Vite development and preview, never as a public build asset; it accepts same-origin loopback requests for one fixed validated file and denies direct private-directory access. Cached base data supports New Game when that file is unavailable. Hosted offline caching and installable desktop packaging are later delivery choices, not capabilities already provided.
+Bundle required runtime code and authorized assets locally. Gameplay must not depend on external fonts, remote images, cloud AI, or network APIs. Production acceptance enforces an exact loopback-origin proxy, verifies external HTTP/HTTPS denial, decodes bundled artwork and exercises cached-base/pending/terminal recovery. Physical disconnected operation after initial setup with the local server running remains a target-device check. Size and piece-count validation lives in `src/data/localGameData.ts`, shared by import/save loading and the server without loading the rules engine into the server configuration. The private startup endpoint is provided by `scripts/localGameData.ts` for Vite development and preview, never as a public build asset; it accepts same-origin loopback requests for one fixed validated file and denies direct private-directory access. Cached base data supports New Game when that file is unavailable. Hosted offline caching and installable desktop packaging are later delivery choices, not capabilities already provided.
 
 Keep UI and persistence adapters separate from rules so the companion and other devices can reuse the same verified behavior. Future strategic bots should receive only the information allowed to their seat; they must use the same legal-command boundary.
 

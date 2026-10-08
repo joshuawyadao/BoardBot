@@ -59,12 +59,14 @@ To check a contribution, install Git, Python 3.9 or newer, and Node.js 26. From 
 
 ```sh
 npm run verify
-npx playwright install chromium webkit
+npx playwright install chromium webkit firefox
 npm run test:e2e
 npm run test:production
 ```
 
-The first command typechecks, builds, runs sample, data, and game-engine tests, and runs repository checks. Public browser tests run in Playwright Chromium and WebKit; use `npm run test:e2e -- --project=chromium` or `--project=webkit` for one engine. `test:production` builds the app and checks startup, pending-save recovery, cached components, and a complete synthetic defeat in both engines against an isolated preview on port 4180, with external HTTP requests blocked. WebKit automation is additional browser-engine evidence, not Safari or VoiceOver certification. `./scripts/verify-repository.sh` remains available for repository checks alone. The shell script works on macOS and Linux; Windows contributors can use WSL. These are contributor prerequisites, not supported platforms for a finished game. No API keys are needed. See [verification](docs/Verification.md) for coverage and limits, and the [owner playtest checklist](docs/Playtest-Checklist.md) for the remaining human acceptance.
+The first command typechecks, builds, runs sample, data, and game-engine tests, and runs repository checks. Public and production browser tests run in Playwright Chromium, WebKit and Firefox; use `npm run test:e2e -- --project=chromium`, `--project=webkit` or `--project=firefox` for one engine. Tests include native touch-event input, compact-board captions/pieces, enlarged text, keyboard focus, reduced motion, real storage failures and complete synthetic games. `test:production` checks built startup, locally decoded map art, cached components, exact pending/terminal recovery and a complete synthetic defeat through a proxy that permits only the local preview on port 4180. External HTTP and HTTPS denial controls verify that boundary.
+
+CI runs independent Linux browser jobs plus WebKit on a standard macOS M1 runner; the required **CI Verify** check succeeds only when every job succeeds. Emulated touch and WebKit execution are additional evidence, not actual touch-hardware, installed Safari or VoiceOver certification. `./scripts/verify-repository.sh` remains available for repository checks alone. The shell script works on macOS and Linux; Windows contributors can use WSL. These are contributor prerequisites, not supported platforms for a finished game. No API keys are needed. See [verification](docs/Verification.md) for coverage and limits, and the [short owner checklist](docs/Playtest-Checklist.md) for remaining human acceptance.
 
 With the verified private packet prepared, `npm run test:private` additionally runs isolated browser games for all five Heroes using those actual components. It requires the ignored prepared JSON (or `BOARDBOT_PRIVATE_DATA`), uses port 4182, and keeps artifacts in the system temporary directory. It is opt-in and excluded from public CI; keep any output private.
 

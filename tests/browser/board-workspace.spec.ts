@@ -545,3 +545,110 @@ test('named Move controls and enlarged panel text work without relying on tiny m
   await expect(row).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(640);
 });
+
+test.describe('touch-sized tabletop controls', () => {
+  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
+
+  test('touch opens information and confirms a named Move and required response exactly once', async ({ page }) => {
+    await load(page, illustratedFixture(), 2);
+    // Playwright's hasTouch enables native tap input across engines. WebKit may still report zero maxTouchPoints.
+    await page.getByRole('button', { name: 'Ready to play', exact: true }).tap();
+    const before = await readSavedState(page);
+
+    await page.getByRole('button', { name: /^Inventory/ }).tap();
+    await page.getByRole('button', { name: 'Monsters', exact: true }).tap();
+    await expect(page.locator('[data-panel="inventory"]')).toBeVisible();
+    await expect(page.locator('[data-panel="monsters"]')).toBeVisible();
+    expect(await readSavedState(page)).toEqual(before);
+    const targetHeights = await page.locator('.h-panel-nav > button, .h-tray .action-card, .h-tray .tray-toggle').evaluateAll(
+      elements => elements.map(element => element.getBoundingClientRect().height),
+    );
+    expect(targetHeights.length).toBeGreaterThan(8);
+    expect(targetHeights.every(height => height >= 44), 'primary touch controls remain at least 44px high').toBe(true);
+
+    await page.getByRole('button', { name: 'Move Connected location' }).tap();
+    const destination = page.getByLabel('Move destination', { exact: true });
+    await destination.tap();
+    await destination.selectOption('location-3');
+    expect(await readSavedState(page)).toEqual(before);
+    await page.getByRole('button', { name: 'Move to selected location', exact: true }).tap();
+    await expect.poll(async () => (await readSavedState(page)).revision).toBe(before.revision + 1);
+    expect((await readSavedState(page)).hero.location).toBe('location-3');
+    await page.getByRole('button', { name: 'Special Action Hero ability' }).tap();
+    await page.getByRole('button', { name: 'Roll special action', exact: true }).tap();
+    await expect(page.locator('.h-pending')).toBeVisible();
+    const pending = page.locator('.h-pending');
+    const choice = pending.getByRole('radio', { name: 'Keep this result' });
+    await choice.tap();
+    await expect(choice).toBeChecked();
+    expect((await pending.locator('.h-check-row').first().boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    const beforeResponse = await readSavedState(page);
+    const confirm = pending.getByRole('button', { name: 'Confirm choice', exact: true });
+    expect((await confirm.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await confirm.tap();
+    await expect.poll(async () => (await readSavedState(page)).revision).toBe(beforeResponse.revision + 1);
+    expect((await readSavedState(page)).commands).toHaveLength(before.commands.length + 3);
+    await expect(page.locator('.h-pending')).toBeHidden();
+  });
+});
+
+test('every illustrated location keeps its named caption and physical pieces inside the compact map', async ({ page }) => {
+  const data = illustratedFixture();
+  await load(page, data);
+  await expect(page.locator('.game-board-caption')).toHaveCount(29);
+  for (const viewport of [{ width: 390, height: 844 }, { width: 800, height: 800 }]) {
+    await page.setViewportSize(viewport);
+    const measurements = await page.locator('.h-game-board.illustrated').evaluate(board => {
+      const rect = (element: Element) => {
+        const { x, y, width, height } = element.getBoundingClientRect();
+        return { x, y, width, height };
+      };
+      return {
+        board: rect(board.querySelector('.game-board-svg')!),
+        floors: Array.from(board.querySelectorAll<HTMLElement>('.h-location'), floor => {
+          const caption = board.querySelector(`[data-caption-for="${floor.dataset.locationId}"] .h-node-name`)!;
+          return { id: floor.dataset.locationId, name: caption.textContent, aria: floor.getAttribute('aria-label'),
+            floor: rect(floor), caption: rect(caption), pieces: Array.from(floor.querySelectorAll('.piece'), rect) };
+        }),
+      };
+    });
+    expect(measurements.floors).toHaveLength(data.board.locations.length);
+    for (const location of data.board.locations) {
+      const entry = measurements.floors.find(floor => floor.id === location.id)!;
+      expect(entry.name).toBe(location.name);
+      expect(entry.aria).toContain(location.name);
+      expect(entry.caption.width).toBeGreaterThan(0);
+      expect(entry.caption.y, `${location.name} caption follows its floor`).toBeGreaterThan(entry.floor.y + entry.floor.height / 2);
+      expect(entry.caption.x, `${location.name} caption stays on the map`).toBeGreaterThanOrEqual(measurements.board.x - 1);
+      expect(entry.caption.x + entry.caption.width).toBeLessThanOrEqual(measurements.board.x + measurements.board.width + 1);
+      expect(entry.caption.y + entry.caption.height).toBeLessThanOrEqual(measurements.board.y + measurements.board.height + 1);
+      for (const piece of entry.pieces) {
+        expect(piece.x).toBeGreaterThanOrEqual(entry.floor.x - 1);
+        expect(piece.y).toBeGreaterThanOrEqual(entry.floor.y - 1);
+        expect(piece.x + piece.width).toBeLessThanOrEqual(entry.floor.x + entry.floor.width + 1);
+        expect(piece.y + piece.height).toBeLessThanOrEqual(entry.floor.y + entry.floor.height + 1);
+      }
+    }
+    expect(measurements.floors.some(floor => floor.pieces.length > 1), 'setup shows clustered physical pieces').toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+  }
+});
+
+test('reduced motion disables transitions and smooth scrolling while native Move focus still works', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await load(page, illustratedFixture());
+  expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);
+  await page.addStyleTag({ content: '.h-panel-nav { transition: opacity 1s; scroll-behavior: smooth; }' });
+  const styles = await page.locator('.h-panel-nav').evaluate(element => ({
+    transition: getComputedStyle(element).transitionDuration,
+    scroll: getComputedStyle(element).scrollBehavior,
+  }));
+  expect(styles).toEqual({ transition: '0s', scroll: 'auto' });
+  const before = await readSavedState(page);
+  await page.getByRole('button', { name: 'Move Connected location' }).press('Enter');
+  await page.getByLabel('Move destination', { exact: true }).selectOption('location-3');
+  await page.getByRole('button', { name: 'Move to selected location', exact: true }).press('Enter');
+  await expect.poll(async () => (await readSavedState(page)).revision).toBe(before.revision + 1);
+  await expect(page.locator('[data-location-id="location-3"]')).toBeFocused();
+  expect((await readSavedState(page)).hero.location).toBe('location-3');
+});

@@ -12,6 +12,7 @@ export default defineConfig({
   projects: [
     { name: 'production-chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'production-webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'production-firefox', use: { ...devices['Desktop Firefox'] } },
   ],
   webServer: {
     command: 'npm run preview -- --port 4180 --strictPort',
