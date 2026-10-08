@@ -52,10 +52,10 @@ test('the built app restores and completes a game behind an enforced local-only 
     // Negative controls must reach the proxy and be denied before DNS or an external connection.
     const probe = await context.newPage();
     expect((await probe.goto('http://boardbot-network-probe.invalid/denied'))!.status()).toBe(403);
-    expect((await probe.goto('http://127.0.0.1:1/denied'))!.status()).toBe(403);
+    expect((await probe.goto('http://127.0.0.1:4181/denied'))!.status()).toBe(403);
     await expect(probe.goto('https://boardbot-network-probe.invalid/denied')).rejects.toThrow();
     expect(proxy.denied).toContain('http://boardbot-network-probe.invalid/denied');
-    expect(proxy.denied).toContain('http://127.0.0.1:1/denied');
+    expect(proxy.denied).toContain('http://127.0.0.1:4181/denied');
     expect(proxy.denied.some(url => url === 'CONNECT boardbot-network-probe.invalid:443')).toBe(true);
     await probe.close();
     const deniedBeforePlay = [...proxy.denied];
@@ -104,6 +104,7 @@ test('the built app restores and completes a game behind an enforced local-only 
     await page.reload();
     await expect(page.getByRole('button', { name: 'New game', exact: true })).toBeEnabled();
     await page.getByRole('button', { name: 'Resume saved game', exact: true }).click();
+    await expect(page.getByText('Local game in progress.')).toBeVisible({ timeout: 15_000 });
     await expect(page.locator('.h-roll-peek [data-testid="roll-effective"]')).toHaveText(value);
     expect(await savedState(page)).toEqual(pending);
     await resolveChoices(page);
@@ -124,6 +125,7 @@ test('the built app restores and completes a game behind an enforced local-only 
     await expect(page.getByRole('button', { name: 'End Hero Phase', exact: true })).toBeDisabled();
     await page.reload();
     await page.getByRole('button', { name: 'Resume saved game', exact: true }).click();
+    await expect(page.getByText('Local game in progress.')).toBeVisible({ timeout: 15_000 });
     await expect(page.locator('.h-end')).toContainText('Defeat');
     expect(await savedState(page)).toEqual(finished);
     expect(requests.some(url => new URL(url).pathname.startsWith('/assets/') && url.endsWith('.js'))).toBe(true);

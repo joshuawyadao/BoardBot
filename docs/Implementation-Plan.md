@@ -13,13 +13,16 @@ Reduce repeated manual acceptance by making the remaining deterministic browser,
 [x] Add bounded emulated touch input, compact all-location captions/pieces and reduced-motion regressions using synthetic illustrated fixtures and normal native input; report application defects before changing test expectations.
 [x] Strengthen production disconnected-network evidence with a real loopback-only proxy, denied HTTP/HTTPS controls, cached-base/pending/terminal recovery and no external gameplay requests; never touch owner network settings or saves.
 [x] Update README, Verification, Playtest-Checklist and the browser-coverage notes in Work-Plan/Architecture to distinguish automation, emulation, native CI and remaining subjective/device checks; preserve durable milestone requirements.
-[ ] Run focused cases, npm run verify, npm run test:e2e, npm run test:production and existing opt-in private acceptance; investigate reproduced failures, inspect diffs and save coherent checkpoints.
-[ ] Push the feature branch, verify the new CI matrix, record exact evidence and leave only the concise human review checklist.
+[x] Run focused cases, npm run verify, npm run test:e2e, npm run test:production and existing opt-in private acceptance; investigate reproduced failures, inspect diffs and save coherent checkpoints.
+[ ] Push the feature branch, verify all four CI browser jobs, record exact evidence and leave only the concise human review checklist.
 
-## Verification in progress
-- Build/typecheck, 148 Vitest cases and five repository checks pass. Chromium/WebKit production acceptance passes with enforced proxy and bundled art; the additional wrong-loopback-port denial and complete public rerun are pending.
-- Chromium passes the new tap, caption/piece and reduced-motion cases. WebKit passes compact geometry and reduced motion; its unsupported maxTouchPoints test assumption was removed while preserving native tap/action assertions. Full browser suites are running.
-- Local Firefox fails at launch before page creation on macOS 27, including a temporary-root control; use the Linux Firefox CI leg for execution and retain the upstream environment limitation in Verification.
+## Local verification and CI handoff
+- Build/typecheck, 148 Vitest cases across 27 files and five repository checks pass. All 102 Chromium public cases pass, including complete victories for all five Heroes. Four focused WebKit cases pass: the formerly stalled keyboard scenario plus native tap, compact captions/pieces and reduced motion.
+- Both final Chromium/WebKit production cases pass with external HTTP/HTTPS and wrong-loopback-port denial controls, bundled map decoding, exact pending/terminal recovery and complete defeat. Visible replay readiness has a bounded 15-second allowance; exact assertions are unchanged.
+- All six existing opt-in private scenarios pass: complete defeat games for all Heroes and Fighter victory at seed 8, turn 18, after 103 legal decisions, with Item conservation and exact replay/recovery. No private artifact is tracked.
+- CI gate controls pass all-success plus each job's failure, skip and cancellation (16 shell controls). Complete CI execution is pending the final source push.
+- The full Mac headless WebKit attempt reproduced a localhost load-event timeout in its first case; eight subsequent cases passed before stopping the run (one interrupted, 92 remaining). Trace responses were local HTTP 200. The isolated rerun passes; no full local WebKit pass is claimed and no assertion was weakened.
+- Local Firefox fails at launch before page creation on macOS 27, including a temporary-root control; the upstream environment issue is recorded in Verification. Linux Firefox and native macOS WebKit CI will supply complete execution evidence.
 
 ## Open questions
 - None blocking. Use standard public-repository CI runners only. Full owner play and actual VoiceOver/device experience remain human acceptance; automated network isolation is not a claim of physically switching off Wi-Fi.
