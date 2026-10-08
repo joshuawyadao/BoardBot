@@ -1,20 +1,20 @@
 # Plan
 
-Finish the illustrated tabletop with remembered presentation preferences, accessible error recovery and automated WebKit coverage. Keep preferences separate from game data and retain the existing engine, save/replay boundaries and manual acceptance requirements.
+Reduce repeated manual acceptance by making the remaining deterministic browser, input, layout and network checks repeatable. Reuse the existing full-game, real-storage and private-component evidence; retain human judgment and the established owner-play/publication gates.
 
 ## Scope
-- In: Browser-wide table panel/tray preferences and Reset layout; error focus and announcements for import, save/retry, recovery and competing-tab failures; WebKit projects and CI coverage; focused regressions, canonical docs, local checkpoints and branch push.
-- Out: Rules/data changes, save migrations, restoring uncommitted drafts or inspected contents across reload, animations, new platforms beyond tested browsers, deployment, PR review requests and merging.
+- In: Firefox public/production coverage; independent Linux browser jobs plus native M1 macOS WebKit CI; coarse-pointer/touch, compact caption/piece and reduced-motion regressions; production network isolation with an enforced loopback-only proxy and a denied-request control; a checklist mapping automated evidence to the smallest remaining human review; validation, checkpoints and branch push.
+- Out: Rules/data or save-format changes, new strategic bots, new required accounts/paid services, publishing private components/artifacts, disabling the owner's network, declaring real-device/VoiceOver certification, waiving source/publication or complete owner-game acceptance, deployment and merging.
 
 ## Action items
-[x] Read README, Architecture, Local-Saves, UI-Design, Verification and existing browser/configuration contracts; confirm the clean codex/illustrated-tabletop-ui branch.
-[x] Checkpoint the resolved plan before implementation (c2dba71).
-[x] Add validated, versioned, nonfatal presentation preferences for persistent information panels, their sides, decision-panel side and collapsed tray; keep transient inspector/selection state out of storage and add Reset layout without changing game progress or required choices.
-[x] Give asynchronous errors a visible focus target with specific recovery guidance; announce save progress and success without duplicate alert/status content, including retry, import, previous-save and stale-tab failures.
-[x] Add focused unit/browser regressions for preference restoration/reset, malformed or unavailable preference storage, retained drafts and pending choices, and keyboard error recovery without rerolling or overwriting saves.
-[x] Add WebKit to public and production browser configuration and CI, install the compatible engine, and address reproduced browser differences without weakening valid tests.
-[x] Update README, UI-Design, Local-Saves, Architecture and Verification to describe implemented behavior, browser coverage and remaining manual acceptance.
-[x] Run focused tests, npm run verify, npm run test:e2e and npm run test:production; inspect the resulting UI and final diff, commit coherent slices and push the feature branch. Final executable checkpoint 4865c80 passes CI Verify: 148 unit cases, 198 public browser cases and two production cases, with five repository checks. Local follow-up passed 52 board/accessibility/layout cases and four strengthened import-recovery cases across both engines, plus the final production smoke tests and isolated prepared-board WebKit inspection.
+[x] Read README, Architecture, Playtest-Checklist, Work-Plan/Roadmap, Rules-Reference/Game-Data-Checklist and current browser/production/private contracts; identify gaps without duplicating setup, replay or five-Hero outcomes.
+[ ] Checkpoint this resolved plan on codex/illustrated-tabletop-ui before implementation.
+[ ] Add Firefox to public/production projects and split CI by browser/OS, preserving the required CI Verify result and one-worker isolation; add a standard native macOS M1 WebKit job.
+[ ] Add bounded touch/coarse-pointer, compact all-location captions/pieces and reduced-motion regressions using synthetic illustrated fixtures and normal native input; report application defects before changing test expectations.
+[ ] Strengthen production disconnected-network evidence with a real loopback-only proxy, denied HTTP/HTTPS controls, cached-base/pending/terminal recovery and no external gameplay requests; never touch owner network settings or saves.
+[ ] Update README, Verification, Playtest-Checklist and the browser-coverage notes in Work-Plan/Architecture to distinguish automation, emulation, native CI and remaining subjective/device checks; preserve durable milestone requirements.
+[ ] Run focused cases, npm run verify, npm run test:e2e, npm run test:production and existing opt-in private acceptance; investigate reproduced failures, inspect diffs and save coherent checkpoints.
+[ ] Push the feature branch, verify the new CI matrix, record exact evidence and leave only the concise human review checklist.
 
 ## Open questions
-- None blocking. Layout is a preference for this browser origin across solo games; malformed/unavailable preference storage falls back to defaults and must not block saving. Ephemeral drafts and selected location contents remain unpersisted. WebKit coverage does not imply Safari or VoiceOver certification.
+- None blocking. Use standard public-repository CI runners only. Full owner play and actual VoiceOver/device experience remain human acceptance; automated network isolation is not a claim of physically switching off Wi-Fi.
