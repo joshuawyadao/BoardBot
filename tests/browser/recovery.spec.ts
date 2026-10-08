@@ -190,8 +190,12 @@ test('invalid imports retain the save and a damaged current payload can recover 
   await page.locator('#game-save-file').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{broken') });
   await expect(page.getByRole('alert')).toContainText('malformed');
   await expectFocusedError(page);
+  await page.getByText('Import game data or backup', { exact: true }).click();
+  await expect(page.locator('.library-import')).not.toHaveAttribute('open', '');
   await page.getByRole('button', { name: 'Choose another backup', exact: true }).press('Enter');
+  await expect(page.locator('.library-import')).toHaveAttribute('open', '');
   await expect(page.locator('#game-save-file')).toBeFocused();
+  await expect(page.locator('#game-save-file')).toBeInViewport({ ratio: 1 });
   await page.locator('#game-save-file').setInputFiles({ name: 'still-bad.json', mimeType: 'application/json', buffer: Buffer.from('{broken') });
   await expectFocusedError(page);
   expect(await savedPayload(page)).toBe(original);
@@ -347,8 +351,12 @@ test('invalid base-data import focuses its guidance and returns to the file cont
   await expect(page.getByRole('alert')).toContainText('existing games and base components are kept');
   const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice']).analyze();
   expect(axe.violations.map(item => item.id)).toEqual([]);
+  await page.getByText('Import game data or backup', { exact: true }).click();
+  await expect(page.locator('.library-import')).not.toHaveAttribute('open', '');
   await page.getByRole('button', { name: 'Choose another base game file', exact: true }).press('Enter');
+  await expect(page.locator('.library-import')).toHaveAttribute('open', '');
   await expect(page.locator('#game-data-file')).toBeFocused();
+  await expect(page.locator('#game-data-file')).toBeInViewport({ ratio: 1 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   expect(await allPayloads(page)).toEqual([]);
 });

@@ -24,11 +24,19 @@ function ErrorNotice({ error, busy = false, className = 'library-error' }: { err
   useLayoutEffect(() => {
     if (!busy) { errorRef.current?.focus(); errorRef.current?.scrollIntoView({ block: 'center' }); }
   }, [error, busy]);
+  function focusFileInput() {
+    if (!error.returnTo) return;
+    const input = document.getElementById(error.returnTo.id);
+    const disclosure = input?.closest('details');
+    if (disclosure) disclosure.open = true;
+    input?.focus();
+    input?.scrollIntoView({ block: 'center' });
+  }
   return <div className="local-error-recovery">
     <div className={className} role="alert" tabIndex={-1} ref={errorRef}>
       <p>{error.message}</p><p>{error.guidance}</p>
     </div>
-    {error.returnTo && <button className="quiet-button" onClick={() => document.getElementById(error.returnTo!.id)?.focus()}>{error.returnTo.label}</button>}
+    {error.returnTo && <button className="quiet-button" onClick={focusFileInput}>{error.returnTo.label}</button>}
   </div>;
 }
 
