@@ -62,11 +62,14 @@ function conserveItems(state: FighterGame) {
 async function perform(page: Page, data: GameData, state: FighterGame, action: HeroAction) {
   if (action.kind === 'choose') {
     const inputs = page.locator('.h-pending input');
-    await expect(inputs.first()).toBeEnabled();
+    const destination = page.locator('.h-pending').getByLabel('Wizard destination', { exact: true });
+    if (await destination.count()) await expect(destination).toBeEnabled();
+    else await expect(inputs.first()).toBeEnabled();
     for (const id of action.selected) {
       const index = state.pending!.options.findIndex(option => option.id === id);
       expect(index, 'the planned choice must be offered').toBeGreaterThanOrEqual(0);
-      await inputs.nth(index).check();
+      if (await destination.count()) await destination.selectOption(id);
+      else await inputs.nth(index).check();
     }
     await page.locator('.h-pending').getByRole('button', { name: 'Confirm choice', exact: true }).click();
     return;

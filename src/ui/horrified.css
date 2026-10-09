@@ -80,3 +80,56 @@
 .local-import select { min-height: 36px; border: 1px solid var(--line); border-radius: 5px; background: #fffef9; padding: 6px; }
 .saved-game > button, .saved-game details button, .save-status .confirm-button { min-height: 36px; padding: 8px 12px; border-radius: 6px; font-size: 12px; }
 @media (pointer: coarse) { .saved-game button, .save-status button { min-height: 44px; } }
+
+/* Controls shared by the solo table's action and decision panels. */
+.h-workspace-table .h-action-editor { color: #e5e7db; }
+.h-workspace-table .h-action-editor h3 { color: #f2d6aa; }
+.h-workspace-table .h-action-editor fieldset,
+.h-workspace-table .h-pending fieldset {
+  border-color: #65706a;
+  background: #17252c;
+}
+.h-workspace-table .h-action-editor legend,
+.h-workspace-table .h-pending legend,
+.h-workspace-table .h-reveal legend { color: #e0c38e; }
+.h-workspace-table .h-check-row { color: #f0ecdf; }
+.h-workspace-table .h-check-row:hover { background: #2b4047; }
+.h-workspace-table .h-check-row:has(input:checked) { background: #31504f; }
+.h-workspace-table .h-check-row input { accent-color: #b3ddc9; }
+.h-workspace-table .h-preview { color: #c6d2c9; }
+.h-workspace-table .h-controls { border-top-color: #6b604e; }
+.h-workspace-table .h-pending {
+  border-color: #c99c59;
+  background: #423426;
+  color: #fff1d8;
+}
+.h-workspace-table .h-pending p { color: #f3e4cc; }
+.h-workspace-table .h-info-card { background: #1b2a33; color: #e7e7dc; }
+.h-workspace-table .h-info-card h2,
+.h-workspace-table .h-info-card h3 { color: #f2d3a3; }
+.h-workspace-table .h-eyes .done { color: #b7d9ae; }
+.h-workspace-table .h-displacement-grid > div {
+  border-color: #64706b;
+  background: #24343a;
+  color: #f0eadb;
+}
+.h-workspace-table .h-displacement-grid > div.filled {
+  border-color: #b08a55;
+  background: #514535;
+}
+.h-workspace-table .h-displacement-grid small { color: #c8d3ce; }
+.h-workspace-table .h-error {
+  border-color: #b66a61;
+  background: #4a2528;
+  color: #ffe1d8;
+}
+.h-workspace-table .h-end {
+  border-color: #ae915d;
+  background: #243d39;
+  color: #f9eccd;
+}
+.h-workspace-table .local-import select {
+  border-color: #71807a;
+  background: #1d2e37;
+  color: #fff3dc;
+}

@@ -14,7 +14,7 @@
 .roll-result-value { flex: none; font: 700 24px/1 Georgia, serif; }
 .roll-result-math, .roll-result-effect { margin: 4px 0 0; line-height: 1.4; }
 .roll-result-math { font-variant-numeric: tabular-nums; }
-.roll-result-bound { white-space: nowrap; }
+.roll-result-bound { white-space: normal; overflow-wrap: anywhere; }
 .roll-result-effect { border-top: 1px solid #d2dfc8; padding-top: 5px; }
 .roll-result-compact { padding: 7px 10px; }
 .roll-result-compact .roll-result-value { font-size: 20px; }
@@ -26,3 +26,42 @@
 .roll-guide th { width: 64px; white-space: nowrap; }
 .roll-guide-match { background: #e4f1d7; }
 .roll-guide-note { color: #5b6c57; }
+
+/* Results read like a small inlaid die and ledger on the illustrated table. */
+.h-workspace-table .roll-result {
+  border-color: #986f48;
+  border-left: 4px solid #d2a760;
+  background: linear-gradient(145deg, #29323a, #17242d);
+  color: #f7edda;
+  box-shadow: inset 0 1px #f8d69e35;
+}
+.h-workspace-table .roll-result-heading strong { color: #f4d7a3; }
+.h-workspace-table .roll-result-reason { color: #d1d8d0; }
+.h-workspace-table .roll-result-value {
+  min-width: 34px;
+  min-height: 34px;
+  padding: 4px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #ca8d6d;
+  border-radius: 7px;
+  background: linear-gradient(140deg, #a24537, #601e22);
+  box-shadow: inset 0 1px #ffd2aa66, 0 2px 8px #0007;
+  color: #fff4dd;
+}
+.h-workspace-table .roll-result-effect { border-top-color: #6b6458; }
+.h-workspace-table .roll-guide { color: #efe9d9; }
+.h-workspace-table .roll-guide th,
+.h-workspace-table .roll-guide td { border-bottom-color: #59696a; }
+.h-workspace-table .roll-guide th { color: #f2d29c; }
+.h-workspace-table .roll-guide-match { background: #305751; }
+.h-workspace-table .roll-guide-note { color: #c7d6d1; }
+.h-workspace-table .roll-result-value { position: relative; border: 0; background: transparent; box-shadow: none; font-size: 0; padding: 0; width: 52px; height: 52px; }
+.h-workspace-table .roll-result-value svg { width: 100%; height: 100%; }
+.h-workspace-table .roll-result-compact .roll-result-value { width: 36px; height: 36px; }
+.h-workspace-table .roll-result { font-size: 16px; }
+.h-workspace-table .h-roll-peek .roll-result { font-size: 13px; }
+.h-workspace-table .roll-guide { font-size: 16px; }
+.roll-guide-applied { display: inline; color: #f8de84; }
+.h-workspace-table .roll-guide-match { background: #27565a; box-shadow: inset 3px 0 #efc55d; }
+.h-workspace-table .roll-result-math { overflow-wrap: anywhere; }

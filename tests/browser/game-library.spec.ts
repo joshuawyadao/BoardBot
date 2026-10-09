@@ -1,4 +1,4 @@
-import { expect, test, type Page } from './test';
+import { expect, setAvailableFile, test, type Page } from './test';
 import { heroFixture } from '../../src/engine/fixtures/heroFixture';
 
 async function records(page: Page) {
@@ -20,6 +20,33 @@ async function start(page: Page, hero: string) {
   await expect(page.getByRole('heading', { name: `Horrified ${hero} table`, exact: true })).toBeAttached();
   await expect(page.getByText('Local game in progress.')).toBeVisible();
 }
+
+test('file import waits for the available control while startup components are still loading', async ({ page }) => {
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  let requested!: () => void;
+  const started = new Promise<void>(resolve => { requested = resolve; });
+  await page.route('**/__boardbot/local-game-data', async route => {
+    requested();
+    await gate;
+    await route.fulfill({ status: 404, body: '' });
+  });
+  await page.goto('/');
+  await started;
+  await page.getByText('Import game data or backup').click();
+  const input = page.locator('#game-data-file');
+  await expect(input).toBeDisabled();
+  // Keep startup pending during the initial file attempt; a native picker cannot use this input yet.
+  const timer = setTimeout(release, 1500);
+  try {
+    await setAvailableFile(input, { name: 'synthetic.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(heroFixture())) });
+    await expect(page.getByLabel('Hero', { exact: true })).toBeVisible();
+    await page.getByLabel('Hero', { exact: true }).selectOption('Wizard');
+    await page.getByRole('button', { name: 'Start game', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Horrified Wizard table', exact: true })).toBeVisible();
+    expect(await records(page)).toHaveLength(1);
+  } finally { clearTimeout(timer); release(); }
+});
 
 test('prepared base game starts after Hero selection and preserves independent adventures', async ({ page }) => {
   await page.route('**/__boardbot/local-game-data', route => route.fulfill({ json: heroFixture() }));
@@ -72,7 +99,7 @@ test('a fresh clone offers one-time import and a sample, then remembers the base
   await expect(page.getByRole('region', { name: 'The training grounds' })).toBeVisible();
   await page.getByRole('button', { name: 'Saved games', exact: true }).click();
   await page.getByText('Import game data or backup', { exact: true }).click();
-  await page.locator('#game-data-file').setInputFiles({ name: 'synthetic.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(heroFixture())) });
+  await setAvailableFile(page.locator('#game-data-file'), { name: 'synthetic.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(heroFixture())) });
   await expect(page.getByRole('heading', { name: 'Choose your Hero' })).toBeVisible();
   expect(await records(page)).toEqual([]);
   await page.reload();
@@ -119,6 +146,8 @@ test('a failed initial save retries the same setup once without creating a secon
   });
   await page.getByRole('button', { name: 'Start game', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Retry saving new game' })).toBeVisible();
+  await expect(page.getByRole('alert')).toBeFocused();
+  await expect(page.getByRole('alert')).toContainText('exact setup');
   expect(await records(page)).toEqual([]);
   await page.getByRole('button', { name: 'Retry saving new game' }).click();
   await expect(page.getByText('Local Cleric game')).toBeVisible();
@@ -226,6 +255,8 @@ test('failed deletion keeps the saved game and shows a retryable error', async (
   const confirmation = page.getByRole('dialog');
   await confirmation.getByRole('button', { name: 'Delete game', exact: true }).click();
   await expect(confirmation.getByRole('alert')).toContainText('Simulated delete failure');
+  await expect(confirmation.getByRole('alert')).toBeFocused();
+  await expect(confirmation.getByRole('alert')).toBeInViewport({ ratio: 1 });
   expect(await records(page)).toEqual(before);
   await expect(confirmation.getByRole('button', { name: 'Delete game', exact: true })).toBeEnabled();
   await confirmation.getByRole('button', { name: 'Delete game', exact: true }).click();
@@ -249,6 +280,7 @@ test('a stale deletion cannot remove newer progress and an open tab cannot recre
   const confirmation = page.getByRole('dialog');
   await confirmation.getByRole('button', { name: 'Delete game', exact: true }).click();
   await expect(confirmation.getByRole('alert')).toContainText('changed or was removed in another tab');
+  await expect(confirmation.getByRole('alert')).toBeFocused();
   expect(await records(page)).toEqual(latest);
   await confirmation.getByRole('button', { name: 'Cancel', exact: true }).click();
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
@@ -257,6 +289,7 @@ test('a stale deletion cannot remove newer progress and an open tab cannot recre
   await other.getByRole('button', { name: 'Move Connected location' }).click();
   await other.getByRole('button', { name: /Room 2/ }).click();
   await expect(other.getByRole('alert')).toContainText('deleted in another tab');
+  await expect(other.getByRole('alert')).toBeFocused();
   await expect(other.getByRole('button', { name: 'Retry saving', exact: true })).toBeVisible();
   expect(await records(page)).toEqual([]);
   await other.close();
