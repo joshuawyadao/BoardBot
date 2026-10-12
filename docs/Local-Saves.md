@@ -39,3 +39,13 @@ Loading validates the embedded data, bounds file size and physical piece counts,
 Files are limited to 8 MiB of serialized text and 5,000 commands. This supports ordinary scoped games while bounding recovery work; saves above these limits are rejected. Browser quota, storage permissions, and available disk space can still prevent writes. The UI reports those failures rather than claiming that progress was saved.
 
 Recovery and backup tests use synthetic data. Full owner play acceptance remains separate from automated replay and browser checks.
+
+## Presentation preferences and error recovery
+
+The solo table stores versioned layout preferences under `boardbot-table-layout` in this origin's localStorage. Open information panels, their sides (including the inspector side), the action/choice/setup panel side and collapsed action tray apply across solo games in this browser. Inspector contents, draft selections and game progress are not stored there. Layout is excluded from portable backups. Invalid or unavailable preference storage falls back to defaults without locking gameplay or changing IndexedDB saves.
+
+**Reset layout** closes optional panels, places contextual panels on the right and expands the tray. It preserves an unfinished action, a required-choice selection and all saved outcomes. Clearing browser site data also clears these preferences.
+
+Asynchronous save, import, previous-save recovery and competing-tab errors focus a visible alert with operation-specific next steps. A rejected action that never reaches saving instead explains that no progress changed and permits a fresh legal action. Save progress/success uses a separate polite status; the alert is not nested inside that status. Invalid file imports offer a button returning focus to their file input. A valid backup whose initial write fails retains that imported adventure for **Retry saving new game** instead of asking for a different file.
+
+**Retry saving** continues the same session and saves the exact candidate. Explicit **Discard unsaved action and load latest save** installs the validated stored session with fresh drafts and restored layout preferences. Recovery returns focus to the saved status or the restored required choice. None of these presentation changes adds a command, rerolls a result, bypasses stale-write checks or changes the save codec.

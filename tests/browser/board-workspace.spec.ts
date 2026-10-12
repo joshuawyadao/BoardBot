@@ -1,4 +1,4 @@
-import { expect, test, type Page } from './test';
+import { expect, setAvailableFile, test, type Page } from './test';
 import type { GameData } from '../../src/data/gameData';
 import { heroFixture } from '../../src/engine/fixtures/heroFixture';
 
@@ -24,10 +24,34 @@ function layoutFixture(): GameData {
   return data;
 }
 
+/** Accepted topology with invented component text; no private packet is needed. */
+function illustratedFixture(): GameData {
+  const data = layoutFixture();
+  const pairs = [
+    ['1', '3'], ['3', '5'], ['5', '6'], ['3', '2'], ['2', '4'], ['5', '4'], ['4', '7'],
+    ['4', 'castle-corkscrew'], ['7', '8'], ['8', 'the-yawning-portal-the-well'],
+    ['14', '13'], ['14', 'teleportation-circle-arcane-chambers'], ['13', 'teleportation-circle-arcane-chambers'],
+    ['13', '11'], ['11', '12'], ['11', 'stairway-to-arcane-chambers'],
+    ['stairway-to-arcane-chambers', 'teleportation-circle-dungeon-level'],
+    ['stairway-to-arcane-chambers', 'entry-well'], ['10', 'entry-well'], ['entry-well', '9'],
+    ['15', '16'], ['15', 'skullport-gate'], ['15', 'teleportation-circle-skullport'],
+    ['skullport-gate', '17'], ['17', 'teleportation-circle-skullport'],
+    ['18', '19'], ['19', '20'], ['19', 'teleportation-circle-wyllowwood'],
+  ];
+  data.board.edges = pairs.map(([from, to]) => ({ from: `location-${from}`, to: `location-${to}`, kind: 'ordinary' }));
+  data.board.edges.push(
+    { from: 'location-castle-corkscrew', to: 'location-skullport-gate', kind: 'passage' },
+    { from: 'location-the-yawning-portal-the-well', to: 'location-entry-well', kind: 'passage' },
+  );
+  const circles = data.board.locations.filter(location => location.kind === 'circle').map(location => location.id);
+  circles.forEach((from, index) => circles.slice(index + 1).forEach(to => data.board.edges.push({ from, to, kind: 'teleport' })));
+  return data;
+}
+
 async function load(page: Page, data: GameData, seed = 2, hero = 'Fighter') {
   await page.goto('/');
   await page.getByText('Import game data or backup').click();
-  await page.locator('#game-data-file').setInputFiles({ name: 'synthetic-layout.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
+  await setAvailableFile(page.locator('#game-data-file'), { name: 'synthetic-layout.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
   await page.getByLabel('Hero', { exact: true }).selectOption(hero);
   await page.getByLabel('Seed (optional, for a repeatable setup)').fill(String(seed));
   await page.getByRole('button', { name: 'Start game', exact: true }).click();
@@ -35,25 +59,44 @@ async function load(page: Page, data: GameData, seed = 2, hero = 'Fighter') {
 }
 
 async function expectWholeBoard(page: Page) {
-  const fit = await page.locator('.h-board-fit').boundingBox();
-  expect(fit).not.toBeNull();
+  const measured = await page.locator('.h-board-fit').evaluate(element => {
+    const rect = (node: Element) => {
+      const { x, y, width, height } = node.getBoundingClientRect();
+      return { x, y, width, height };
+    };
+    return {
+      fit: rect(element),
+      fits: element.scrollWidth <= element.clientWidth && element.scrollHeight <= element.clientHeight,
+      nodes: Array.from(element.querySelectorAll('.h-location'), node => ({
+        box: rect(node),
+        markers: Array.from(node.querySelectorAll('.game-board-number, .game-board-passage-badge, .piece-count, .game-board-selected'), rect),
+      })),
+    };
+  });
+  const { fit } = measured;
   const viewport = page.viewportSize()!;
-  expect(fit!.y).toBeGreaterThanOrEqual(0);
-  expect(fit!.y + fit!.height).toBeLessThanOrEqual(viewport.height);
-  for (const node of await page.locator('.h-location').all()) {
-    const box = (await node.boundingBox())!;
-    expect(box.x).toBeGreaterThanOrEqual(fit!.x);
-    expect(box.x + box.width).toBeLessThanOrEqual(fit!.x + fit!.width);
-    expect(box.y).toBeGreaterThanOrEqual(fit!.y);
-    expect(box.y + box.height).toBeLessThanOrEqual(fit!.y + fit!.height);
+  expect(fit.y).toBeGreaterThanOrEqual(0);
+  expect(fit.y + fit.height).toBeLessThanOrEqual(viewport.height);
+  for (const { box, markers } of measured.nodes) {
+    expect(box.x).toBeGreaterThanOrEqual(fit.x);
+    expect(box.x + box.width).toBeLessThanOrEqual(fit.x + fit.width);
+    expect(box.y).toBeGreaterThanOrEqual(fit.y);
+    expect(box.y + box.height).toBeLessThanOrEqual(fit.y + fit.height);
+    for (const marker of markers) {
+      expect(marker.x, 'piece counts and floor markers belong to their floor').toBeGreaterThanOrEqual(box.x - 1);
+      expect(marker.y).toBeGreaterThanOrEqual(box.y - 1);
+      expect(marker.x + marker.width).toBeLessThanOrEqual(box.x + box.width + 1);
+      expect(marker.y + marker.height).toBeLessThanOrEqual(box.y + box.height + 1);
+    }
   }
-  expect(await page.locator('.h-board-fit').evaluate(element => element.scrollWidth <= element.clientWidth && element.scrollHeight <= element.clientHeight)).toBe(true);
+  expect(measured.fits).toBe(true);
 }
 
 test('all 29 locations fit desktop and smaller windows with panels on either side', async ({ page }) => {
   await load(page, layoutFixture());
   await expect(page.locator('.h-location')).toHaveCount(29);
   await expect(page.locator('.game-board-region')).toHaveCount(5);
+  await expect(page.locator('.game-board-art')).toHaveCount(0); // painted roads would misrepresent this invented graph
   for (const viewport of [{ width: 1440, height: 900 }, { width: 1024, height: 768 }, { width: 800, height: 800 }]) {
     await page.setViewportSize(viewport);
     await expectWholeBoard(page);
@@ -73,6 +116,124 @@ test('all 29 locations fit desktop and smaller windows with panels on either sid
   await page.setViewportSize({ width: 390, height: 844 });
   await expectWholeBoard(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test('pieces never block inspection of another illustrated floor when actions are hidden', async ({ page }) => {
+  test.setTimeout(120_000); // Normal pointer inspection and focus restoration at all 29 floors.
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  const data = illustratedFixture();
+  data.heroes.find(hero => hero.id === 'hero-fighter')!.start = 'location-10';
+  await load(page, data, 8);
+  await page.getByRole('button', { name: 'Ready to play', exact: true }).click();
+  await page.getByRole('button', { name: /Hide actions/ }).click();
+  const before = await readSavedState(page);
+  for (const location of data.board.locations) {
+    const floor = page.locator(`[data-location-id="${location.id}"]`);
+    await floor.click();
+    await expect(page.locator('[data-panel="inspector"]')).toContainText(location.name);
+    await page.getByRole('button', { name: 'Close Location inspector', exact: true }).click();
+    await expect(floor).toBeFocused();
+  }
+  expect(await readSavedState(page)).toEqual(before);
+});
+
+test('illustrated floors, portals and passage pairs retain keyboard movement and recovery', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await load(page, illustratedFixture());
+  const board = page.locator('.h-game-board.illustrated');
+  await expect(board).toBeVisible();
+  const art = board.locator('.game-board-art');
+  await expect(art).toHaveCount(1);
+  const loaded = await art.evaluate(async element => {
+    const image = new Image();
+    image.src = element.getAttribute('href')!;
+    await image.decode();
+    return image.naturalWidth > 500 && image.naturalHeight > 500;
+  });
+  expect(loaded).toBe(true);
+  await expect(board.locator('.game-board-route.ordinary')).toHaveCount(28);
+  await expect(board.locator('.game-board-route.passage, .game-board-route.teleport')).toHaveCount(0);
+  await expect(board.locator('.game-board-portal-runes')).toHaveCount(4);
+  expect((await board.locator('.game-board-passage-badge').allTextContents()).sort()).toEqual(['A', 'A', 'B', 'B']);
+  const floorStyles = await board.locator('.h-location').evaluateAll(elements => elements.map(element => {
+    const style = getComputedStyle(element);
+    return { background: style.backgroundColor, border: style.borderTopWidth, shadow: style.boxShadow };
+  }));
+  expect(floorStyles.every(style => style.background === 'rgba(0, 0, 0, 0)' && style.border === '0px' && style.shadow === 'none')).toBe(true);
+  await page.getByRole('button', { name: 'Move Connected location' }).click();
+  await expect(board.locator('.h-location.reachable')).toHaveCount(2);
+  const target = board.locator('[data-location-id="location-3"]');
+  await target.focus();
+  await expect(target).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(board.locator('.h-location.current')).toHaveAttribute('data-location-id', 'location-3');
+  await expect(page.locator('.h-tray .action-budget')).toContainText('3 / 4');
+  for (const name of [/^Inventory/, /^Latest result$/]) await page.getByRole('button', { name }).click();
+  await expectWholeBoard(page);
+  await page.reload();
+  await page.getByRole('button', { name: 'Resume saved game', exact: true }).click();
+  await expect(board.locator('.h-location.current')).toHaveAttribute('data-location-id', 'location-3');
+  await expect(art).toHaveCount(1);
+  await expect(page.locator('.h-tray .action-budget')).toContainText('3 / 4');
+});
+
+for (const [at, label] of [
+  ['location-2', 'Twilight Watchtower'],
+  ['location-stairway-to-arcane-chambers', 'Stairway to Arcane Chambers'],
+] as const) test(`crowded pieces and the complete ${label} name fit their integrated location`, async ({ page }) => {
+  const data = illustratedFixture();
+  data.heroes.find(hero => hero.id === 'hero-fighter')!.start = at;
+  data.board.locations.find(location => location.id === at)!.name = label;
+  data.board.lairLocations[0] = at;
+  data.setup!.beholderLocation = at;
+  data.setup!.displacerLocation = at;
+  data.board.monsterStarts.forEach(start => { start.location = at; });
+  data.items.forEach(item => { item.locations = Array.from({ length: item.quantity }, () => at); });
+  await load(page, data);
+  const floor = page.locator(`[data-location-id="${at}"]`);
+  await expect(floor.locator('.piece')).toHaveCount(5); // Hero, both Monsters, 12 Items and unrevealed Lair
+  await expect(floor).toHaveAttribute('aria-label', /Beholder, Displacer Beast, 12 Items.*Unrevealed Lair/);
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 1024, height: 768 }]) {
+    await page.setViewportSize(viewport);
+    const bounds = (await floor.boundingBox())!;
+    const name = page.locator(`[data-caption-for="${at}"] .h-node-name`);
+    await expect(name).toHaveText(label);
+    const nameBounds = (await name.boundingBox())!;
+    const boardBounds = (await page.locator('.game-board-svg').boundingBox())!;
+    expect(nameBounds.y, 'caption sits on the lower rim outside the pieces').toBeGreaterThan(bounds.y + bounds.height / 2);
+    expect(nameBounds.x).toBeGreaterThanOrEqual(boardBounds.x);
+    expect(nameBounds.x + nameBounds.width).toBeLessThanOrEqual(boardBounds.x + boardBounds.width);
+    expect(nameBounds.y + nameBounds.height).toBeLessThanOrEqual(boardBounds.y + boardBounds.height);
+    for (const piece of await floor.locator('.piece').all()) {
+      await expect(piece).toBeVisible();
+      const box = (await piece.boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(bounds.x - 1);
+      expect(box.y).toBeGreaterThanOrEqual(bounds.y - 1);
+      expect(box.x + box.width).toBeLessThanOrEqual(bounds.x + bounds.width + 1);
+      expect(box.y + box.height).toBeLessThanOrEqual(bounds.y + bounds.height + 1);
+    }
+  }
+});
+
+test('paired passages show only the relevant trace and move to their matching endpoint', async ({ page }) => {
+  const data = illustratedFixture();
+  data.heroes.find(hero => hero.id === 'hero-fighter')!.start = 'location-castle-corkscrew';
+  await load(page, data);
+  const start = page.locator('[data-location-id="location-castle-corkscrew"]');
+  const destination = page.locator('[data-location-id="location-skullport-gate"]');
+  for (const endpoint of [start, destination]) {
+    await expect(endpoint).toHaveAttribute('data-passage-label', 'A');
+    await expect(endpoint.locator('.game-board-passage-badge')).toBeVisible();
+    await expect(endpoint).toHaveAttribute('aria-label', /Secret passage A/);
+  }
+  await expect(page.locator('.game-board-route.passage')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Move Connected location' }).click();
+  await expect(page.locator('.game-board-route.passage.highlighted')).toHaveCount(1);
+  await expect(page.locator('.h-location.reachable')).toHaveCount(2);
+  await destination.click();
+  await expect(destination).toHaveClass(/current/);
+  await expect(page.locator('.game-board-route.passage')).toHaveCount(0);
+  await expect(page.locator('.h-tray .action-budget')).toContainText('3 / 4');
 });
 
 test('teleport links appear only for a relevant Move and do not alter the legal graph', async ({ page }) => {
@@ -119,10 +280,22 @@ test('special ranges and confirmation stay visible, then a saved response displa
   await expect(summary.getByTestId('roll-status')).toHaveText('Awaiting response');
   await expect(summary).toBeInViewport();
   await expect(page.getByRole('radio', { name: 'Keep this result' })).toBeChecked();
+  // Panel controls may overflow; the public roll must stay visible beside them.
+  for (const viewport of [{ width: 800, height: 800 }, { width: 1024, height: 768 }]) {
+    await page.setViewportSize(viewport);
+    await page.getByRole('button', { name: 'Required choice', exact: true }).click();
+    await expect(page.locator('.h-pending h2')).toBeFocused();
+    await expect(summary).toBeInViewport({ ratio: 1 });
+    expect(await summary.evaluate(element => element.scrollWidth <= element.clientWidth), 'roll text and die fit inside the visible summary').toBe(true);
+  }
   await page.reload();
   await page.getByRole('button', { name: 'Resume saved game' }).click();
-  await expect(context.getByTestId('roll-effective')).toHaveText(value);
-  await expect(context.getByTestId('roll-status')).toHaveText('Awaiting response');
+  await expect(page.locator('[data-panel="inventory"]')).toBeVisible();
+  await expect(context.getByTestId('roll-effective')).toHaveCount(0); // Restored panels keep the compact summary instead of duplicating the roll.
+  await expect(summary.getByTestId('roll-effective')).toHaveText(value);
+  await expect(summary.getByTestId('roll-status')).toHaveText('Awaiting response');
+  await expect(summary).toBeInViewport();
+  await expect(page.getByRole('radio', { name: 'Keep this result' })).not.toBeChecked();
   await page.locator('.h-pending').getByRole('radio').last().check();
   await expect(page.getByRole('button', { name: 'Confirm choice', exact: true })).toBeInViewport();
   await page.getByRole('radio', { name: 'Keep this result' }).check();
@@ -221,7 +394,7 @@ test('Wizard destination 17 explains relocating a Monster already on the board a
   await expect(choice).toContainText('initial roll 5');
   await expect(choice).toContainText('destination roll 17');
   await expect(page.locator('.h-location.wizard-destination')).toHaveAttribute('aria-label', /Test room 17/);
-  await expect(page.locator('.h-location.wizard-destination')).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.locator('.h-location.wizard-destination')).toHaveAttribute('data-move-enabled', 'false');
   await page.reload();
   await page.getByRole('button', { name: 'Resume saved game' }).click();
   await expect(choice).toContainText('initial roll 5');
@@ -233,4 +406,290 @@ test('Wizard destination 17 explains relocating a Monster already on the board a
   await page.getByRole('button', { name: 'Confirm choice', exact: true }).click();
   await expect(page.getByRole('button', { name: /^Test room 17\. Displacer Beast/ })).toBeVisible();
   await expect(page.locator('.h-location .piece-displacer')).toHaveCount(1);
+});
+
+async function readSavedState(page: Page) {
+  return page.evaluate(async () => {
+    const path = '/src/session/gameLibrary.ts';
+    const library = await (await import(path)).openGameLibrary();
+    try {
+      const [entry] = await library.list();
+      return JSON.parse((await library.game(entry.id).read()).current!.payload).state;
+    } finally { library.close(); }
+  });
+}
+
+test('inspection preserves a Pick Up draft, shows Strength, and restores keyboard focus', async ({ page }) => {
+  const data = illustratedFixture();
+  data.items.forEach(item => { item.locations = Array.from({ length: item.quantity }, () => 'location-2'); });
+  await load(page, data);
+  await page.getByRole('button', { name: 'Pick Up Items' }).click();
+  const item = page.locator('.h-action-editor input[type=checkbox]').first();
+  await item.check();
+  const before = await readSavedState(page);
+  const floor = page.locator('[data-location-id="location-2"]');
+  await floor.focus();
+  await page.keyboard.press('Enter');
+  const inspector = page.locator('[data-panel="inspector"]');
+  await expect(inspector).toContainText('12 Items');
+  await expect(inspector).toContainText('Strength');
+  await expect(inspector).toContainText('does not spend an action');
+  await expect(item).toBeChecked();
+  expect(await readSavedState(page)).toEqual(before);
+  await page.getByRole('button', { name: 'Move Location inspector panel to left' }).click();
+  await expect(item).toBeChecked();
+  await page.getByRole('button', { name: 'Close Location inspector', exact: true }).click();
+  await expect(floor).toBeFocused();
+  await expect(item).toBeChecked();
+  await page.getByRole('button', { name: 'Confirm action', exact: true }).click();
+  await expect.poll(async () => (await readSavedState(page)).revision).toBe(before.revision + 1);
+  expect((await readSavedState(page)).hero.items).toHaveLength(1);
+});
+
+test('named locations and supplies are independent, readable, and accessible in narrow layouts', async ({ page }) => {
+  const data = illustratedFixture();
+  await load(page, data);
+  await page.getByRole('button', { name: 'Ready to play' }).click();
+  const before = await readSavedState(page);
+  const locationsToggle = page.getByRole('button', { name: 'Locations', exact: true });
+  await locationsToggle.click();
+  const locations = page.locator('[data-panel="locations"]');
+  const rows = locations.locator('.h-locations-list button');
+  await expect(rows).toHaveCount(29);
+  const sizes = await rows.evaluateAll(elements => elements.map(element => ({ height: element.getBoundingClientRect().height, font: parseFloat(getComputedStyle(element).fontSize) })));
+  expect(sizes.every(size => size.height >= 44 && size.font >= 16)).toBe(true);
+  await rows.nth(1).press('Enter');
+  await expect(page.locator('[data-panel="inspector"]')).toBeVisible();
+  await page.getByRole('button', { name: 'Close Location inspector', exact: true }).click();
+  await expect(rows.nth(1)).toBeFocused();
+  const decksToggle = page.getByRole('button', { name: 'Decks & progress', exact: true });
+  await decksToggle.click();
+  await expect(page.locator('[data-panel="decks"]')).toContainText('Upcoming Hero Phase');
+  await expect(locations).toBeVisible();
+  await page.getByRole('button', { name: 'Close Decks & progress', exact: true }).click();
+  await expect(decksToggle).toBeFocused();
+  await page.getByRole('button', { name: 'Close Locations', exact: true }).click();
+  await expect(locationsToggle).toBeFocused();
+  for (const viewport of [{ width: 640, height: 480 }, { width: 320, height: 740 }]) {
+    await page.setViewportSize(viewport);
+    await locationsToggle.click();
+    await rows.last().press('Enter');
+    await expect(page.locator('[data-panel="inspector"]')).toContainText(data.board.locations.at(-1)!.name);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+    await page.getByRole('button', { name: 'Close Location inspector', exact: true }).click();
+    await expect(rows.last()).toBeFocused();
+    await page.getByRole('button', { name: 'Close Locations', exact: true }).click();
+  }
+  expect(await readSavedState(page)).toEqual(before);
+});
+
+test('Wizard map and named selection share a draft and require confirmation after recovery', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await load(page, heroFixture(), 65, 'Wizard');
+  await page.getByRole('button', { name: 'Special Action Hero ability' }).click();
+  await page.getByRole('button', { name: 'Roll special action' }).click();
+  await page.getByRole('radio', { name: 'Keep this result' }).check();
+  await page.getByRole('button', { name: 'Confirm choice', exact: true }).click();
+  const before = await readSavedState(page);
+  expect(before.hero.location).toBe('b');
+  const select = page.getByLabel('Wizard destination', { exact: true });
+  await expect(select).toBeEnabled();
+  const confirm = page.getByRole('button', { name: 'Confirm choice', exact: true });
+  await expect(confirm).toBeDisabled();
+  const target = page.locator('[data-location-id="room-17"]');
+  await target.press('Enter');
+  await expect(select).toHaveValue('room-17');
+  await expect(confirm).toBeFocused();
+  await expect(confirm).toBeInViewport({ ratio: 1 });
+  await expect(target).toHaveAttribute('aria-label', /Selected destination, awaiting confirmation/);
+  await expect(confirm).toBeEnabled();
+  expect(await readSavedState(page)).toEqual(before);
+  await select.selectOption('room-18');
+  await expect(page.locator('[data-location-id="room-18"]')).toHaveAttribute('aria-label', /Selected destination/);
+  await expect(target).not.toHaveAttribute('aria-label', /Selected destination/);
+  await page.getByRole('button', { name: /^Inventory/ }).click();
+  await expect(select).toHaveValue('room-18');
+  await expect(page.getByRole('button', { name: 'End Hero Phase' })).toBeDisabled();
+  await page.reload();
+  await page.getByRole('button', { name: 'Resume saved game', exact: true }).click();
+  expect(await readSavedState(page)).toEqual(before);
+  await expect(select).toHaveValue('');
+  await select.selectOption('room-17');
+  await confirm.click();
+  await expect.poll(async () => (await readSavedState(page)).revision).toBe(before.revision + 1);
+  expect((await readSavedState(page)).hero.location).toBe('room-17');
+  await expect(page.locator('[data-panel="result"] h3')).toBeFocused();
+  await expect(page.locator('[data-panel="result"] h3')).toBeInViewport({ ratio: 1 });
+  await expect(page.locator('.h-location.current')).toHaveAttribute('data-location-id', 'room-17');
+});
+
+
+test('named Move controls and enlarged panel text work without relying on tiny map targets', async ({ page }) => {
+  await load(page, illustratedFixture());
+  await page.getByRole('button', { name: 'Move Connected location' }).click();
+  const before = await readSavedState(page);
+  const destination = page.getByLabel('Move destination', { exact: true });
+  await destination.selectOption('location-3');
+  expect(await readSavedState(page)).toEqual(before);
+  await page.getByRole('button', { name: 'Move to selected location', exact: true }).press('Enter');
+  await expect.poll(async () => (await readSavedState(page)).revision).toBe(before.revision + 1);
+  expect((await readSavedState(page)).hero.location).toBe('location-3');
+  await expect(page.locator('[data-location-id="location-3"]')).toBeFocused();
+  await page.setViewportSize({ width: 640, height: 480 });
+  await page.addStyleTag({ content: ':root { font-size: 200%; }' });
+  await page.getByRole('button', { name: 'Locations', exact: true }).click();
+  const row = page.locator('.h-locations-list button').last();
+  expect(await row.evaluate(element => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(32);
+  await row.press('Enter');
+  await expect(page.locator('[data-panel="inspector"]')).toBeVisible();
+  await page.getByRole('button', { name: 'Close Location inspector' }).press('Enter');
+  await expect(row).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(640);
+});
+
+test('Move completion preserves deliberate information focus during a pending save', async ({ page }) => {
+  await load(page, illustratedFixture());
+  await page.evaluate(async () => {
+    const path = '/src/session/savedSession.ts';
+    const { SavedSession } = await import(path);
+    const submit = SavedSession.prototype.submit;
+    const held = new Promise<void>(resolve => Object.defineProperty(window, 'releaseInspectedMove', { value: resolve, configurable: true }));
+    SavedSession.prototype.submit = async function (...args: unknown[]) {
+      SavedSession.prototype.submit = submit;
+      await submit.apply(this, args);
+      await held;
+    };
+  });
+  const move = page.getByRole('button', { name: 'Move Connected location' });
+  await move.click();
+  const before = await readSavedState(page);
+  await page.getByLabel('Move destination', { exact: true }).selectOption('location-3');
+  await page.getByRole('button', { name: 'Move to selected location', exact: true }).press('Enter');
+  await expect.poll(async () => (await readSavedState(page)).revision).toBe(before.revision + 1);
+  await expect(move).toHaveAttribute('aria-disabled', 'true');
+  await page.getByRole('button', { name: 'Locations', exact: true }).click();
+  const row = page.locator('.h-locations-list button').last();
+  await row.press('Enter');
+  const inspector = page.locator('[data-panel="inspector"]');
+  await expect(inspector).toBeVisible();
+  const close = page.getByRole('button', { name: 'Close Location inspector', exact: true });
+  await close.focus();
+  await expect(close).toBeFocused();
+  await page.evaluate(() => { Reflect.get(window, 'releaseInspectedMove')(); Reflect.deleteProperty(window, 'releaseInspectedMove'); });
+  await expect(move).toHaveAttribute('aria-disabled', 'false');
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(inspector).toBeHidden();
+  await expect(row).toBeFocused();
+  const after = await readSavedState(page);
+  expect(after.hero.location).toBe('location-3');
+  expect(after.revision).toBe(before.revision + 1);
+  expect(after.commands).toHaveLength(before.commands.length + 1);
+});
+
+test.describe('touch-sized tabletop controls', () => {
+  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
+
+  test('touch opens information and confirms a named Move and required response exactly once', async ({ page }) => {
+    await load(page, illustratedFixture(), 2);
+    // Playwright's hasTouch enables native tap input across engines. WebKit may still report zero maxTouchPoints.
+    await page.getByRole('button', { name: 'Ready to play', exact: true }).tap();
+    const before = await readSavedState(page);
+
+    await page.getByRole('button', { name: /^Inventory/ }).tap();
+    await page.getByRole('button', { name: 'Monsters', exact: true }).tap();
+    await expect(page.locator('[data-panel="inventory"]')).toBeVisible();
+    await expect(page.locator('[data-panel="monsters"]')).toBeVisible();
+    expect(await readSavedState(page)).toEqual(before);
+    const targetHeights = await page.locator('.h-panel-nav > button, .h-tray .action-card, .h-tray .tray-toggle').evaluateAll(
+      elements => elements.map(element => element.getBoundingClientRect().height),
+    );
+    expect(targetHeights.length).toBeGreaterThan(8);
+    expect(targetHeights.every(height => height >= 44), 'primary touch controls remain at least 44px high').toBe(true);
+
+    await page.getByRole('button', { name: 'Move Connected location' }).tap();
+    const destination = page.getByLabel('Move destination', { exact: true });
+    await destination.tap();
+    await destination.selectOption('location-3');
+    expect(await readSavedState(page)).toEqual(before);
+    await page.getByRole('button', { name: 'Move to selected location', exact: true }).tap();
+    await expect.poll(async () => (await readSavedState(page)).revision).toBe(before.revision + 1);
+    expect((await readSavedState(page)).hero.location).toBe('location-3');
+    await page.getByRole('button', { name: 'Special Action Hero ability' }).tap();
+    await page.getByRole('button', { name: 'Roll special action', exact: true }).tap();
+    await expect(page.locator('.h-pending')).toBeVisible();
+    const pending = page.locator('.h-pending');
+    const choice = pending.getByRole('radio', { name: 'Keep this result' });
+    await choice.tap();
+    await expect(choice).toBeChecked();
+    expect((await pending.locator('.h-check-row').first().boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    const beforeResponse = await readSavedState(page);
+    const confirm = pending.getByRole('button', { name: 'Confirm choice', exact: true });
+    expect((await confirm.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await confirm.tap();
+    await expect.poll(async () => (await readSavedState(page)).revision).toBe(beforeResponse.revision + 1);
+    expect((await readSavedState(page)).commands).toHaveLength(before.commands.length + 3);
+    await expect(page.locator('.h-pending')).toBeHidden();
+  });
+});
+
+test('every illustrated location keeps its named caption and physical pieces inside the compact map', async ({ page }) => {
+  const data = illustratedFixture();
+  await load(page, data);
+  await expect(page.locator('.game-board-caption')).toHaveCount(29);
+  for (const viewport of [{ width: 390, height: 844 }, { width: 800, height: 800 }]) {
+    await page.setViewportSize(viewport);
+    const measurements = await page.locator('.h-game-board.illustrated').evaluate(board => {
+      const rect = (element: Element) => {
+        const { x, y, width, height } = element.getBoundingClientRect();
+        return { x, y, width, height };
+      };
+      return {
+        board: rect(board.querySelector('.game-board-svg')!),
+        floors: Array.from(board.querySelectorAll<HTMLElement>('.h-location'), floor => {
+          const caption = board.querySelector(`[data-caption-for="${floor.dataset.locationId}"] .h-node-name`)!;
+          return { id: floor.dataset.locationId, name: caption.textContent, aria: floor.getAttribute('aria-label'),
+            floor: rect(floor), caption: rect(caption), pieces: Array.from(floor.querySelectorAll('.piece'), rect) };
+        }),
+      };
+    });
+    expect(measurements.floors).toHaveLength(data.board.locations.length);
+    for (const location of data.board.locations) {
+      const entry = measurements.floors.find(floor => floor.id === location.id)!;
+      expect(entry.name).toBe(location.name);
+      expect(entry.aria).toContain(location.name);
+      expect(entry.caption.width).toBeGreaterThan(0);
+      expect(entry.caption.y, `${location.name} caption follows its floor`).toBeGreaterThan(entry.floor.y + entry.floor.height / 2);
+      expect(entry.caption.x, `${location.name} caption stays on the map`).toBeGreaterThanOrEqual(measurements.board.x - 1);
+      expect(entry.caption.x + entry.caption.width).toBeLessThanOrEqual(measurements.board.x + measurements.board.width + 1);
+      expect(entry.caption.y + entry.caption.height).toBeLessThanOrEqual(measurements.board.y + measurements.board.height + 1);
+      for (const piece of entry.pieces) {
+        expect(piece.x).toBeGreaterThanOrEqual(entry.floor.x - 1);
+        expect(piece.y).toBeGreaterThanOrEqual(entry.floor.y - 1);
+        expect(piece.x + piece.width).toBeLessThanOrEqual(entry.floor.x + entry.floor.width + 1);
+        expect(piece.y + piece.height).toBeLessThanOrEqual(entry.floor.y + entry.floor.height + 1);
+      }
+    }
+    expect(measurements.floors.some(floor => floor.pieces.length > 1), 'setup shows clustered physical pieces').toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+  }
+});
+
+test('reduced motion disables transitions and smooth scrolling while native Move focus still works', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await load(page, illustratedFixture());
+  expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);
+  await page.addStyleTag({ content: '.h-panel-nav { transition: opacity 1s; scroll-behavior: smooth; }' });
+  const styles = await page.locator('.h-panel-nav').evaluate(element => ({
+    transition: getComputedStyle(element).transitionDuration,
+    scroll: getComputedStyle(element).scrollBehavior,
+  }));
+  expect(styles).toEqual({ transition: '0s', scroll: 'auto' });
+  const before = await readSavedState(page);
+  await page.getByRole('button', { name: 'Move Connected location' }).press('Enter');
+  await page.getByLabel('Move destination', { exact: true }).selectOption('location-3');
+  await page.getByRole('button', { name: 'Move to selected location', exact: true }).press('Enter');
+  await expect.poll(async () => (await readSavedState(page)).revision).toBe(before.revision + 1);
+  await expect(page.locator('[data-location-id="location-3"]')).toBeFocused();
+  expect((await readSavedState(page)).hero.location).toBe('location-3');
 });

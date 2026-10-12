@@ -1,11 +1,11 @@
-import { expect, test, type Page } from './test';
+import { expect, setAvailableFile, test, type Page } from './test';
 import { fighterFixture } from '../../src/engine/fixtures/fighterFixture';
 
 async function loadSyntheticFighter(page: Page, seed = 17, data = fighterFixture()) {
   await page.goto('/');
   await page.getByText('Import game data or backup').click();
   await expect(page.locator('#game-data-file')).toBeEnabled();
-  await page.locator('#game-data-file').setInputFiles({
+  await setAvailableFile(page.locator('#game-data-file'), {
     name: 'synthetic-game-data.json', mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(data)),
   });
@@ -19,7 +19,10 @@ test('local import opens a Fighter table with visible map, resources, and no hid
   await loadSyntheticFighter(page);
   await expect(page.getByRole('heading', { name: 'The city and dungeon' })).toBeVisible();
   await expect(page.locator('.h-location')).toHaveCount(4);
-  await expect(page.locator('.game-board-route .route-line')).toHaveCount(3);
+  await expect(page.locator('.game-board-route.ordinary .route-line')).toHaveCount(2);
+  await expect(page.locator('.game-board-route.passage')).toHaveCount(0);
+  await expect(page.locator('.game-board-passage-badge')).toHaveCount(2);
+  expect(await page.locator('.game-board-passage-badge').allTextContents()).toEqual(['A', 'A']);
   await expect(page.locator('.h-tray .action-card')).toHaveCount(8);
   await expect(page.getByRole('button', { name: /Wait/ })).toHaveCount(0);
   await expect(page.getByText('Monster progress')).toBeHidden();
@@ -122,17 +125,40 @@ test('a pending Fighter choice stays operable while actions are collapsed', asyn
 
 test('keyboard Move targets a destination and same-tick clicks commit once', async ({ page }) => {
   await loadSyntheticFighter(page);
+  await page.evaluate(async () => {
+    const path = '/src/session/savedSession.ts';
+    const { SavedSession } = await import(path);
+    const submit = SavedSession.prototype.submit;
+    const released = new Promise<void>(resolve => Object.defineProperty(window, 'releaseMoveSave', { value: resolve, configurable: true }));
+    SavedSession.prototype.submit = async function (...args: unknown[]) {
+      SavedSession.prototype.submit = submit;
+      await submit.apply(this, args);
+      // Hold real completion so lock assertions do not race a 300ms display delay.
+      await released;
+    };
+  });
   const move = page.getByRole('button', { name: 'Move Connected location' });
   await move.focus();
   await page.keyboard.press('Enter');
   const destination = page.getByRole('button', { name: /Room 1/ });
   await expect(destination).toBeFocused();
   await destination.evaluate((button: HTMLButtonElement) => { button.click(); button.click(); });
+  await expect(move).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.locator('.h-table .hero span')).toHaveText('At Room 2');
+  await page.evaluate(() => { Reflect.get(window, 'releaseMoveSave')(); Reflect.deleteProperty(window, 'releaseMoveSave'); });
   await expect(page.locator('.h-table .hero span')).toHaveText('At Room 1');
   await expect(page.locator('.h-tray .action-budget')).toContainText('3 / 4');
-  await expect(move).toHaveAttribute('aria-disabled', 'true');
-  await page.waitForTimeout(340);
   await expect(move).toHaveAttribute('aria-disabled', 'false');
+  const state = await page.evaluate(async () => {
+    const path = '/src/session/gameLibrary.ts';
+    const library = await (await import(path)).openGameLibrary();
+    try {
+      const [game] = await library.list();
+      return JSON.parse((await library.game(game.id).read()).current!.payload).state;
+    } finally { library.close(); }
+  });
+  expect(state.commands).toHaveLength(1);
+  expect(state.revision).toBe(1);
 });
 
 test('confirmed special action and Monster Phase run with local requests only', async ({ page }) => {
@@ -202,6 +228,7 @@ test('narrow Fighter layout has no document overflow with actions shown or hidde
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     await loadSyntheticFighter(page);
+    await page.getByRole('button', { name: 'Reset layout', exact: true }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     await page.getByRole('button', { name: 'Hide actions' }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);

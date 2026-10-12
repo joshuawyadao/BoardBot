@@ -60,9 +60,12 @@ async function resolveChoice(page: Page, current: FighterGame) {
   const panel = page.locator('.h-pending');
   await expect(panel).toBeVisible();
   const choices = panel.locator('input');
-  await expect(choices.first()).toBeEnabled({ timeout: 10_000 });
+  const destination = panel.getByLabel('Wizard destination', { exact: true });
+  if (await destination.count()) await expect(destination).toBeEnabled({ timeout: 10_000 });
+  else await expect(choices.first()).toBeEnabled({ timeout: 10_000 });
   const keep = panel.getByRole('radio', { name: /Keep this result|Keep these dice/ });
   if (await keep.count()) await keep.check();
+  else if (await destination.count()) await destination.selectOption(current.pending!.options[0].id);
   else for (let index = 0; index < current.pending!.min; index++) await choices.nth(index).check();
   const confirm = panel.getByRole('button', { name: 'Confirm choice', exact: true });
   await expect(confirm).toBeEnabled();

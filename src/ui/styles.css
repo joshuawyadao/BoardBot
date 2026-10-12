@@ -114,3 +114,29 @@ h2 { font: 400 22px/1.3 Georgia, serif; margin: 0; }
 @media (min-width: 1200px) { .action-options { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
 @media (max-width: 680px) { .action-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } .action-help { height: 80px; } .tray-status { width: 100%; justify-content: space-between; gap: 8px; } .tray-tools { width: 100%; justify-content: space-between; margin-left: 0; } .tray-tools .end-button { margin-left: 0; } }
 @media (pointer: coarse) { .tray-tools button { min-height: 44px; } }
+
+/* The illustrated solo table and its library share a darker reading palette.
+   The invented sample keeps its lighter practice-table styling. */
+body:has(.h-workspace-table), body:has(.game-library) {
+  background: #10171b;
+  color: #f4ecd9;
+}
+body:has(.h-workspace-table) :focus-visible,
+body:has(.game-library) :focus-visible {
+  outline: 3px solid #e7bd72;
+  outline-offset: 3px;
+}
+.h-workspace-table, .game-library {
+  --ink: #f4ecd9;
+  --soft-ink: #c4c4ba;
+  --brass: #d3ac6e;
+  --brass-line: #765b37;
+  --night: #121d25;
+  --raised: #1b2932;
+  --deep: #0d151b;
+  --teal: #82b5a8;
+  --line: #435259;
+  --muted: #b8c0bc;
+  --green: #82b5a8;
+  color: var(--ink);
+}

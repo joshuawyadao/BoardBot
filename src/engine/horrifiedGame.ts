@@ -1,6 +1,6 @@
 import type { GameData } from '../data/gameData';
 import { adjacentLocations, awaySteps, nextInt, shortestRouteSteps } from './gamePrimitives.ts';
-import { closeResponseWindow, createResponseWindow, passResponse, resolveD20, selectResponse, isSupportedRuleset, RULESET_VERSION } from './decisionPolicies.ts';
+import { closeResponseWindow, createResponseWindow, passResponse, resolveD20, selectResponse, isSupportedRuleset, LEGACY_RULESET_VERSION, RULESET_VERSION } from './decisionPolicies.ts';
 import { createHorrifiedGame, drawBoardItems, gainPerk, logEntry, projectGame, SOLO_SEAT } from './horrifiedState.ts';
 import type { MonsterId } from './horrifiedState';
 import type { ChoiceOption, EngineContext, FighterGame, GameCommand, HeroAction, Task } from './horrifiedRuntime';
@@ -495,6 +495,25 @@ export function dispatchGame(data: GameData, state: FighterGame, command: GameCo
 
 export function getFighterView(data: GameData, state: FighterGame) {
   const view = projectGame(state);
+  const baseActions = data.heroes.find(hero => hero.id === state.hero.definitionId)!.actions;
+  // A skipped upcoming turn has no playable Hero Phase, even if the following turn will have actions.
+  const nextHeroPhaseSkipped = state.hero.penalties.skipTurn;
+  const allowanceAfter = (penalties: number) => nextHeroPhaseSkipped ? 0 : Math.max(0, baseActions - penalties);
+  const nextHeroPhaseAllowance = allowanceAfter(state.hero.penalties.fewerActions);
+  const currentAttack = state.attack ? {
+    monster: state.attack.monster, target: state.attack.target, faces: [...state.attack.faces],
+    remainingHits: state.attack.hits, remainingPowers: state.attack.powers,
+  } : null;
+  const cardInstance = state.currentCard ? state.monsterCards[state.currentCard] : undefined;
+  const cardDefinition = cardInstance ? data.monsterCards.find(card => card.id === cardInstance.definitionId) : undefined;
+  type ObservedMonsterCard = Pick<GameData['monsterCards'][number], 'name' | 'itemsDrawn' | 'activationSymbols' | 'movement' | 'attackDice' | 'event'>
+    & { citizenStartingLocation?: string | null };
+  const currentMonsterCard: ObservedMonsterCard | null = cardDefinition ? {
+    name: cardDefinition.name, itemsDrawn: cardDefinition.itemsDrawn,
+    activationSymbols: [...cardDefinition.activationSymbols], movement: cardDefinition.movement,
+    attackDice: cardDefinition.attackDice, event: cardDefinition.event,
+    citizenStartingLocation: cardDefinition.citizenStartingLocation ?? null,
+  } : null;
   const blocked = state.phase === 'won' || state.phase === 'lost' ? 'This game has ended.'
     : state.pending || state.roll || state.queue.length ? 'Finish the pending choice first.'
     : state.phase !== 'hero' ? 'Wait for the Hero Phase.' : null;
@@ -527,6 +546,28 @@ export function getFighterView(data: GameData, state: FighterGame) {
     id: state.pending.id, title: state.pending.title, options: structuredClone(state.pending.options),
     min: state.pending.min, max: state.pending.max, description: null as string | null, destination: null as string | null,
   } : null;
+  const pendingKind = state.pending?.resume.kind === 'wizard:place'
+    ? state.pending.resume.to ? 'wizard-monster-target' as const : 'wizard-hero-destination' as const
+    : state.pending?.resume.kind === 'monster:ray-choice' && (state.pending.resume.result === 8 || state.pending.resume.result === 9)
+      ? 'slowing-response' as const : undefined;
+  const rayResult = state.pending?.resume.kind === 'monster:ray-choice' ? state.pending.resume.result : undefined;
+  const rayDefinition = rayResult === undefined ? undefined
+    : [...data.monsters.beholder.rays.front, ...data.monsters.beholder.rays.back]
+      .find(candidate => candidate.min <= rayResult && rayResult <= candidate.max);
+  const ray = rayDefinition && rayResult !== undefined ? {
+    result: rayResult, name: rayDefinition.name, min: rayDefinition.min,
+    max: rayDefinition.max, effect: rayDefinition.effect,
+  } : undefined;
+  const slowing = pendingKind === 'slowing-response' ? (() => {
+    const existingPenalties = state.hero.penalties.fewerActions;
+    const acceptPenalties = state.rulesVersion === LEGACY_RULESET_VERSION
+      ? Math.max(1, existingPenalties) : existingPenalties + 1;
+    return {
+      ownerName: data.heroes.find(hero => hero.id === state.hero.definitionId)!.name,
+      existingPenalties, discardAllowance: allowanceAfter(existingPenalties),
+      acceptAllowance: allowanceAfter(acceptPenalties), acceptPenalties, skipped: nextHeroPhaseSkipped,
+    };
+  })() : undefined;
   if (pending && state.pending?.resume.kind === 'wizard:place') {
     const target = state.pending.resume.to;
     if (target) {
@@ -549,7 +590,8 @@ export function getFighterView(data: GameData, state: FighterGame) {
     }
   }
   return { ...view, actions, moveDestinations: moves, guideOptions: guides, advanceOptions: advances, perkOptions: perks, visibleItems, visiblePerks,
-    pending,
+    pending: pending ? { ...pending, ...(pendingKind ? { kind: pendingKind } : {}), ...(slowing ? { slowing } : {}), ...(ray ? { ray } : {}) } : null,
+    currentAttack, currentMonsterCard, nextHeroPhaseAllowance, nextHeroPhaseSkipped,
     currentRoll: state.roll ? { reason: state.roll.reason, result: structuredClone(state.roll.result), turn: state.turn } : null,
     rolls: structuredClone(state.rolls) };
 }

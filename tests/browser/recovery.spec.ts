@@ -1,10 +1,19 @@
-import { expect, test, type Page } from './test';
+import { expect, setAvailableFile, test, type Page } from './test';
 import { fighterFixture } from '../../src/engine/fixtures/fighterFixture';
+import AxeBuilder from '@axe-core/playwright';
+import { readFile } from 'node:fs/promises';
+
+async function expectFocusedError(page: Page) {
+  const alert = page.getByRole('alert');
+  await expect(alert).toBeFocused();
+  await expect(alert).toBeInViewport({ ratio: 1 });
+  expect(await alert.evaluate(element => element.parentElement?.closest('[role="status"]'))).toBeNull();
+}
 
 async function loadGame(page: Page, data = fighterFixture()) {
   await page.goto('/');
   await page.getByText('Import game data or backup').click();
-  await page.locator('#game-data-file').setInputFiles({ name: 'synthetic.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
+  await setAvailableFile(page.locator('#game-data-file'), { name: 'synthetic.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
   await page.getByLabel('Seed (optional, for a repeatable setup)').fill('17');
   await page.getByRole('button', { name: 'Start game', exact: true }).click();
   await expect(page.getByText('Local game in progress.')).toBeVisible();
@@ -93,7 +102,23 @@ test('restores the exact pending d20 response and exports a locally usable backu
   const later = await savedPayload(page);
   await page.getByRole('button', { name: 'Saved games' }).click();
   await page.getByText('Import game data or backup').click();
-  await page.locator('#game-save-file').setInputFiles({ name: 'boardbot-save.json', mimeType: 'application/json', buffer: Buffer.from(before) });
+  await page.evaluate(() => {
+    const originalPut = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (...args: Parameters<IDBObjectStore['put']>) {
+      if (this.name === 'games') {
+        IDBObjectStore.prototype.put = originalPut;
+        this.transaction.abort();
+        throw new Error('Simulated imported game write failure');
+      }
+      return originalPut.apply(this, args);
+    };
+  });
+  await setAvailableFile(page.locator('#game-save-file'), { name: 'boardbot-save.json', mimeType: 'application/json', buffer: Buffer.from(before) });
+  await expectFocusedError(page);
+  await expect(page.getByRole('alert')).toContainText('exact imported adventure');
+  await expect(page.getByRole('button', { name: 'Choose another backup', exact: true })).toHaveCount(0);
+  expect(await allPayloads(page)).toEqual([later]);
+  await page.getByRole('button', { name: 'Retry saving new game', exact: true }).press('Enter');
   await expect.poll(async () => (await allPayloads(page)).length).toBe(2);
   expect(await allPayloads(page)).toContain(later);
   await expect(page.locator('.h-pending')).toHaveText(pending, { useInnerText: true });
@@ -113,11 +138,45 @@ test('failed writes pause gameplay and retry commits the already resolved action
   await page.getByRole('button', { name: 'Move Connected location' }).click();
   await page.getByRole('button', { name: /Room 1/ }).click();
   await expect(page.getByRole('button', { name: 'Retry saving', exact: true })).toBeVisible();
+  await expectFocusedError(page);
+  await expect(page.getByRole('alert')).toContainText('without another roll or draw');
   await expect(page.locator('.h-tray .action-budget')).toContainText('4 / 4');
   await expect(page.getByRole('button', { name: 'End Hero Phase' })).toBeDisabled();
   expect(await savedPayload(page)).toBe(original);
   await page.getByRole('button', { name: 'Retry saving', exact: true }).click();
   await expect(page.locator('.h-tray .action-budget')).toContainText('3 / 4');
+  const saved = JSON.parse(await savedPayload(page));
+  expect(saved.state.commands).toHaveLength(1);
+  expect(saved.state.hero.location).toBe('a');
+  await expect(page.locator('[data-location-id="a"]')).toBeFocused();
+});
+
+test('a rejected action focuses accurate guidance and permits a legal retry without changing the save', async ({ page }) => {
+  await loadGame(page);
+  const original = await savedPayload(page);
+  await page.evaluate(async () => {
+    const path = '/src/session/savedSession.ts';
+    const { SavedSession } = await import(path);
+    const submit = SavedSession.prototype.submit;
+    SavedSession.prototype.submit = function (command: { revision: number }) {
+      SavedSession.prototype.submit = submit;
+      // Exercise a real engine rejection, rather than a failed storage write.
+      return submit.call(this, { ...command, revision: command.revision + 1 });
+    };
+  });
+  await page.getByRole('button', { name: 'Move Connected location' }).click();
+  await page.getByRole('button', { name: /Room 1/ }).click();
+  await expectFocusedError(page);
+  await expect(page.getByRole('alert')).toContainText('The action was not applied');
+  await expect(page.getByRole('alert')).not.toContainText('Retry saving');
+  await expect(page.getByRole('button', { name: 'Retry saving', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'End Hero Phase' })).toBeEnabled();
+  await expect(page.locator('.h-tray .action-budget')).toContainText('4 / 4');
+  expect(await savedPayload(page)).toBe(original);
+  await page.getByRole('button', { name: 'Move Connected location' }).click();
+  await page.getByRole('button', { name: /Room 1/ }).click();
+  await expect(page.locator('.h-tray .action-budget')).toContainText('3 / 4');
+  await expect(page.getByRole('alert')).toHaveCount(0);
   const saved = JSON.parse(await savedPayload(page));
   expect(saved.state.commands).toHaveLength(1);
   expect(saved.state.hero.location).toBe('a');
@@ -128,17 +187,29 @@ test('invalid imports retain the save and a damaged current payload can recover 
   const original = await savedPayload(page);
   await page.getByRole('button', { name: 'Saved games' }).click();
   await page.getByText('Import game data or backup').click();
-  await page.locator('#game-save-file').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{broken') });
+  await setAvailableFile(page.locator('#game-save-file'), { name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{broken') });
   await expect(page.getByRole('alert')).toContainText('malformed');
+  await expectFocusedError(page);
+  await page.getByText('Import game data or backup', { exact: true }).click();
+  await expect(page.locator('.library-import')).not.toHaveAttribute('open', '');
+  await page.getByRole('button', { name: 'Choose another backup', exact: true }).press('Enter');
+  await expect(page.locator('.library-import')).toHaveAttribute('open', '');
+  await expect(page.locator('#game-save-file')).toBeFocused();
+  await expect(page.locator('#game-save-file')).toBeInViewport({ ratio: 1 });
+  await setAvailableFile(page.locator('#game-save-file'), { name: 'still-bad.json', mimeType: 'application/json', buffer: Buffer.from('{broken') });
+  await expectFocusedError(page);
   expect(await savedPayload(page)).toBe(original);
   await damageCurrent(page, false);
   await page.reload();
   await page.getByRole('button', { name: 'Resume saved game' }).click();
   await expect(page.getByRole('alert')).toContainText('record is damaged');
+  await expectFocusedError(page);
+  await expect(page.getByRole('alert')).toContainText('Recovery options');
   await page.getByText('Recovery options', { exact: true }).click();
   await page.getByRole('button', { name: 'Recover previous save' }).click();
   await expect(page.getByText('Local game in progress.')).toBeVisible();
   expect(await savedPayload(page)).toBe(original);
+  await expect(page.locator('.save-status [role="status"]')).toBeFocused();
 });
 
 test('a stale tab cannot overwrite newer progress and can load the latest save', async ({ page, context }) => {
@@ -154,9 +225,13 @@ test('a stale tab cannot overwrite newer progress and can load the latest save',
   await other.getByRole('button', { name: 'Move Connected location' }).click();
   await other.getByRole('button', { name: /Room 3/ }).click();
   await expect(other.getByRole('alert')).toContainText('newer save');
+  await expectFocusedError(other);
+  await expect(other.getByRole('alert')).toContainText('load the latest save');
   expect(await savedPayload(other)).toBe(newer);
   await other.getByRole('button', { name: 'Discard unsaved action and load latest save' }).click();
   await expect(other.locator('.h-table .hero')).toContainText('Room 1');
+  await expect(other.locator('.save-status [role="status"]')).toBeFocused();
+  expect(await savedPayload(other)).toBe(newer);
 });
 
 test('an interruption immediately after storage commit resumes the committed move', async ({ page }) => {
@@ -193,4 +268,95 @@ test('damaged current metadata still exposes previous-save recovery in the app',
   await page.getByRole('button', { name: 'Recover previous save' }).click();
   await expect(page.getByText('Local game in progress.')).toBeVisible();
   expect(await savedPayload(page)).toBe(original);
+});
+
+test('failed previous-save recovery focuses guidance and preserves both recovery records for keyboard retry', async ({ page }) => {
+  await loadGame(page);
+  const original = await savedPayload(page);
+  await damageCurrent(page, true);
+  await page.reload();
+  await page.getByRole('button', { name: 'Resume saved game', exact: true }).click();
+  await expectFocusedError(page);
+  const damaged = await savedPayload(page);
+  await page.getByText('Recovery options', { exact: true }).click();
+  await page.evaluate(() => {
+    const originalPut = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (...args: Parameters<IDBObjectStore['put']>) {
+      if (this.name === 'games') {
+        IDBObjectStore.prototype.put = originalPut;
+        this.transaction.abort();
+        throw new Error('Simulated recovery write failure');
+      }
+      return originalPut.apply(this, args);
+    };
+  });
+  const recover = page.getByRole('button', { name: 'Recover previous save', exact: true });
+  await recover.press('Enter');
+  await expectFocusedError(page);
+  await expect(page.getByRole('alert')).toContainText('Recovery options');
+  expect(await savedPayload(page)).toBe(damaged);
+  await recover.press('Enter');
+  await expect(page.locator('.save-status [role="status"]')).toBeFocused();
+  expect(await savedPayload(page)).toBe(original);
+});
+
+test('repeated failed roll saves focus one alert and keyboard retry preserves the exact exported result', async ({ page }) => {
+  const data = fighterFixture();
+  data.perks = data.perks.filter(perk => perk.id === 'perk-ott-steeltoes');
+  await loadGame(page, data);
+  const original = await savedPayload(page);
+  await page.evaluate(() => {
+    const originalPut = IDBObjectStore.prototype.put;
+    let failures = 2;
+    IDBObjectStore.prototype.put = function (...args: Parameters<IDBObjectStore['put']>) {
+      if (this.name === 'games' && failures-- > 0) {
+        this.transaction.abort();
+        throw new Error('Simulated repeated save failure');
+      }
+      IDBObjectStore.prototype.put = originalPut;
+      return originalPut.apply(this, args);
+    };
+  });
+  await page.getByRole('button', { name: 'Special Action Hero ability' }).press('Enter');
+  await page.getByRole('button', { name: 'Roll special action' }).press('Enter');
+  await expectFocusedError(page);
+  await expect(page.getByRole('alert')).toContainText('Simulated repeated save failure');
+  const waitingForBackup = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export backup', exact: true }).press('Enter');
+  const backupPath = await (await waitingForBackup).path();
+  if (!backupPath) throw new Error('The backup download did not provide a local test file.');
+  const backup = await readFile(backupPath, 'utf8');
+  const pending = JSON.parse(backup);
+  expect(pending.state.commands).toHaveLength(1);
+  expect(await savedPayload(page)).toBe(original);
+  await page.getByRole('button', { name: 'Retry saving', exact: true }).press('Enter');
+  await expectFocusedError(page);
+  await expect(page.getByRole('alert')).toContainText('same unsaved result');
+  const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice']).analyze();
+  expect(axe.violations.map(item => item.id)).toEqual([]);
+  expect(await savedPayload(page)).toBe(original);
+  await page.getByRole('button', { name: 'Retry saving', exact: true }).press('Enter');
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(page.locator('.h-pending h2')).toBeFocused();
+  expect(await savedPayload(page)).toBe(backup);
+});
+
+test('invalid base-data import focuses its guidance and returns to the file control at narrow enlarged text', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto('/');
+  await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+  await page.getByText('Import game data or backup').click();
+  await setAvailableFile(page.locator('#game-data-file'), { name: 'invalid.json', mimeType: 'application/json', buffer: Buffer.from('{}') });
+  await expectFocusedError(page);
+  await expect(page.getByRole('alert')).toContainText('existing games and base components are kept');
+  const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice']).analyze();
+  expect(axe.violations.map(item => item.id)).toEqual([]);
+  await page.getByText('Import game data or backup', { exact: true }).click();
+  await expect(page.locator('.library-import')).not.toHaveAttribute('open', '');
+  await page.getByRole('button', { name: 'Choose another base game file', exact: true }).press('Enter');
+  await expect(page.locator('.library-import')).toHaveAttribute('open', '');
+  await expect(page.locator('#game-data-file')).toBeFocused();
+  await expect(page.locator('#game-data-file')).toBeInViewport({ ratio: 1 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  expect(await allPayloads(page)).toEqual([]);
 });

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from './test';
+import { expect, setAvailableFile, test, type Page } from './test';
 import type { GameData } from '../../src/data/gameData';
 import { heroFixture } from '../../src/engine/fixtures/heroFixture';
 import { getActionReason, getFighterView } from '../../src/engine/horrifiedGame';
@@ -36,7 +36,7 @@ async function saveAfter(page: Page, revision: number): Promise<FighterGame> {
 async function load(page: Page, data: GameData, hero: string): Promise<void> {
   await page.goto('/');
   await page.getByText('Import game data or backup').click();
-  await page.locator('#game-data-file').setInputFiles({
+  await setAvailableFile(page.locator('#game-data-file'), {
     name: 'synthetic-victory.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)),
   });
   await page.getByLabel('Hero', { exact: true }).selectOption(hero);
@@ -60,7 +60,8 @@ function defeatCost(data: GameData, state: FighterGame, monster: 'beholder' | 'd
 
 for (const hero of ['Fighter', 'Bard', 'Cleric', 'Rogue', 'Wizard']) {
   test(`${hero} completes both Monster challenges and retains victory after reload`, async ({ page }) => {
-    test.setTimeout(120_000);
+    // Complete legal games involve many UI decisions; allow both browser engines to finish.
+    test.setTimeout(180_000);
     const data = victoryFixture();
     await load(page, data, hero);
     let reloadedChallenge = false;

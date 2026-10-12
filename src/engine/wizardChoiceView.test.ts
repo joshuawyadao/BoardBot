@@ -22,6 +22,7 @@ it('reproduces the Wizard follow-up prompt from an ordinary setup and legal roll
   expect(view.pending?.description).toMatch(/initial roll 5.*destination roll 17/i);
   expect(view.pending?.description).toMatch(/already on the board/i);
   expect(view.pending?.destination).toBe('room-17');
+  expect(view.pending?.kind).toBe('wizard-monster-target');
   expect(view.pending?.options.find(option => option.id === 'displacerBeast')?.label).toMatch(/Displacer Beast.*from #1 · Room 1.*to #17 · Test room 17/i);
   expect(view.pending).not.toHaveProperty('resume');
   const moved = dispatchGame(data, game, { id: 'move-displacer', revision: game.revision, actorSeatId: 'solo',
@@ -42,5 +43,6 @@ it('shows a direct Wizard result of 17 as a Hero destination choice', async () =
   expect(view.pending?.title).toBe('Choose where the Wizard moves');
   expect(view.pending?.description).toMatch(/Wizard special action result 17.*currently at #2 · Room 2/i);
   expect(view.pending?.destination).toBeNull();
+  expect(view.pending?.kind).toBe('wizard-hero-destination');
   expect(view.pending?.options.find(option => option.id === 'room-17')?.label).toBe('#17 · Test room 17');
 });
