@@ -51,7 +51,7 @@ Component data is stored once per exact version in this browser, separately from
 - End the Hero Phase explicitly; reaching zero paid actions must not prevent eligible free perks before that boundary.
 - Save and resume locally, preserving committed dice/card outcomes and pending choices. Play without internet access after initial setup while the local development server is running.
 
-The full milestone still requires the owner’s complete-game acceptance on the physical game data. The separate sample turn only tests the interaction pattern; its map, actions, and action budget are invented. Its Guide, Pick Up, Share, Advance, Defeat, Special Action, and Perks cards are unavailable previews, not implemented game actions or legal-rule checks. A later physical-game companion will reuse the rules foundation for setup, tracking, and sourced rules lookup. Other monsters, devices, optional desktop packaging, and broader bot playtesting follow later. No paid AI service or account is planned for the initial milestone.
+The full milestone still requires the owner’s complete-game acceptance on the physical game data. The separate sample turn only tests the interaction pattern; its map, actions, and action budget are invented. Its Guide, Pick Up, Share, Advance, Defeat, Special Action, and Perks cards are unavailable previews, not implemented game actions or legal-rule checks. A later [physical-game companion](docs/Companion-Plan.md) is planned for visual setup, optional character-effect reminders and sourced rules lookup. Other monsters, devices, optional desktop packaging, and broader bot playtesting follow later. No paid AI service or account is planned for the initial milestone.
 
 ## Get started
 
@@ -80,6 +80,7 @@ With the verified private packet prepared, `npm run test:private` additionally r
 | [Roadmap](docs/Roadmap.md) | Milestones toward a first playable game |
 | [Verification](docs/Verification.md) | Local checks, CI, and future game acceptance checks |
 | [Work plan](docs/Work-Plan.md) | Finalized planning baseline, build order, and completion criteria |
+| [Companion plan](docs/Companion-Plan.md) | Planned physical setup guide, optional character-effect reminders, sourced rules help and proof-of-concept path |
 | [Game-data checklist](docs/Game-Data-Checklist.md) | Confirmed component coverage, private evidence access, and publication gates |
 | [Rules reference](docs/Rules-Reference.md) | Durable sourced findings, accepted interpretations, open cases, and multiplayer boundaries |
 | [Local game-data format](docs/Game-Data-Format.md) | Private data preparation, schema, and engine-foundation limits |

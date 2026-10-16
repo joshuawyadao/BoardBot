@@ -35,7 +35,7 @@ Both tables share a compact Event log that retains every event. It follows new e
 
 ## Later experiences
 
-Stage two is a companion for physical play: setup assistance, session tracking, and quick sourced rules/edge-case lookup. Reuse the verified rules foundation while letting the player report physical outcomes and correct tracking mistakes. The companion's detailed interaction design is future work.
+Stage two is a companion for physical play. The October 16 direction is a phone-oriented visual setup guide, optional character-effect reminders and quick sourced rules help. Players can pin a saved effect after a physical roll and clear or correct it themselves; routine play requires no turn entry, board-action confirmation or start/pause/finish flow. The [companion plan](Companion-Plan.md) defines the proof-of-concept build order, source boundaries and future phone-delivery/AI decisions. It is planned, not implemented. Solo human acceptance remains deferred and open.
 
 Later expansions may include remaining monsters, other devices, optional desktop packaging, more games, strategic hero bots, and repeatable simulation. Accounts, telemetry, paid AI services, online multiplayer, and cloud saves are not required for the first milestone.
 

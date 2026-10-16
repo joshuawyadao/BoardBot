@@ -36,7 +36,7 @@ Acceptance criteria:
 
 ## 2. Physical-game companion
 
-Reuse the verified rules foundation for setup assistance, session tracking, and quick rules/edge-case lookup during physical play. Define manual input, correction, and rules-search behavior separately before implementation. Answers should distinguish published rules, reported clarifications, and unresolved interpretations.
+The [companion plan](Companion-Plan.md), agreed October 16, defines a phone-oriented visual setup guide, optional character-effect reminders and sourced rules help beside the physical table. Build the setup proof of concept first, then add user-managed saved effects and curated search. Physical play requires no turn logging, phase advancement or board-action confirmation. AI assistance and actual phone delivery require later decisions; the companion is not implemented. Answers must distinguish published rules, reported clarifications, accepted BoardBot interpretations and unresolved cases. Companion planning can proceed while solo human acceptance remains deferred and open.
 
 ## 3. Broader game and device support
 

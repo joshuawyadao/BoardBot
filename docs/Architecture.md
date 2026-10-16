@@ -47,9 +47,15 @@ The shared `SessionLog` receives visibility from the solo panel so closing it pr
 | Session runner | Turn/phase progression, commands, injected randomness, required choices, event history | Applies commands once through the rules engine; the current reducer/timer only handles the sample turn |
 | React interface | Illustrated board, compact tray, Event log, descriptions, selections, confirmation where needed, outcomes | Never duplicates rule decisions as a separate authority |
 | Local persistence | Versioned snapshots, pending choices, committed random results, recovery | Loading validates data and never executes imported code |
-| Future companion | Physical setup/tracking and sourced rules explanations | Reuses rules and data with a different interaction model |
+| Future companion | Visual physical setup, optional character-effect reminders and sourced rules help | Reuses validated data/helpers; companion edits do not submit solo commands or track required turns |
 
 Begin with small modules in one application. A general plugin system, remote backend, and strategic hero bots are unnecessary for the first milestone.
+
+## Planned physical companion boundary
+
+The [companion plan](Companion-Plan.md), agreed October 16, is a future design, not an implemented mode. Its Setup, My character and Rules features work independently. Physical actions and random outcomes remain at the table; players optionally pin, spend or correct saved-effect reminders. Timing is reference text, not automatic expiration inferred from an untracked phase. Companion restoration covers selections/reminders only, with storage separate from solo saves and no command replay or physical-state reconstruction. Rules search begins with curated sourced material; AI integration is a later explicit decision.
+
+Phone-sized layout does not establish actual phone access. The current loopback-only server/private-data boundary remains in force; phone delivery requires a separate access/content decision. Physical group setup guidance may use verified Hero-count conditions without introducing multiplayer engine support. Manual solo acceptance stays deferred and open.
 
 ## Action-resolution contract
 
