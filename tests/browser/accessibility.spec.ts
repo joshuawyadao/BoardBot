@@ -1,20 +1,11 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, setAvailableFile, test, type Page } from './test';
+import { expect, setAvailableFile, startSyntheticGame, test, type Page } from './test';
 import { heroFixture } from '../../src/engine/fixtures/heroFixture';
 
 async function importGame(page: Page, hero = 'Fighter', seed = 17) {
   const data = heroFixture();
   data.perks = data.perks.filter(perk => perk.id === 'perk-ott-steeltoes');
-  await page.goto('/');
-  await page.getByText('Import game data or backup').click();
-  await setAvailableFile(page.locator('#game-data-file'), {
-    name: 'synthetic-accessibility.json', mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(data)),
-  });
-  await page.getByLabel('Hero', { exact: true }).selectOption(hero);
-  await page.getByLabel('Seed (optional, for a repeatable setup)').fill(String(seed));
-  await page.getByRole('button', { name: 'Start game', exact: true }).click();
-  await expect(page.getByText('Local game in progress.')).toBeVisible();
+  await startSyntheticGame(page, data, { fileName: 'synthetic-accessibility.json', hero, seed });
 }
 
 async function assertFocusedInViewport(page: Page, selector: string) {

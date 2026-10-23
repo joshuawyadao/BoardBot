@@ -4,6 +4,7 @@ import {
   adjacentLocations,
   awaySteps,
   createRandomState,
+  distancesFrom,
   nextInt,
   shortestRouteSteps,
   shuffle,
@@ -88,6 +89,20 @@ describe('deterministic random primitives', () => {
 })
 
 describe('board graph movement', () => {
+  it('finds shortest distances in route order and leaves unreachable locations absent', () => {
+    expect([...distancesFrom(routes, 'start', 'monster')]).toEqual([
+      ['start', 0], ['a', 1], ['b', 1], ['c', 1], ['target', 2],
+    ])
+    expect(distancesFrom(routes, 'start', 'hero').get('island')).toBeUndefined()
+  })
+
+  it('includes special routes for heroes and monsters but only ordinary edges for guides', () => {
+    expect(distancesFrom(special, 'home', 'hero').get('end')).toBe(3)
+    expect(distancesFrom(special, 'home', 'monster').get('passage-end')).toBe(1)
+    expect(distancesFrom(special, 'home', 'guide').get('end')).toBeUndefined()
+    expect(distancesFrom(special, 'home', 'guide').get('passage-end')).toBeUndefined()
+  })
+
   it('uses undirected edges and returns every equal shortest first step', () => {
     expect(adjacentLocations(routes, 'a', 'hero')).toEqual(['start', 'target'])
     expect(shortestRouteSteps(routes, 'start', 'target', 'monster')).toEqual(['a', 'b', 'c'])
@@ -121,6 +136,7 @@ describe('board graph movement', () => {
 
   it('rejects every unknown endpoint', () => {
     expect(() => adjacentLocations(routes, 'missing', 'hero')).toThrow(RangeError)
+    expect(() => distancesFrom(routes, 'missing', 'hero')).toThrow(RangeError)
     expect(() => shortestRouteSteps(routes, 'missing', 'target', 'monster')).toThrow(RangeError)
     expect(() => shortestRouteSteps(routes, 'start', 'missing', 'monster')).toThrow(RangeError)
     expect(() => awaySteps(routes, 'missing', 'start', 'monster')).toThrow(RangeError)

@@ -1,6 +1,7 @@
 import { MAX_SAVE_LENGTH, validateLocalGameData } from '../data/localGameData.ts';
 export { MAX_SAVE_LENGTH, validateLocalGameData } from '../data/localGameData.ts';
 import type { GameData } from '../data/gameData';
+import { canonicalJSON } from '../data/canonicalJSON';
 import { createFighterGame, dispatchGame } from '../engine/horrifiedGame';
 import type { FighterGame, GameCommand } from '../engine/horrifiedRuntime';
 
@@ -9,12 +10,6 @@ export const ENGINE_VERSION = 'solo-1';
 const MAX_COMMANDS = 5000;
 export interface SavedGame { data: GameData; game: FighterGame }
 
-function canonical(value: unknown): string {
-  if (value === null || typeof value !== 'object') return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
-  return `{${Object.entries(value).filter(([, entry]) => entry !== undefined).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)
-    .map(([key, entry]) => `${JSON.stringify(key)}:${canonical(entry)}`).join(',')}}`;
-}
 function record(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('The save contains an invalid object.');
   return value as Record<string, unknown>;
@@ -52,7 +47,7 @@ export async function decodeGameSave(payload: string): Promise<SavedGame> {
       if (result.error) throw new Error(`The saved history is invalid: ${result.error}`);
       game = result.state;
     }
-    if (canonical(game) !== canonical(saved)) throw new Error('The saved state does not match its committed history or game data.');
+    if (canonicalJSON(game) !== canonicalJSON(saved)) throw new Error('The saved state does not match its committed history or game data.');
     return { data, game };
   } catch (error) {
     if (error instanceof SyntaxError || error instanceof TypeError || error instanceof RangeError) {
