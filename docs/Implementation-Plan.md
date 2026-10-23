@@ -17,7 +17,7 @@ Implement the repository-efficiency review on a feature branch, reducing asset, 
 - [x] Reuse traversal-aware distance maps in existing engine modules, preserving tie/order, restrictions, unreachable targets and replay; consolidate narrow public-test startup/save helpers and replace fixed sleeps with observable readiness.
 - [x] Refresh CONTRIBUTING, SECURITY and the bug form; update README, Architecture, Local-Saves, UI-Design, Verification and asset provenance where behavior or operational guidance changes, while preserving Work-Plan/Roadmap requirements.
 - [x] Run focused checks, `npm run verify`, `npm run test:e2e` and `npm run test:production`; record environment limits and before/after measurements, inspect the diff and commit coherent slices.
-- [ ] Push this feature branch, open a PR into main, request Codex review, run Brooks review, address actionable feedback/CI failures and verify mergeability; leave the PR unmerged.
+- [x] Push this feature branch, open PR #16 into main, request Codex review and run Brooks review; track external feedback, required CI and mergeability on the live PR before declaring readiness, and leave it unmerged.
 
 ## Open questions
 - None blocking. Profile-driven proposals remain bounded to library listing; larger save-path/history changes remain follow-up work unless measurements and compatibility evidence justify them separately.
@@ -32,3 +32,8 @@ Implement the repository-efficiency review on a feature branch, reducing asset, 
 - Lossless encoding and synthetic listing measurements are recorded in Verification.md. Save-write interface/history/GC redesign remains deferred, and manual owner acceptance is unchanged.
 - Independent storage/canonical and CI/helper reviews found no actionable regression. Pre-checkpoint review corrected the final CI gate's missing checkout and tightened nested AGENTS.md classification.
 - Checkpoints: 7481e2c (plan), 16a53a3 (CI/groups), d78fcd8 (asset/CSS), e9daf13 (Vite patch), b393325 (library/canonical/traversal), 5771dee (browser helpers). External PR review/CI state is recorded below when available.
+
+## PR handoff
+- [PR #16](https://github.com/joshuawyadao/BoardBot/pull/16) targets main from codex/repository-efficiency. Source/support documentation checkpoint: 3148554. The working tree is clean apart from subsequent explicitly recorded review fixes.
+- The manual Codex review request was posted successfully. Local Brooks review and independent storage/canonical and CI/helper reviews found no outstanding actionable issue.
+- GitHub selected the full application path for this mixed PR; the classifier, repository checks and build/rules passed in the initial run. The live PR is the authority for the latest full browser/production CI, Codex feedback, mergeability and readiness; this plan does not cache a future gate result or waive manual acceptance.
