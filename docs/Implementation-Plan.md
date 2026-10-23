@@ -1,20 +1,19 @@
 # Plan
 
-Require the Node.js 26.12.1 security release for BoardBot development and CI, validate the existing application under that runtime, and prepare a reviewed PR into main.
+Enforce the Node.js 26.12.1 security minimum during npm installation, addressing Codex review feedback on PR #15 while preserving the validated runtime upgrade.
 
 ## Scope
-- In: `.nvmrc`, the root Node engine constraint in `package.json` and `package-lock.json`, contributor setup instructions in `README.md` and `docs/Verification.md`, and validation/review evidence.
-- Out: npm package upgrades, GitHub Action upgrades, gameplay changes, save migrations, private components, and merging the PR.
+- In: repository `.npmrc`, contributor/verification instructions, installation checks under the affected and patched Node runtimes, and PR feedback/CI evidence.
+- Out: npm package versions, GitHub Action versions, application/gameplay behavior, save formats, private components, and merging the PR.
 
 ## Action items
-- [x] Confirm the [October 21 Node security release](https://nodejs.org/en/blog/release/v26.12.1), inspect setup/CI/browser configurations, and reuse `codex/node-26-security-upgrade` from current main.
-- [x] Checkpoint this resolved plan before implementation.
-- [x] Pin `.nvmrc` to `26.12.1`, require `>=26.12.1 <27` in the manifest and lockfile, and preserve every locked package version/integrity.
-- [x] Update current contributor prerequisites and explain the security minimum in README/Verification; preserve historical test evidence and durable product/architecture plans.
-- [x] Install/select the patched Node runtime, run a clean `npm ci`, and verify runtime/manifest/lock agreement. Use the existing application tests: no executable application behavior changes or new test cases are needed.
-- [x] Run `npm run verify`, public Chromium browser checks, and production checks under Node 26.12.1; use the full Linux/macOS CI browser matrix for platform coverage and record any local environment limits.
-- [x] Prepare the validated batch for save/push and the authorized PR review cycle; track publication, Codex/Brooks feedback, full CI Verify, and conflict-free mergeability in the PR and automation memory before reporting ready.
-- [x] Keep this as one runtime upgrade batch: revert the version/configuration/docs commit together if a compatibility regression requires rollback; do not claim the previous vulnerable runtime is a security fix.
+- [x] Diagnose [Codex feedback](https://github.com/joshuawyadao/BoardBot/pull/15#discussion_r4355501884): the package engine range is advisory unless npm engine-strict is enabled; retain the existing 26.12.1 nvm/CI pin and >=26.12.1 <27 manifest/lock range.
+- [ ] Checkpoint this resolved feedback plan before changing configuration.
+- [ ] Add `engine-strict=true` in repository `.npmrc` and explain that a normal `npm ci` rejects unsupported Node versions in README/Verification.
+- [ ] Verify the actual install path rejects Node 26.10.0 with EBADENGINE in a disposable manifest/lock/config copy; verify clean installation under Node 26.12.1. No application tests need changes for this configuration-only correction.
+- [ ] Run `npm run verify`, the 104-case public Chromium suite, and Chromium/WebKit production checks under the patched runtime; preserve existing assertions and recorded historical evidence.
+- [ ] Prepare the verified feedback fix for save/push; acknowledge the addressed Codex comment with a thumbs-up after push, repeat Brooks/Codex review, and track complete CI Verify plus mergeability on the PR and in automation memory.
+- [ ] Keep the strict-install setting and its documentation in one feedback commit; validate the existing security pin/minimum and unchanged package graph before reporting readiness.
 
 ## Open questions
 - None.
