@@ -2,9 +2,9 @@
 
 ## Local command
 
-Requirements for the app checks: Git, Python 3.9 or newer, Node.js 26 with its bundled npm, and a POSIX shell on macOS or Linux (or WSL on Windows). Public and production Playwright checks require Chromium, WebKit and Firefox. No credentials are required.
+Requirements for the app checks: Git, Python 3.9 or newer, Node.js 26.12.1 or a newer 26.x release with its bundled npm, and a POSIX shell on macOS or Linux (or WSL on Windows). Public and production Playwright checks require Chromium, WebKit and Firefox. No credentials are required.
 
-The supported Node major is recorded in `.nvmrc` and `package.json`. If using nvm, run `nvm install` and `nvm use` from the checkout, then confirm `node --version` reports `v26.x` before installing dependencies. When moving from Node 24, run `npm ci` again under Node 26 to refresh installed packages, including native tooling.
+The minimum supported runtime is Node.js 26.12.1, the [October 21 security release](https://nodejs.org/en/blog/release/v26.12.1). `.nvmrc` pins that release for nvm and CI; the `package.json` engine requirement permits 26.12.1 and newer 26.x releases. Earlier Node 26 releases do not meet this security minimum. If using nvm, run `nvm install` and `nvm use` from the checkout, then confirm `node --version` reports `v26.12.1` before installing dependencies. Run `npm ci` again after switching Node releases to refresh installed packages, including native tooling.
 
 From a checkout, run:
 
@@ -45,7 +45,7 @@ The Fighter integration adds public synthetic tests for the complete command/eff
 
 The `CI Verify` workflow runs on pushes to `main`, pull requests and manual dispatch. Build/rules checks run separately from four independent one-worker browser jobs: Chromium, WebKit and Firefox on Ubuntu 24.04, and WebKit on macOS 15 arm64. Each browser job runs the public interaction suite and isolated production acceptance; failures do not cancel the other engines. The aggregate job retains the required **CI Verify** check name and directly requires success from build/rules and each of the four browser job IDs; any failure or skip prevents success. Jobs have explicit budgets (10 minutes build/rules, 25 minutes Linux browsers, 35 minutes macOS, 5 minutes aggregation).
 
-The public repository uses standard hosted runners. GitHub documents the `macos-15` label as M1/arm64 and standard public-repository runners as free in its [runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners). This supplies native macOS engine evidence without changing the owner's Mac settings. The workflow selects Node 26 from `.nvmrc`, pins checkout/Node setup actions, uses read-only repository permissions and disabled persisted checkout credentials, and cancels superseded runs. It never requires or publishes private components, saves or browser artifacts. Dependabot checks GitHub Actions and npm dependencies weekly; major `@types/node` updates remain excluded so a runtime upgrade changes `.nvmrc`, the engine requirement and types together. Repository rules require a pull request for `main`; direct pushes are blocked.
+The public repository uses standard hosted runners. GitHub documents the `macos-15` label as M1/arm64 and standard public-repository runners as free in its [runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners). This supplies native macOS engine evidence without changing the owner's Mac settings. The workflow selects Node 26.12.1 from `.nvmrc`, pins checkout/Node setup actions, uses read-only repository permissions and disabled persisted checkout credentials, and cancels superseded runs. It never requires or publishes private components, saves or browser artifacts. Dependabot checks GitHub Actions and npm dependencies weekly; major `@types/node` updates remain excluded so a runtime upgrade changes `.nvmrc`, the engine requirement and types together. Repository rules require a pull request for `main`; direct pushes are blocked.
 
 ## Acceptance checks for the solo game
 
@@ -295,3 +295,10 @@ Executable checkpoint **c8451e8** passes the complete local Chromium suite (**10
 | WebKit, macOS 15 arm64 | 104 | 1 | 6.7 minutes |
 
 The [three remaining human reviews](Playtest-Checklist.md#small-remaining-human-review) combine full owner play with subjective readability, actual Safari/VoiceOver experience, and physical internet disconnection (which can be done during the same owner game). No private packet or generated test artifact is tracked or uploaded by CI. Final evidence-only documentation updates do not change the verified executable checkpoint.
+
+
+## Node 26 security minimum — October 22, 2026
+
+The runtime requirement now starts at Node.js 26.12.1, the [October 21 security release](https://nodejs.org/en/blog/release/v26.12.1). The nvm/CI pin selects that exact version, while the package engine range permits later 26.x releases. No npm dependency version, gameplay code, or save format changed.
+
+Local validation with Node 26.12.1 and its bundled npm 11.20.0 passed a clean `npm ci`, `npm ls --all`, build/typecheck, all 148 unit tests across 27 files, five repository tests, all 104 Chromium public browser cases, and both Chromium/WebKit production acceptance cases. A full lockfile comparison confirmed that only the root Node engine constraint changed; explicit version-range checks accepted the fixed release and later 26.x versions while excluding older releases and other majors. Existing tests provide the regression coverage for this runtime-only change; no test cases were added or weakened. The PR CI matrix separately validates the complete public/production suites in Linux Chromium/WebKit/Firefox and native macOS WebKit.
