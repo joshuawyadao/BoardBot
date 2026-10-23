@@ -10,11 +10,11 @@ Implement the repository-efficiency review on a feature branch, reducing asset, 
 - [x] Review the October 20 findings, README, Architecture, Local-Saves, existing verification and affected public tests; fetch main and create `codex/repository-efficiency` from its clean tip.
 - [x] Checkpoint this resolved plan, install locked dependencies and establish the build/unit/repository baseline; use synthetic data only.
 - [x] Group compatible routine updates and classify documentation-only PRs inside CI; test classifier uncertainty, mixed changes, manual/main runs, and every gate failure/cancellation/unexpected-skip state.
-- [ ] Pin Vite to its patched 8.3.5 release after the installed baseline audit reported advisories affecting 8.3.2; rerun audit and endpoint/build/browser checks.
-- [ ] Replace the bundled PNG with pixel-identical lossless WebP, preserve provenance, update built-image acceptance, and remove only confirmed-unused CSS selectors.
-- [ ] Characterize existing canonical bytes/fingerprints and share the encoding implementation without changing existing data identities or supported-save replay.
-- [ ] Measure 1/10/50-game synthetic library listings; reuse per-listing content validation and avoid portable payload construction where it preserves corruption, size, recovery and concurrency behavior; add native IndexedDB regressions.
-- [ ] Reuse traversal-aware distance maps in existing engine modules, preserving tie/order, restrictions, unreachable targets and replay; consolidate narrow public-test startup/save helpers and replace fixed sleeps with observable readiness.
+- [x] Pin Vite to its patched 8.3.5 release after the installed baseline audit reported advisories affecting 8.3.2; rerun audit and endpoint/build/browser checks.
+- [x] Replace the bundled PNG with pixel-identical lossless WebP, preserve provenance, update built-image acceptance, and remove only confirmed-unused CSS selectors.
+- [x] Characterize existing canonical bytes/fingerprints and share the encoding implementation without changing existing data identities or supported-save replay.
+- [x] Measure 1/10/50-game synthetic library listings; reuse per-listing content validation and avoid portable payload construction where it preserves corruption, size, recovery and concurrency behavior; add native IndexedDB regressions.
+- [x] Reuse traversal-aware distance maps in existing engine modules, preserving tie/order, restrictions, unreachable targets and replay; consolidate narrow public-test startup/save helpers and replace fixed sleeps with observable readiness.
 - [ ] Refresh CONTRIBUTING, SECURITY and the bug form; update README, Architecture, Local-Saves, UI-Design, Verification and asset provenance where behavior or operational guidance changes, while preserving Work-Plan/Roadmap requirements.
 - [ ] Run focused checks, `npm run verify`, `npm run test:e2e` and `npm run test:production`; record environment limits and before/after measurements, inspect the diff and commit coherent slices.
 - [ ] Push this feature branch, open a PR into main, request Codex review, run Brooks review, address actionable feedback/CI failures and verify mergeability; leave the PR unmerged.

@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import type { GameData } from '../data/gameData';
 import type { GameView } from '../engine/horrifiedGame';
 import { BOARD_HEIGHT, BOARD_WIDTH, NODE_HEIGHT, NODE_WIDTH, boardPassages, boardPositions, boardRoutes, hasIllustratedLayout, isPhysicalBoard } from './boardLayout';
-import illustratedBoard from './assets/illustrated-board-v2.png';
+import illustratedBoard from './assets/illustrated-board-v2.webp';
 import { PieceArtwork } from './TabletopPieces';
 import './gameBoard.css';
 

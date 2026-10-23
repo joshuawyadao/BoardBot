@@ -73,8 +73,8 @@ test('the built app restores and completes a game behind an enforced local-only 
     await page.route('**/__boardbot/local-game-data', route => route.fulfill({ json: data }));
     await page.goto('/');
     // The synthetic board doesn't select the illustrated map: decode the actual bundled art too.
-    const art = (await readdir('dist/assets')).filter(name => name.endsWith('.png'));
-    expect(art.length).toBeGreaterThan(0);
+    const art = (await readdir('dist/assets')).filter(name => name.startsWith('illustrated-board-v2-') && name.endsWith('.webp'));
+    expect(art).toHaveLength(1);
     await page.evaluate(async names => {
       for (const name of names) {
         const image = new Image();
