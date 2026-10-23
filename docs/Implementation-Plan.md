@@ -8,8 +8,9 @@ Implement the repository-efficiency review on a feature branch, reducing asset, 
 
 ## Action items
 - [x] Review the October 20 findings, README, Architecture, Local-Saves, existing verification and affected public tests; fetch main and create `codex/repository-efficiency` from its clean tip.
-- [ ] Checkpoint this resolved plan, install locked dependencies and establish the build/unit/repository baseline; use synthetic data only.
-- [ ] Group compatible routine updates and classify documentation-only PRs inside CI; test classifier uncertainty, mixed changes, manual/main runs, and every gate failure/cancellation/unexpected-skip state.
+- [x] Checkpoint this resolved plan, install locked dependencies and establish the build/unit/repository baseline; use synthetic data only.
+- [x] Group compatible routine updates and classify documentation-only PRs inside CI; test classifier uncertainty, mixed changes, manual/main runs, and every gate failure/cancellation/unexpected-skip state.
+- [ ] Pin Vite to its patched 8.3.5 release after the installed baseline audit reported advisories affecting 8.3.2; rerun audit and endpoint/build/browser checks.
 - [ ] Replace the bundled PNG with pixel-identical lossless WebP, preserve provenance, update built-image acceptance, and remove only confirmed-unused CSS selectors.
 - [ ] Characterize existing canonical bytes/fingerprints and share the encoding implementation without changing existing data identities or supported-save replay.
 - [ ] Measure 1/10/50-game synthetic library listings; reuse per-listing content validation and avoid portable payload construction where it preserves corruption, size, recovery and concurrency behavior; add native IndexedDB regressions.

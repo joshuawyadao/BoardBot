@@ -14,10 +14,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_and_rules:
-    name: Build and rules
+  classify_changes:
+    name: Classify changes
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 5
+    outputs:
+      run_app: ${{ steps.classify.outputs.run_app }}
+    steps:
+      - name: Check out full history for the pull request merge base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Classify the complete PR diff
+        id: classify
+        env:
+          CI_EVENT: ${{ github.event_name }}
+          CI_BASE: ${{ github.event.pull_request.base.sha }}
+          CI_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/ci_changes.py "$CI_EVENT" "$CI_BASE" "$CI_HEAD"
+
+  repository_verify:
+    name: Repository verification
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -25,6 +45,18 @@ jobs:
           persist-credentials: false
       - name: Verify repository and tooling tests
         run: ./scripts/verify-repository.sh
+
+  build_and_rules:
+    name: Build and rules
+    needs: classify_changes
+    if: ${{ needs.classify_changes.outputs.run_app == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -37,6 +69,8 @@ jobs:
 
   chromium_linux:
     name: Browser Chromium on Linux
+    needs: classify_changes
+    if: ${{ needs.classify_changes.outputs.run_app == 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -60,6 +94,8 @@ jobs:
 
   webkit_linux:
     name: Browser WebKit on Linux
+    needs: classify_changes
+    if: ${{ needs.classify_changes.outputs.run_app == 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -83,6 +119,8 @@ jobs:
 
   firefox_linux:
     name: Browser Firefox on Linux
+    needs: classify_changes
+    if: ${{ needs.classify_changes.outputs.run_app == 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -106,6 +144,8 @@ jobs:
 
   webkit_macos:
     name: Browser WebKit on macOS
+    needs: classify_changes
+    if: ${{ needs.classify_changes.outputs.run_app == 'true' }}
     runs-on: macos-15
     timeout-minutes: 35
     steps:
@@ -129,23 +169,23 @@ jobs:
 
   ci-verify:
     name: CI Verify
-    needs: [build_and_rules, chromium_linux, webkit_linux, firefox_linux, webkit_macos]
+    needs: [classify_changes, repository_verify, build_and_rules, chromium_linux, webkit_linux, firefox_linux, webkit_macos]
     if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Require every verification job
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Require the expected verification jobs
         env:
+          CLASSIFIER_RESULT: ${{ needs.classify_changes.result }}
+          REPOSITORY_RESULT: ${{ needs.repository_verify.result }}
+          RUN_APP: ${{ needs.classify_changes.outputs.run_app }}
           BUILD_RESULT: ${{ needs.build_and_rules.result }}
           CHROMIUM_RESULT: ${{ needs.chromium_linux.result }}
           WEBKIT_LINUX_RESULT: ${{ needs.webkit_linux.result }}
           FIREFOX_RESULT: ${{ needs.firefox_linux.result }}
           WEBKIT_MACOS_RESULT: ${{ needs.webkit_macos.result }}
-        run: |
-          if [ "$BUILD_RESULT" != success ] || [ "$CHROMIUM_RESULT" != success ] ||
-             [ "$WEBKIT_LINUX_RESULT" != success ] || [ "$FIREFOX_RESULT" != success ] ||
-             [ "$WEBKIT_MACOS_RESULT" != success ]; then
-            printf 'Build: %s; Chromium: %s; Linux WebKit: %s; Firefox: %s; macOS WebKit: %s\n' \
-              "$BUILD_RESULT" "$CHROMIUM_RESULT" "$WEBKIT_LINUX_RESULT" "$FIREFOX_RESULT" "$WEBKIT_MACOS_RESULT"
-            exit 1
-          fi
+        run: python3 scripts/ci_gate.py
