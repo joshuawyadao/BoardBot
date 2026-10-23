@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        BoardBot currently has no playable app. For future game bugs, identify the game and rules version. Use invented data; exclude credentials, personal saves, private prototypes, and unlicensed assets. Report security vulnerabilities through the private Security link.
+        BoardBot includes a local solo playtest build. For game bugs, identify the game and rules version; see README for current support and remaining acceptance gates. Use invented data; exclude credentials, personal saves, private prototypes, and unlicensed assets. Report security vulnerabilities through the private Security link.
   - type: textarea
     id: observed
     attributes:
