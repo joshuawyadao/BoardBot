@@ -103,7 +103,9 @@ export function adjacentLocations(graph: BoardGraph, from: string, traversal: Tr
   return [...neighbors]
 }
 
-function distancesFrom(graph: BoardGraph, origin: string, traversal: Traversal): Map<string, number> {
+/** Shortest legal distance to each reachable location, in deterministic discovery order. */
+export function distancesFrom(graph: BoardGraph, origin: string, traversal: Traversal): Map<string, number> {
+  requireLocation(knownLocations(graph), origin)
   const distances = new Map<string, number>([[origin, 0]])
   const queue = [origin]
   for (let head = 0; head < queue.length; head++) {

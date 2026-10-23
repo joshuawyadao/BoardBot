@@ -1,4 +1,5 @@
 import type { GameData } from '../data/gameData';
+import { canonicalJSON } from '../data/canonicalJSON';
 import { validateGameData } from '../data/gameData.ts';
 import { isSupportedRuleset } from './decisionPolicies.ts';
 import { createRandomState, shuffle } from './gamePrimitives.ts';
@@ -47,13 +48,6 @@ export interface HorrifiedState {
   monsterDiscard: string[];
   lairs: Record<string, { definitionId: string; revealed: boolean }>;
   entries: GameEntry[];
-}
-
-function canonicalJSON(value: unknown): string {
-  if (value === null || typeof value !== 'object') return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(entry => canonicalJSON(entry) ?? 'null').join(',')}]`;
-  return `{${Object.entries(value).filter(([, entry]) => entry !== undefined).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)
-    .map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJSON(entry)}`).join(',')}}`;
 }
 
 /** Fingerprint actual contents, not a caller's claimed source fingerprint. */

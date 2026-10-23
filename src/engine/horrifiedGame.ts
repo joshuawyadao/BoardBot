@@ -1,5 +1,5 @@
 import type { GameData } from '../data/gameData';
-import { adjacentLocations, awaySteps, nextInt, shortestRouteSteps } from './gamePrimitives.ts';
+import { adjacentLocations, awaySteps, distancesFrom, nextInt, shortestRouteSteps } from './gamePrimitives.ts';
 import { closeResponseWindow, createResponseWindow, passResponse, resolveD20, selectResponse, isSupportedRuleset, LEGACY_RULESET_VERSION, RULESET_VERSION } from './decisionPolicies.ts';
 import { createHorrifiedGame, drawBoardItems, gainPerk, logEntry, projectGame, SOLO_SEAT } from './horrifiedState.ts';
 import type { MonsterId } from './horrifiedState';
@@ -349,10 +349,7 @@ export function getActionReason(data: GameData, state: FighterGame, action: Hero
 
 function nearestMonsterTargets(data: GameData, state: FighterGame): { id: string; distance: number }[] {
   const from = state.hero.location!;
-  const distances = new Map<string, number>([[from, 0]]), queue = [from];
-  for (let index = 0; index < queue.length; index++) for (const next of adjacentLocations(data.board, queue[index], 'hero')) {
-    if (!distances.has(next)) { distances.set(next, distances.get(queue[index])! + 1); queue.push(next); }
-  }
+  const distances = distancesFrom(data.board, from, 'hero');
   const candidates = monsterIds.filter(id => !state.monsters[id].defeated && state.monsters[id].location)
     .map(id => ({ id, distance: distances.get(state.monsters[id].location!) ?? Infinity }));
   const minimum = Math.min(...candidates.map(candidate => candidate.distance));
