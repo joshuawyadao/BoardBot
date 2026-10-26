@@ -29,6 +29,7 @@ Complete the smallest Vite security upgrade by adopting the existing Dependabot 
 - The complete public Chromium suite passes all 104 cases in 5.4 minutes, including victory and exact reload recovery for every Hero. Test output is outside the repository under /private/tmp/boardbot-vite-upgrade-browser and /private/tmp/boardbot-vite-upgrade-production.
 - No application/test source, other direct package version, Node constraint or GitHub Action changed. The two dependency files retain the original Dependabot commit as their single rollback boundary.
 - Post-push Codex review, any feedback, complete cross-browser CI and mergeability are checked on [PR #14](https://github.com/joshuawyadao/BoardBot/pull/14); the automation memory records the final observed state without another documentation-only push.
+- Integration follow-up: current main now includes Node security PR #15 at 0077c6a, and GitHub reports a merge conflict after this plan replaced the same temporary document. Merge current main into this branch, retain the new Node 26.12.1 pin, >=26.12.1 <27 manifest/lock engines, engine-strict setting and canonical setup docs, and keep this Vite task as the temporary plan. Revalidate exact installation and npm run verify; prior browser results remain applicable only if application/test/configuration trees and the validated Node runtime are unchanged.
 
 ## Brooks-Lint Review
 
