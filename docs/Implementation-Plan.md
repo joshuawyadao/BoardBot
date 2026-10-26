@@ -19,6 +19,10 @@ Implement the repository-efficiency review on a feature branch, reducing asset, 
 - [x] Run focused checks, `npm run verify`, `npm run test:e2e` and `npm run test:production`; record environment limits and before/after measurements, inspect the diff and commit coherent slices.
 - [x] Push this feature branch, open PR #16 into main, request Codex review and run Brooks review; track external feedback, required CI and mergeability on the live PR before declaring readiness, and leave it unmerged.
 
+- [x] Integrate main's merged PR #15 security minimum without dropping the efficiency changes; preserve the exact Node 26.12.1 pin, >=26.12.1 <27 engine range, strict installs and both verification histories.
+- [x] Reinstall and rerun verification, full public Chromium and production Chromium/WebKit under Node 26.12.1; preserve existing assertions and confirm the merge changes only the root engine requirement in the dependency graph.
+- [x] Save the conflict-resolution checkpoint and track its fresh review/CI on PR #16 before declaring readiness; the live PR remains the authority for external gate results.
+
 ## Open questions
 - None blocking. Profile-driven proposals remain bounded to library listing; larger save-path/history changes remain follow-up work unless measurements and compatibility evidence justify them separately.
 
@@ -37,3 +41,9 @@ Implement the repository-efficiency review on a feature branch, reducing asset, 
 - [PR #16](https://github.com/joshuawyadao/BoardBot/pull/16) targets main from codex/repository-efficiency. Source/support documentation checkpoint: 3148554. The working tree is clean apart from subsequent explicitly recorded review fixes.
 - The manual Codex review request was posted successfully. Local Brooks review and independent storage/canonical and CI/helper reviews found no outstanding actionable issue.
 - GitHub selected the full application path for this mixed PR; the classifier, repository checks and build/rules passed in the initial run. The live PR is the authority for the latest full browser/production CI, Codex feedback, mergeability and readiness; this plan does not cache a future gate result or waive manual acceptance.
+
+## Main integration — October 26, 2026
+- Main advanced to 0077c6a (PR #15) while the Linux WebKit retry completed. The pre-integration c2bd2f2 head passed all eight CI jobs: 154 unit cases, 12 repository cases, 428 public browser cases and four production cases, with no test retries. The first Linux WebKit job timed out after a slow Ubuntu mirror took 23m54s for 117 MB; its focused retry passed.
+- The only merge conflicts were the temporary task plan and appended Verification sections. Keep this task plan, retain the complete Node security verification section beside the efficiency section, and accept main's runtime/configuration/setup changes. Both canonical Work-Plan and Roadmap remain unchanged.
+- No executable application or test source changes are required for the merge; existing suites cover the combined runtime and efficiency behavior. No new test cases are needed solely for resolving these documentation conflicts. Local verification and the new current-head CI remain required before readiness.
+- Clean installation under Node 26.12.1/npm 11.20.0, build/typecheck, all 154 unit cases, 12 repository cases, all 107 Chromium cases (4.7 minutes) and both Chromium/WebKit production cases (21.7 seconds) pass. A read-only integration review found no actionable issue. The initial local server starts were denied by the execution sandbox before page creation; authorized local-server execution passed without source changes. Full Firefox and native macOS/Linux WebKit evidence remains in the new PR CI run.

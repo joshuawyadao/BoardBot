@@ -9,7 +9,7 @@ BoardBot is a project for playing board games solo against bots on your computer
 
 ## Try the sample turn
 
-Install Node.js 26 and its bundled npm, then run:
+Install Node.js 26.12.1 (or a newer 26.x release) and its bundled npm. The repository npm settings reject installation on unsupported Node versions. Then run:
 
 ```sh
 git clone https://github.com/joshuawyadao/BoardBot.git
@@ -55,7 +55,7 @@ The full milestone still requires the owner’s complete-game acceptance on the 
 
 ## Get started
 
-To check a contribution, install Git, Python 3.9 or newer, and Node.js 26. From the checkout, run:
+To check a contribution, install Git, Python 3.9 or newer, and Node.js 26.12.1 or a newer 26.x release. From the checkout, run:
 
 ```sh
 npm run verify
