@@ -4,11 +4,11 @@ Complete the smallest Vite security upgrade by adopting the existing Dependabot 
 
 ## Scope
 - In: Vite 8.3.2 to 8.3.5 and its existing generated lockfile changes; installation, peer compatibility, security, endpoint, build, public browser and production checks; implementation tracking and PR review.
-- Out: Other dependency or Action updates, Node PR #15, repository-efficiency PR #16, application or game-rule changes, private data, and merging the PR.
+- Out: Other dependency or Action updates, further Node changes beyond the already merged PR #15 baseline, repository-efficiency PR #16, application or game-rule changes, private data, and merging the PR.
 
 ## Action items
 - [x] Read README, Architecture and Verification; map the npm scripts, local endpoint tests, public browser fixtures and isolated production coverage.
-- [x] Verify current main at ba9f9cd and adopt existing PR #14 at 45da614 on dependabot/npm_and_yarn/vite-8.3.5 instead of creating another upgrade; preserve the previous clean Node branch.
+- [x] Verify initial main at ba9f9cd and adopt existing PR #14 at 45da614 on dependabot/npm_and_yarn/vite-8.3.5 instead of creating another upgrade; preserve the previous clean Node branch.
 - [x] Checkpoint this resolved plan before installation or further implementation.
 - [x] Verify manifest/lock agreement and the compatible Vite ranges in plugin-react 6.1.1 and Vitest 5.0.3; keep all other direct package pins unchanged.
 - [x] Install the exact lockfile with Node 26.12.1/npm 11.20.0, run npm ls --all and a fresh lockfile-only npm audit; record unavailable sources explicitly.
@@ -29,7 +29,8 @@ Complete the smallest Vite security upgrade by adopting the existing Dependabot 
 - The complete public Chromium suite passes all 104 cases in 5.4 minutes, including victory and exact reload recovery for every Hero. Test output is outside the repository under /private/tmp/boardbot-vite-upgrade-browser and /private/tmp/boardbot-vite-upgrade-production.
 - No application/test source, other direct package version, Node constraint or GitHub Action changed. The two dependency files retain the original Dependabot commit as their single rollback boundary.
 - Post-push Codex review, any feedback, complete cross-browser CI and mergeability are checked on [PR #14](https://github.com/joshuawyadao/BoardBot/pull/14); the automation memory records the final observed state without another documentation-only push.
-- Integration follow-up: current main now includes Node security PR #15 at 0077c6a, and GitHub reports a merge conflict after this plan replaced the same temporary document. Merge current main into this branch, retain the new Node 26.12.1 pin, >=26.12.1 <27 manifest/lock engines, engine-strict setting and canonical setup docs, and keep this Vite task as the temporary plan. Revalidate exact installation and npm run verify; prior browser results remain applicable only if application/test/configuration trees and the validated Node runtime are unchanged.
+- Integration resolution: main now includes Node security PR #15 at 0077c6a. The only conflict was the temporary Implementation-Plan.md; retain this current task plan and preserve the Node security decision in main's canonical README/Verification, .nvmrc 26.12.1, >=26.12.1 <27 manifest/lock engines and engine-strict=true. Application/test/configuration trees and the validation runtime are unchanged from the passing local browser/production run. Revalidate exact installation and npm run verify after integration.
+- Integrated validation passes: fresh strict-engine npm ci/audit, build/typecheck, 148 unit tests and five repository tests. A complete lock comparison confirms that only the root Node engine range was added to the previously validated Vite graph; application, test, script and browser/CI configuration trees are byte-identical. Prior Chromium and production results therefore apply to this integration.
 
 ## Brooks-Lint Review
 
@@ -49,4 +50,4 @@ The patch keeps the dependency boundary coherent and introduces no application, 
 
 ### Summary
 - Retain the exact Dependabot lockfile and the Vite-only direct upgrade; use the existing PR as the rollback boundary.
-- Complete public Chromium, Codex review and the final CI Verify gate before declaring readiness.
+- Require final Codex review and complete CI Verify on the integrated head before declaring readiness.
