@@ -242,13 +242,15 @@ test('missing data references fail safely while a valid previous save stays avai
       tx.oncomplete = () => resolve(); tx.onabort = () => reject(tx.error);
     });
     db.close();
+    const listed = await library.list();
     const damaged = await store.read();
     const repaired = await store.write(damaged.previous!.payload, damaged.current!.token);
     const after = await store.read();
     library.close();
-    return { previous, damaged, repaired, after };
+    return { previous, listed, damaged, repaired, after };
   }, fighterFixture());
   expect(result.damaged.current?.damaged).toBe(true);
+  expect(result.listed[0]).toMatchObject({ id: 'missing-reference', damaged: true, hasPrevious: true });
   expect(result.damaged.previous?.token).toBe(result.previous.token);
   expect(result.after.current).toEqual(result.repaired);
   expect(result.after.previous).toEqual(result.damaged.previous);
@@ -280,9 +282,12 @@ test('corrupted shared data is restored from the exact incoming version before s
         tx.onabort = () => { db.close(); reject(tx.error); };
       });
     };
+    const healthy = await library.list();
     await corrupt();
+    const damagedList = await library.list();
     const unreadable = await store.read();
     await library.setData(data);
+    const repairedList = await library.list();
     const afterSetData = await store.read();
     await decodeGameSave(afterSetData.current!.payload);
     await corrupt();
@@ -291,14 +296,131 @@ test('corrupted shared data is restored from the exact incoming version before s
     await decodeGameSave(afterWrite.current!.payload);
     const restoredData = await library.getData();
     library.close();
-    return { unreadable: unreadable.current?.damaged, firstToken: first.token,
+    return { healthy, damagedList, repairedList, unreadable: unreadable.current?.damaged, firstToken: first.token,
       afterSetDataToken: afterSetData.current?.token, secondToken: second.token,
       afterWriteToken: afterWrite.current?.token, restoredIdentity: await dataIdentity(restoredData!), ref };
   }, fighterFixture());
   expect(result.unreadable).toBe(true);
+  expect(result.healthy[0].damaged).not.toBe(true);
+  expect(result.damagedList[0].damaged).toBe(true);
+  expect(result.repairedList[0].damaged).not.toBe(true);
   expect(result.afterSetDataToken).toBe(result.firstToken);
   expect(result.afterWriteToken).toBe(result.secondToken);
   expect(result.restoredIdentity).toBe(result.ref);
+});
+
+test('listing verifies each content version once while preserving all game rows and recovery slots', async ({ page }) => {
+  await page.goto(adapterPage);
+  const result = await page.evaluate(async data => {
+    const { openGameLibrary } = await import('/src/session/gameLibrary.ts' as string);
+    const { createFighterGame } = await import('/src/engine/horrifiedGame.ts' as string);
+    const { encodeGameSave } = await import('/src/session/gameSave.ts' as string);
+    const library = await openGameLibrary();
+    const earlier = structuredClone(data);
+    earlier.interpretationVersion = 'boardbot-dnd-2026-10-02-v4';
+    const payloads = [encodeGameSave(data, await createFighterGame(data, 17)),
+      encodeGameSave(earlier, await createFighterGame(earlier, 17))];
+    for (let index = 0; index < 12; index++) {
+      const store = library.game(`shared-${index}`);
+      const payload = payloads[index % payloads.length];
+      const first = await store.write(payload, null);
+      await store.write(payload, first.token);
+      store.close();
+    }
+    let dataReads = 0, hashes = 0;
+    const originalGet = IDBObjectStore.prototype.get;
+    const originalDigest = crypto.subtle.digest.bind(crypto.subtle);
+    IDBObjectStore.prototype.get = function (...args: Parameters<IDBObjectStore['get']>) {
+      if (this.name === 'data') dataReads++;
+      return originalGet.apply(this, args);
+    };
+    crypto.subtle.digest = (...args) => { hashes++; return originalDigest(...args); };
+    try { return { rows: await library.list(), dataReads, hashes }; }
+    finally {
+      IDBObjectStore.prototype.get = originalGet;
+      crypto.subtle.digest = originalDigest;
+      library.close();
+    }
+  }, fighterFixture());
+  expect(result.rows.map((row: { id: string }) => row.id).sort()).toEqual(
+    Array.from({ length: 12 }, (_, index) => `shared-${index}`).sort());
+  expect(result.rows.every((row: { damaged?: boolean; hasPrevious: boolean }) => !row.damaged && row.hasPrevious)).toBe(true);
+  expect(result.dataReads).toBe(2);
+  expect(result.hashes).toBe(2);
+});
+
+test('a list keeps one readonly snapshot while another tab commits a new save', async ({ page }) => {
+  await page.goto(adapterPage);
+  const result = await page.evaluate(async data => {
+    const { openGameLibrary } = await import('/src/session/gameLibrary.ts' as string);
+    const { createFighterGame } = await import('/src/engine/horrifiedGame.ts' as string);
+    const { encodeGameSave } = await import('/src/session/gameSave.ts' as string);
+    const one = await openGameLibrary(), two = await openGameLibrary();
+    const payload = encodeGameSave(data, await createFighterGame(data, 23));
+    const initial = await one.game('concurrent-list').write(payload, null);
+    let release!: () => void, started!: () => void;
+    const hold = new Promise<void>(resolve => { release = resolve; });
+    const digestStarted = new Promise<void>(resolve => { started = resolve; });
+    const original = crypto.subtle.digest.bind(crypto.subtle);
+    let held = false;
+    crypto.subtle.digest = async (...args) => {
+      if (!held) { held = true; started(); await hold; }
+      return original(...args);
+    };
+    try {
+      const listing = one.list();
+      await digestStarted;
+      const changed = await two.game('concurrent-list').write(payload, initial.token);
+      release();
+      const snapshot = await listing;
+      return { snapshot, latest: await one.list(), initial, changed };
+    } finally { release(); crypto.subtle.digest = original; one.close(); two.close(); }
+  }, fighterFixture());
+  expect(result.snapshot[0].version).toBe(JSON.stringify([result.initial.token, null]));
+  expect(result.snapshot[0].hasPrevious).toBe(false);
+  expect(result.latest[0].version).toBe(JSON.stringify([result.changed.token, result.initial.token]));
+  expect(result.latest[0].hasPrevious).toBe(true);
+});
+
+test('listing preserves the exact portable UTF-8 size boundary without hydrating each save', async ({ page }) => {
+  await page.goto(adapterPage);
+  const result = await page.evaluate(async data => {
+    const { openGameLibrary } = await import('/src/session/gameLibrary.ts' as string);
+    const { createFighterGame } = await import('/src/engine/horrifiedGame.ts' as string);
+    const { encodeGameSave, MAX_SAVE_LENGTH } = await import('/src/session/gameSave.ts' as string);
+    const library = await openGameLibrary(), store = library.game('size-boundary');
+    const payload = encodeGameSave(data, await createFighterGame(data, 19));
+    const first = await store.write(payload, null);
+    await store.write(payload, first.token);
+    const envelope = JSON.parse(payload);
+    envelope.state.padding = 'é';
+    const emptyBytes = new TextEncoder().encode(JSON.stringify(envelope)).byteLength;
+    // Keep a multi-byte character and fill the rest with single-byte ASCII.
+    envelope.state.padding += 'x'.repeat(MAX_SAVE_LENGTH - emptyBytes);
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('boardbot-game-library', 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    async function replaceState() {
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction('games', 'readwrite'), bucket = tx.objectStore('games');
+        const request = bucket.get('size-boundary');
+        request.onsuccess = () => { const raw = request.result; raw.current.state = envelope.state; bucket.put(raw, 'size-boundary'); };
+        tx.oncomplete = () => resolve(); tx.onabort = () => reject(tx.error);
+      });
+    }
+    try {
+      await replaceState();
+      const atLimit = await library.list();
+      envelope.state.padding += 'x';
+      await replaceState();
+      return { atLimit, oversized: await library.list(), recoveryToken: (await store.read()).previous?.token, firstToken: first.token };
+    } finally { db.close(); library.close(); }
+  }, fighterFixture());
+  expect(result.atLimit[0].damaged).not.toBe(true);
+  expect(result.oversized[0]).toMatchObject({ id: 'size-boundary', damaged: true, hasPrevious: true });
+  expect(result.recoveryToken).toBe(result.firstToken);
 });
 
 test('a failed data-cache update aborts without changing the default version', async ({ page }) => {

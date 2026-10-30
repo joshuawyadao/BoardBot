@@ -1,4 +1,4 @@
-import { expect, setAvailableFile, test, type Page } from './test';
+import { expect, readSavedState, startSyntheticGame, test, type Page } from './test';
 import type { GameData } from '../../src/data/gameData';
 import { heroFixture } from '../../src/engine/fixtures/heroFixture';
 
@@ -49,13 +49,7 @@ function illustratedFixture(): GameData {
 }
 
 async function load(page: Page, data: GameData, seed = 2, hero = 'Fighter') {
-  await page.goto('/');
-  await page.getByText('Import game data or backup').click();
-  await setAvailableFile(page.locator('#game-data-file'), { name: 'synthetic-layout.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
-  await page.getByLabel('Hero', { exact: true }).selectOption(hero);
-  await page.getByLabel('Seed (optional, for a repeatable setup)').fill(String(seed));
-  await page.getByRole('button', { name: 'Start game', exact: true }).click();
-  await expect(page.getByText('Local game in progress.')).toBeVisible();
+  await startSyntheticGame(page, data, { fileName: 'synthetic-layout.json', hero, seed });
 }
 
 async function expectWholeBoard(page: Page) {
@@ -365,13 +359,7 @@ test('new games visibly contain setup pieces before the first action', async ({ 
   await expect(page.locator('.h-location .piece-lair')).toHaveCount(data.board.lairLocations.length);
   const items = await page.locator('.h-location .piece-item').allTextContents();
   expect(items.reduce((sum, text) => sum + Number(text.slice(1)), 0)).toBe(12);
-  const revisionBefore = await page.evaluate(async () => {
-    const path = '/src/session/gameLibrary.ts';
-    const library = await (await import(path)).openGameLibrary();
-    const [game] = await library.list();
-    const save = (await library.game(game.id).read()).current!.payload;
-    library.close(); return JSON.parse(save).state.revision;
-  });
+  const revisionBefore = (await readSavedState(page)).revision;
   expect(revisionBefore).toBe(0);
   await page.getByRole('button', { name: 'Ready to play', exact: true }).click();
   await expect(setup).toBeHidden();
@@ -407,17 +395,6 @@ test('Wizard destination 17 explains relocating a Monster already on the board a
   await expect(page.getByRole('button', { name: /^Test room 17\. Displacer Beast/ })).toBeVisible();
   await expect(page.locator('.h-location .piece-displacer')).toHaveCount(1);
 });
-
-async function readSavedState(page: Page) {
-  return page.evaluate(async () => {
-    const path = '/src/session/gameLibrary.ts';
-    const library = await (await import(path)).openGameLibrary();
-    try {
-      const [entry] = await library.list();
-      return JSON.parse((await library.game(entry.id).read()).current!.payload).state;
-    } finally { library.close(); }
-  });
-}
 
 test('inspection preserves a Pick Up draft, shows Strength, and restores keyboard focus', async ({ page }) => {
   const data = illustratedFixture();

@@ -1,4 +1,4 @@
-import { adjacentLocations, awaySteps, nextInt, type Traversal } from './gamePrimitives';
+import { adjacentLocations, awaySteps, distancesFrom, nextInt, type Traversal } from './gamePrimitives';
 import { drawBoardItems } from './horrifiedState';
 import { LEGACY_RULESET_VERSION } from './decisionPolicies';
 import type { MonsterId } from './horrifiedState';
@@ -26,24 +26,11 @@ function locatedCharacters(ctx: EngineContext): string[] {
   return occupants;
 }
 
-function distance(ctx: EngineContext, from: string, to: string, traversal: Traversal): number {
-  if (from === to) return 0;
-  const visited = new Set([from]);
-  const queue = [{ location: from, steps: 0 }];
-  for (let index = 0; index < queue.length; index++) {
-    const current = queue[index];
-    for (const neighbor of adjacentLocations(ctx.data.board, current.location, traversal)) {
-      if (neighbor === to) return current.steps + 1;
-      if (!visited.has(neighbor)) { visited.add(neighbor); queue.push({ location: neighbor, steps: current.steps + 1 }); }
-    }
-  }
-  return Infinity;
-}
-
 function nearest(ctx: EngineContext, from: string, entities: string[], traversal: Traversal): string[] {
   const candidates = entities.map(entity => ({ entity, location: ctx.location(entity) }))
     .filter((candidate): candidate is { entity: string; location: string } => candidate.location !== null);
-  const ranked = candidates.map(candidate => ({ entity: candidate.entity, distance: distance(ctx, from, candidate.location, traversal) }));
+  const distances = distancesFrom(ctx.data.board, from, traversal);
+  const ranked = candidates.map(candidate => ({ entity: candidate.entity, distance: distances.get(candidate.location) ?? Infinity }));
   const minimum = Math.min(...ranked.map(candidate => candidate.distance));
   return Number.isFinite(minimum) ? ranked.filter(candidate => candidate.distance === minimum).map(candidate => candidate.entity) : [];
 }
@@ -404,9 +391,10 @@ export function resolveMonsterTask(task: Task, ctx: EngineContext): boolean {
       const location = state.monsters.beholder.location;
       if (!location || state.monsters.beholder.defeated) break;
       const occupied = Object.keys(state.boardItems).filter(id => state.boardItems[id].length);
-      const minimum = Math.min(...occupied.map(id => distance(ctx, location, id, 'monster')));
+      const distances = distancesFrom(ctx.data.board, location, 'monster');
+      const minimum = Math.min(...occupied.map(id => distances.get(id) ?? Infinity));
       if (!Number.isFinite(minimum)) break;
-      const candidates = occupied.filter(id => distance(ctx, location, id, 'monster') === minimum);
+      const candidates = occupied.filter(id => distances.get(id) === minimum);
       const selected = chooseOne(ctx, task, 'Choose the closest Items location', candidates);
       if (!selected) break;
       ctx.place('beholder', selected);
@@ -458,9 +446,10 @@ export function resolveMonsterTask(task: Task, ctx: EngineContext): boolean {
       const location = state.monsters[task.monster].location;
       if (!location) break;
       const lairs = Object.keys(state.lairs);
-      const minimum = Math.min(...lairs.map(id => distance(ctx, location, id, 'monster')));
+      const distances = distancesFrom(ctx.data.board, location, 'monster');
+      const minimum = Math.min(...lairs.map(id => distances.get(id) ?? Infinity));
       if (!Number.isFinite(minimum)) break;
-      const selected = chooseOne(ctx, task, 'Choose the nearest Lair', lairs.filter(id => distance(ctx, location, id, 'monster') === minimum));
+      const selected = chooseOne(ctx, task, 'Choose the nearest Lair', lairs.filter(id => distances.get(id) === minimum));
       if (selected) ctx.place(task.monster, selected);
       break;
     }

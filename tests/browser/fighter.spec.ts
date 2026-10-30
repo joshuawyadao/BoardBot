@@ -1,17 +1,8 @@
-import { expect, setAvailableFile, test, type Page } from './test';
+import { expect, readSavedState, startSyntheticGame, test, type Page } from './test';
 import { fighterFixture } from '../../src/engine/fixtures/fighterFixture';
 
 async function loadSyntheticFighter(page: Page, seed = 17, data = fighterFixture()) {
-  await page.goto('/');
-  await page.getByText('Import game data or backup').click();
-  await expect(page.locator('#game-data-file')).toBeEnabled();
-  await setAvailableFile(page.locator('#game-data-file'), {
-    name: 'synthetic-game-data.json', mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify(data)),
-  });
-  await page.getByLabel('Seed (optional, for a repeatable setup)').fill(String(seed));
-  await page.getByRole('button', { name: 'Start game', exact: true }).click();
-  await expect(page.getByText('Local game in progress.')).toBeVisible();
+  await startSyntheticGame(page, data, { fileName: 'synthetic-game-data.json', seed });
 }
 
 test('local import opens a Fighter table with visible map, resources, and no hidden deck order', async ({ page }) => {
@@ -149,14 +140,7 @@ test('keyboard Move targets a destination and same-tick clicks commit once', asy
   await expect(page.locator('.h-table .hero span')).toHaveText('At Room 1');
   await expect(page.locator('.h-tray .action-budget')).toContainText('3 / 4');
   await expect(move).toHaveAttribute('aria-disabled', 'false');
-  const state = await page.evaluate(async () => {
-    const path = '/src/session/gameLibrary.ts';
-    const library = await (await import(path)).openGameLibrary();
-    try {
-      const [game] = await library.list();
-      return JSON.parse((await library.game(game.id).read()).current!.payload).state;
-    } finally { library.close(); }
-  });
+  const state = await readSavedState(page);
   expect(state.commands).toHaveLength(1);
   expect(state.revision).toBe(1);
 });
@@ -175,27 +159,35 @@ test('confirmed special action and Monster Phase run with local requests only', 
   await confirm.focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('.h-roll-peek')).toContainText('Fighter special action');
-  await page.waitForTimeout(340);
+  await expect.poll(async () => (await readSavedState(page)).revision).toBe(1);
+  let state = await readSavedState(page);
   for (let step = 0; step < 10; step++) {
+    if (!state.pending) break;
     const choice = page.getByRole('button', { name: 'Confirm choice' });
-    if (await choice.isVisible().catch(() => false)) {
-      if (await choice.isDisabled()) await page.locator('.h-pending input').first().check();
-      await choice.click();
-      await page.waitForTimeout(340);
-      continue;
-    }
-    break;
+    await expect(choice).toBeVisible();
+    if (await choice.isDisabled()) await page.locator('.h-pending input').first().check();
+    await expect(choice).toBeEnabled();
+    await choice.click();
+    const revision = state.revision;
+    await expect.poll(async () => (await readSavedState(page)).revision).toBe(revision + 1);
+    state = await readSavedState(page);
   }
   const end = page.getByRole('button', { name: 'End Hero Phase' });
   await expect(end).toBeEnabled();
   await end.click();
-  await page.waitForTimeout(340);
+  const phaseRevision = state.revision;
+  await expect.poll(async () => (await readSavedState(page)).revision).toBe(phaseRevision + 1);
+  state = await readSavedState(page);
   for (let step = 0; step < 10; step++) {
+    if (!state.pending) break;
     const choice = page.getByRole('button', { name: 'Confirm choice' });
-    if (!(await choice.isVisible().catch(() => false))) break;
+    await expect(choice).toBeVisible();
     if (await choice.isDisabled()) await page.locator('.h-pending input').first().check();
+    await expect(choice).toBeEnabled();
     await choice.click();
-    await page.waitForTimeout(340);
+    const revision = state.revision;
+    await expect.poll(async () => (await readSavedState(page)).revision).toBe(revision + 1);
+    state = await readSavedState(page);
   }
   await page.getByRole('button', { name: 'Event log', exact: true }).click();
   await expect(page.getByRole('log', { name: 'Game history' })).toContainText('Monster Phase');

@@ -1,6 +1,6 @@
 # Contributing to BoardBot
 
-BoardBot has a synthetic interaction prototype, while the planned Horrified game remains unimplemented. Read the [README](README.md), [product brief](docs/Product-Brief.md), and [roadmap](docs/Roadmap.md) before proposing a change.
+BoardBot has a local solo Horrified playtest build with all five base Heroes and save/recovery, alongside a synthetic interaction sample. Full human play acceptance and public game-content rights remain unfinished. Read the [README](README.md), [product brief](docs/Product-Brief.md), and [roadmap](docs/Roadmap.md) before proposing a change.
 
 ## Propose focused work
 
@@ -21,7 +21,7 @@ Use `docs/Implementation-Plan.md` for the current task only; future tasks may re
 
 ## Game rules and bots
 
-Keep rule validation separate from bot strategy and presentation. The sample engine validates only invented Move and Wait actions; it does not implement Horrified rules. A future bot may only receive information available to its seat; reject illegal actions through the same rules used for human moves. Record seeds, game/rule versions, and bot settings in future reproducible fixtures. Include relevant turn-order, scoring, terminal-state, and hidden-information cases when a game is implemented. See the [architecture](docs/Architecture.md).
+Keep rule validation separate from bot strategy and presentation. The sample engine validates an invented Move and explicit End Hero Phase; the separate solo engine implements the accepted Horrified interpretations. A future bot may only receive information available to its seat and must use the same legal-command checks as human moves. Preserve seeds, game/rule versions, committed outcomes and replay compatibility in reproducible synthetic fixtures. Cover turn order, terminal states, hidden information and relevant failure paths when changing executable behavior. See the [architecture](docs/Architecture.md) and [verification](docs/Verification.md).
 
 ## Content and privacy
 

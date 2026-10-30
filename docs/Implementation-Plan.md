@@ -1,53 +1,46 @@
 # Plan
 
-Complete the smallest Vite security upgrade by adopting the existing Dependabot PR #14, validating its exact locked dependency set, and saving review evidence on that branch.
+Resolve PR #16's conflicts with the merged Vite update by integrating current main, retaining its reviewed dependency lockfile and all repository-efficiency behavior, then validate and follow fresh review/CI to merge readiness.
 
 ## Scope
-- In: Vite 8.3.2 to 8.3.5 and its existing generated lockfile changes; installation, peer compatibility, security, endpoint, build, public browser and production checks; implementation tracking and PR review.
-- Out: Other dependency or Action updates, further Node changes beyond the already merged PR #15 baseline, repository-efficiency PR #16, application or game-rule changes, private data, and merging the PR.
+- In: Merge origin/main at 8c03c13 into codex/repository-efficiency; resolve the temporary plan and generated lockfile conflicts; retain Vite 8.3.5, Node 26.12.1 and strict installation; verify source preservation, exact installation and existing acceptance suites; save, push and refresh PR evidence.
+- Out: New application behavior, rule/save changes, unrelated dependency upgrades, private data, paid services, history rewriting and merging the pull request.
 
 ## Action items
-- [x] Read README, Architecture and Verification; map the npm scripts, local endpoint tests, public browser fixtures and isolated production coverage.
-- [x] Verify initial main at ba9f9cd and adopt existing PR #14 at 45da614 on dependabot/npm_and_yarn/vite-8.3.5 instead of creating another upgrade; preserve the previous clean Node branch.
-- [x] Checkpoint this resolved plan before installation or further implementation.
-- [x] Verify manifest/lock agreement and the compatible Vite ranges in plugin-react 6.1.1 and Vitest 5.0.3; keep all other direct package pins unchanged.
-- [x] Install the exact lockfile with Node 26.12.1/npm 11.20.0, run npm ls --all and a fresh lockfile-only npm audit; record unavailable sources explicitly.
-- [x] Run npm run verify, the public Chromium browser suite and all-project built-app production checks; use synthetic disposable storage and system temporary test output. Existing endpoint, five-Hero, save/recovery and production tests cover the dependency behavior, so no new test file is needed.
-- [x] Record Brooks review and local validation in this plan; prepare the existing branch for save and Codex review. Observe the final review, CI Verify and mergeability on the live PR after push.
-- [x] Keep the manifest and generated lockfile in one rollback boundary. No canonical documentation change is needed for a compatible patch with unchanged project interfaces or prerequisites; this plan records verification.
+- [x] Inspect README, Verification, current branch/main history, PR #14's resolved plan and manifest/lock differences; confirm the feature branch is clean and PR #16 is still open.
+- [x] Checkpoint this resolved plan before starting the merge (4f5645d).
+- [x] Merge current main without rewriting history; keep this task plan and adopt main's exact reviewed dependency graph, preserving both security requirements and efficiency changes.
+- [x] Confirm application/test/script/CI trees match the pre-merge feature head, direct pins match main, and no conflict markers or unrelated edits remain; no new executable test is needed for a documentation/generated-lockfile resolution.
+- [x] Run strict npm ci, npm ls --all, npm audit, npm run verify, full Chromium and production Chromium/WebKit acceptance under Node 26.12.1; retain the documented local Firefox limit and require all four CI browser environments.
+- [x] Update this plan with concrete verification and conflict choices; keep durable Architecture, Verification, Work-Plan and Roadmap unchanged unless the integration changes their contracts.
+- [x] Prepare the verified merge checkpoint for save/push and fresh Codex review; Brooks integration review found no actionable issue. Follow external feedback and CI on the live PR.
+- [x] Establish the live PR as the authority for fresh CI/review/mergeability: require all checks to pass and no conflicts before declaring readiness, and leave PR #16 unmerged. Final external results are recorded there rather than cached in this plan.
 
 ## Open questions
-- None.
+- None. Use main's reviewed lockfile rather than creating another transitive update; the manifest already agrees on Vite 8.3.5 and the Node security minimum.
 
-## Review and validation ledger
-- Original implementation: Dependabot commit 45da614 changes only package.json and package-lock.json. Vite 8.3.5 clears the previously observed affected 8.3.2 range; the PR's existing six CI jobs passed before this follow-up.
-- Compatibility: plugin-react accepts Vite ^8.0.0; Vitest accepts ^6.4.0 || ^7.0.0 || ^8.0.0; Vite supports Node ^20.19.0 || >=22.12.0, including the validation runtime.
-- Review helper limitation: the gh-fix-ci skill referenced by pr-review-cycle is absent from the installed plugin cache; use available GitHub check diagnostics and CLI if a CI failure needs investigation.
-- Installation, all direct manifest/lock versions and npm ls --all pass under Node 26.12.1/npm 11.20.0. Fresh npm audit --package-lock-only reports zero vulnerabilities across 95 locked dependency records; no unrelated direct pin changed.
-- npm run verify passes: typecheck/build, 148 unit tests in 27 files and five repository tests. Production Chromium and WebKit pass bundled-asset decoding, enforced local-only traffic, pending/terminal recovery and complete synthetic defeat.
-- The all-project production run also reproduced the documented macOS Firefox launch failure: "Could not find profile folder", before page creation. No application assertion failed in that project. Linux Firefox CI remains required for full execution evidence; no browser/OS workaround or test weakening is included.
-- The complete public Chromium suite passes all 104 cases in 5.4 minutes, including victory and exact reload recovery for every Hero. Test output is outside the repository under /private/tmp/boardbot-vite-upgrade-browser and /private/tmp/boardbot-vite-upgrade-production.
-- No application/test source, other direct package version, Node constraint or GitHub Action changed. The two dependency files retain the original Dependabot commit as their single rollback boundary.
-- Post-push Codex review, any feedback, complete cross-browser CI and mergeability are checked on [PR #14](https://github.com/joshuawyadao/BoardBot/pull/14); the automation memory records the final observed state without another documentation-only push.
-- Integration resolution: main now includes Node security PR #15 at 0077c6a. The only conflict was the temporary Implementation-Plan.md; retain this current task plan and preserve the Node security decision in main's canonical README/Verification, .nvmrc 26.12.1, >=26.12.1 <27 manifest/lock engines and engine-strict=true. Application/test/configuration trees and the validation runtime are unchanged from the passing local browser/production run. Revalidate exact installation and npm run verify after integration.
-- Integrated validation passes: fresh strict-engine npm ci/audit, build/typecheck, 148 unit tests and five repository tests. A complete lock comparison confirms that only the root Node engine range was added to the previously validated Vite graph; application, test, script and browser/CI configuration trees are byte-identical. Prior Chromium and production results therefore apply to this integration.
+## Conflict resolution ledger
+- Main advanced to 8c03c13 through Vite security PR #14. Both branches already pin Vite 8.3.5; main locks Rolldown 1.2.14 and @oxc-project/types 0.154.0 while the earlier efficiency installation selected 1.2.15/0.155.0. Adopt main's exact reviewed lockfile, including integrity values and coherent platform bindings, rather than regenerate a transitive upgrade.
+- The conflicts are limited to package-lock.json and this temporary task plan. Preserve all feature application/test/script/CI files byte-for-byte, keep main's Node security settings, and retain previous verification in canonical docs and the PR history. No new executable test or other canonical doc change is needed for this integration.
+
+## Local validation
+- Strict npm ci and npm ls --all pass under Node 26.12.1/npm 11.20.0. Lockfile audit reports zero vulnerabilities across 95 dependency records. Main's manifest, lockfile and runtime configuration match exactly; only the lockfile and temporary plan differ from the pre-integration feature head.
+- Build/typecheck, all 154 unit cases across 28 files and 12 repository checks pass. All 107 Chromium public cases pass in 3.7 minutes; both Chromium/WebKit production cases pass in 11.8 seconds, including bundled WebP decoding and exact pending/terminal recovery behind the local-only proxy. No new tests or weakened assertions are required for the resolution.
+- Independent read-only integration review found no issues. Existing local Firefox limits and manual gameplay/VoiceOver/physical-disconnection gates remain unchanged. Full Linux Firefox/WebKit and native macOS WebKit coverage is required on the fresh CI run.
 
 ## Brooks-Lint Review
 
 **Mode:** PR Review
-
-**Scope:** PR #14 versus origin/main: package.json and this implementation plan; generated package-lock.json excluded from maintainability scoring, with its version graph and peer compatibility inspected separately.
-
+**Scope:** October 28 integration delta: docs/Implementation-Plan.md; generated package-lock.json excluded from maintainability scoring and checked separately for exact main agreement and dependency coherence. The existing PR review remains applicable to application, tests, scripts and CI, which are byte-identical to f707ff9.
 **Health Score:** 100/100
-
 **Trend:** Stable at 100.
 
-The patch keeps the dependency boundary coherent and introduces no application, domain or interface changes.
+The resolution preserves both security and efficiency intent without adding application or domain changes.
 
 ### Findings
-- No actionable findings. The generated dependency graph is validated by installation, npm audit, build and existing acceptance tests.
-- Quick Test Check skipped for configuration/generated/documentation-only changes. Existing tests cover the affected toolchain behavior, so no test source changes are warranted.
+- No actionable findings. Main's exact dependency graph and runtime enforcement remain coherent; no conflicting source changes are discarded.
+- Quick Test Check skipped for this documentation/generated-lockfile-only resolution; existing unit and acceptance tests cover the toolchain integration.
 
 ### Summary
-- Retain the exact Dependabot lockfile and the Vite-only direct upgrade; use the existing PR as the rollback boundary.
-- Require final Codex review and complete CI Verify on the integrated head before declaring readiness.
+- Keep the exact reviewed main lockfile, current task plan and existing efficiency sources.
+- Require current-head Codex review, all CI checks and conflict-free mergeability on the live PR before readiness.

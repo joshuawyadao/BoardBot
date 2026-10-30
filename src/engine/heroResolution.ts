@@ -1,4 +1,4 @@
-import { adjacentLocations } from './gamePrimitives.ts';
+import { distancesFrom } from './gamePrimitives.ts';
 import { drawItem } from './horrifiedState.ts';
 import type { EngineContext, Task } from './horrifiedRuntime';
 import { RULESET_VERSION } from './decisionPolicies';
@@ -7,22 +7,6 @@ const HERO = 'hero';
 
 function heroLocation(ctx: EngineContext): string | null {
   return ctx.state.hero.location;
-}
-
-function boardDistance(ctx: EngineContext, from: string, to: string): number {
-  if (from === to) return 0;
-  const distances = new Map([[from, 0]]);
-  const queue = [from];
-  for (let index = 0; index < queue.length; index++) {
-    for (const adjacent of adjacentLocations(ctx.data.board, queue[index], 'hero')) {
-      if (distances.has(adjacent)) continue;
-      const distance = distances.get(queue[index])! + 1;
-      if (adjacent === to) return distance;
-      distances.set(adjacent, distance);
-      queue.push(adjacent);
-    }
-  }
-  return Infinity;
 }
 
 function chooseEntity(ctx: EngineContext, task: Task, title: string, ids: string[]): string | null {
@@ -91,8 +75,9 @@ export function resolveOtherHeroTask(task: Task, ctx: EngineContext): boolean {
       else if (result <= 15) {
         const origin = heroLocation(ctx);
         if (!origin) break;
+        const distances = distancesFrom(data.board, origin, 'hero');
         const occupied = Object.entries(state.boardItems).filter(([, items]) => items.length > 0)
-          .map(([location]) => ({ location, distance: boardDistance(ctx, origin, location) }));
+          .map(([location]) => ({ location, distance: distances.get(location) ?? Infinity }));
         const minimum = Math.min(...occupied.map(entry => entry.distance));
         const nearest = occupied.filter(entry => entry.distance === minimum && Number.isFinite(entry.distance)).map(entry => entry.location);
         if (nearest.length) ctx.ask('Choose one nearest location with Items.', nearest.map(id => ({ id, label: ctx.name(id) })), 1, 1, { kind: 'rogue:location' });

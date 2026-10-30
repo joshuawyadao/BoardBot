@@ -1,4 +1,5 @@
 import type { GameData } from '../data/gameData';
+import { canonicalJSON } from '../data/canonicalJSON';
 import { dataIdentity } from '../engine/horrifiedState';
 import { ENGINE_VERSION, MAX_SAVE_LENGTH, SAVE_VERSION, validateLocalGameData } from './gameSave';
 import { openLocalSaveStore } from './localSaveStore';
@@ -52,14 +53,6 @@ export interface GameLibrary {
 function object(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('The save contains an invalid object.');
   return value as Record<string, unknown>;
-}
-
-function canonicalJSON(value: unknown): string {
-  if (value === null || typeof value !== 'object') return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(entry => canonicalJSON(entry) ?? 'null').join(',')}]`;
-  return `{${Object.entries(value).filter(([, entry]) => entry !== undefined)
-    .sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)
-    .map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJSON(entry)}`).join(',')}}`;
 }
 
 /** Compare in the active IndexedDB transaction without waiting for asynchronous hashing. */
@@ -142,13 +135,23 @@ function transactionDone(tx: IDBTransaction, failure?: () => unknown): Promise<v
   });
 }
 
+function portableEnvelope(slot: CompactSave, data: GameData | null) {
+  return { format: 'boardbot-local-game', saveVersion: slot.saveVersion,
+    engineVersion: slot.engineVersion, data, state: slot.state };
+}
+
 function portablePayload(slot: CompactSave, data: GameData): string {
-  const payload = JSON.stringify({ format: 'boardbot-local-game', saveVersion: slot.saveVersion,
-    engineVersion: slot.engineVersion, data, state: slot.state });
+  const payload = JSON.stringify(portableEnvelope(slot, data));
   if (new TextEncoder().encode(payload).byteLength > MAX_SAVE_LENGTH) {
     throw new Error('A local save exceeds the supported size.');
   }
   return payload;
+}
+
+/** Preserve the portable size limit without copying shared components into every list row. */
+function oversizedSlot(slot: CompactSave, dataBytes: number): boolean {
+  const shellBytes = new TextEncoder().encode(JSON.stringify(portableEnvelope(slot, null))).byteLength;
+  return shellBytes - 'null'.length + dataBytes > MAX_SAVE_LENGTH;
 }
 
 function metadata(id: string, record: GameRecord): LibraryGame {
@@ -353,17 +356,38 @@ export async function openGameLibrary(): Promise<GameLibrary> {
 
   return {
     list: async () => {
-      const tx = begin(GAMES, 'readonly'), done = transactionDone(tx);
+      const tx = begin([GAMES, DATA], 'readonly'), done = transactionDone(tx);
       const store = tx.objectStore(GAMES);
       const [keys, raw] = await Promise.all([requestValue(store.getAllKeys()), requestValue(store.getAll())]);
-      await done;
-      const games = raw.map((value, index) => ({ id: keys[index], value }))
+      const records = raw.map((value, index) => ({ id: keys[index], value }))
         .filter(entry => typeof entry.id === 'string' && entry.id)
-        .map(entry => metadata(entry.id as string, checkedRecord(entry.value, entry.id as string)));
-      for (const game of games) {
-        const slots = await readGame(game.id);
-        if (slots.current?.damaged) game.damaged = true;
+        .map(entry => checkedRecord(entry.value, entry.id as string));
+      // Queue every unique lookup while this snapshot's transaction is still active.
+      // Never cache between lists: another tab may damage or repair shared content.
+      const lookups = new Map<string, Promise<unknown>>();
+      for (const { current } of records) {
+        if (current && !('damaged' in current) && !lookups.has(current.dataRef)) {
+          lookups.set(current.dataRef, requestValue(tx.objectStore(DATA).get(current.dataRef)));
+        }
       }
+      const verified = Promise.all([...lookups].map(async ([ref, request]): Promise<[string, number | null]> => {
+        try {
+          const data = validateLocalGameData(await request);
+          if (await dataIdentity(data) !== ref) return [ref, null];
+          return [ref, new TextEncoder().encode(JSON.stringify(data)).byteLength];
+        } catch { return [ref, null]; }
+      }));
+      const [contents] = await Promise.all([verified, done]);
+      const sizes = new Map(contents);
+      const games = records.map(record => {
+        const game = metadata(record.id, record), current = record.current;
+        if (current && !('damaged' in current)) {
+          const bytes = sizes.get(current.dataRef);
+          try { if (bytes == null || oversizedSlot(current, bytes)) game.damaged = true; }
+          catch { game.damaged = true; }
+        }
+        return game;
+      });
       return games.sort((left, right) => right.savedAt - left.savedAt || left.id.localeCompare(right.id));
     },
     deleteGame,

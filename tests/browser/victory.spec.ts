@@ -1,4 +1,4 @@
-import { expect, setAvailableFile, test, type Page } from './test';
+import { expect, savedPayload, startSyntheticGame, test, type Page } from './test';
 import type { GameData } from '../../src/data/gameData';
 import { heroFixture } from '../../src/engine/fixtures/heroFixture';
 import { getActionReason, getFighterView } from '../../src/engine/horrifiedGame';
@@ -17,32 +17,13 @@ function victoryFixture(): GameData {
   return data;
 }
 
-async function savedPayload(page: Page): Promise<string> {
-  return page.evaluate(async () => {
-    const path = '/src/session/gameLibrary.ts';
-    const library = await (await import(path)).openGameLibrary();
-    const [game] = await library.list();
-    const saved = await library.game(game.id).read();
-    library.close();
-    return saved.current!.payload;
-  });
-}
-
 async function saveAfter(page: Page, revision: number): Promise<FighterGame> {
   await expect.poll(async () => JSON.parse(await savedPayload(page)).state.revision).toBe(revision + 1);
   return JSON.parse(await savedPayload(page)).state;
 }
 
 async function load(page: Page, data: GameData, hero: string): Promise<void> {
-  await page.goto('/');
-  await page.getByText('Import game data or backup').click();
-  await setAvailableFile(page.locator('#game-data-file'), {
-    name: 'synthetic-victory.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)),
-  });
-  await page.getByLabel('Hero', { exact: true }).selectOption(hero);
-  await page.getByLabel('Seed (optional, for a repeatable setup)').fill('730');
-  await page.getByRole('button', { name: 'Start game', exact: true }).click();
-  await expect(page.getByText('Local game in progress.')).toBeVisible();
+  await startSyntheticGame(page, data, { fileName: 'synthetic-victory.json', hero, seed: 730 });
 }
 
 function defeatCost(data: GameData, state: FighterGame, monster: 'beholder' | 'displacerBeast'): string[] {

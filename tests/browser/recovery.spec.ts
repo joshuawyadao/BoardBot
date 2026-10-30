@@ -1,4 +1,4 @@
-import { expect, setAvailableFile, test, type Page } from './test';
+import { expect, savedPayload, setAvailableFile, startSyntheticGame, test, type Page } from './test';
 import { fighterFixture } from '../../src/engine/fixtures/fighterFixture';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
@@ -11,20 +11,7 @@ async function expectFocusedError(page: Page) {
 }
 
 async function loadGame(page: Page, data = fighterFixture()) {
-  await page.goto('/');
-  await page.getByText('Import game data or backup').click();
-  await setAvailableFile(page.locator('#game-data-file'), { name: 'synthetic.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
-  await page.getByLabel('Seed (optional, for a repeatable setup)').fill('17');
-  await page.getByRole('button', { name: 'Start game', exact: true }).click();
-  await expect(page.getByText('Local game in progress.')).toBeVisible();
-}
-async function savedPayload(page: Page) {
-  return page.evaluate(async () => {
-    const modulePath = '/src/session/gameLibrary.ts';
-    const library = await (await import(modulePath)).openGameLibrary();
-    const games = await library.list();
-    const saved = await library.game(games[0].id).read(); library.close(); return saved.current!.payload;
-  });
+  await startSyntheticGame(page, data, { fileName: 'synthetic.json', seed: 17 });
 }
 
 async function allPayloads(page: Page): Promise<string[]> {
