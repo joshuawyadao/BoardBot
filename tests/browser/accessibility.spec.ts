@@ -197,6 +197,8 @@ test('home, setup, game, panels, action, choice and delete dialog have no automa
   await page.getByRole('button', { name: 'Start game', exact: true }).click();
   await expect(page.getByText('Local game in progress.')).toBeVisible();
   await scan(page, 'new game');
+  const occupiedFloor = page.locator('[data-location-id="b"]');
+  await expect(occupiedFloor).toHaveAccessibleName(/^Room 2\..*\. Board markers 2 ×\d+$/);
   await page.getByRole('button', { name: /^Inventory/ }).click();
   await page.getByRole('button', { name: 'Monsters', exact: true }).click();
   await page.locator('.h-location').first().click();

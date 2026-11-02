@@ -148,7 +148,7 @@ test('illustrated floors, portals and passage pairs retain keyboard movement and
   await expect(board.locator('.game-board-route.ordinary')).toHaveCount(28);
   await expect(board.locator('.game-board-route.passage, .game-board-route.teleport')).toHaveCount(0);
   await expect(board.locator('.game-board-portal-runes')).toHaveCount(4);
-  expect((await board.locator('.game-board-passage-badge').allTextContents()).sort()).toEqual(['A', 'A', 'B', 'B']);
+  expect((await board.locator('.game-board-passage-badge').allTextContents()).map(label => label.trim()).sort()).toEqual(['A', 'A', 'B', 'B']);
   const floorStyles = await board.locator('.h-location').evaluateAll(elements => elements.map(element => {
     const style = getComputedStyle(element);
     return { background: style.backgroundColor, border: style.borderTopWidth, shadow: style.boxShadow };

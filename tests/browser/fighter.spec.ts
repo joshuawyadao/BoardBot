@@ -13,7 +13,7 @@ test('local import opens a Fighter table with visible map, resources, and no hid
   await expect(page.locator('.game-board-route.ordinary .route-line')).toHaveCount(2);
   await expect(page.locator('.game-board-route.passage')).toHaveCount(0);
   await expect(page.locator('.game-board-passage-badge')).toHaveCount(2);
-  expect(await page.locator('.game-board-passage-badge').allTextContents()).toEqual(['A', 'A']);
+  expect((await page.locator('.game-board-passage-badge').allTextContents()).map(label => label.trim())).toEqual(['A', 'A']);
   await expect(page.locator('.h-tray .action-card')).toHaveCount(8);
   await expect(page.getByRole('button', { name: /Wait/ })).toHaveCount(0);
   await expect(page.getByText('Monster progress')).toBeHidden();
