@@ -102,7 +102,11 @@ export function GameBoard({ data, game, moving, locked, onMove, buttonRefs, onIn
         const captionWidth = Math.min(154, Math.max(110, displayName.length * 5.6));
         const captionX = Math.max(4, Math.min(BOARD_WIDTH - captionWidth - 4, position.x - captionWidth / 2));
         const passageLabels = passages.get(location.id)?.join('/');
-        const title = `${location.name}${passageLabels ? `. Secret passage ${passageLabels}` : ''}${details.length ? `. ${details.join(', ')}` : ''}${isWizardDestination ? '. Wizard Monster destination' : ''}${canMove ? '. Reachable Move destination' : ''}${canChoose ? '. Available Wizard destination' : ''}${isChosen ? '. Selected destination, awaiting confirmation' : ''}`;
+        // Speech input needs the visible badge text in the same order as the button's contents.
+        const markers = [passageLabels, location.number, isChosen ? '✓' : null,
+          itemCount ? `×${itemCount}` : null, citizens > 1 ? `×${citizens}` : null,
+        ].filter(Boolean).join(' ');
+        const title = `${location.name}${passageLabels ? `. Secret passage ${passageLabels}` : ''}${details.length ? `. ${details.join(', ')}` : ''}${isWizardDestination ? '. Wizard Monster destination' : ''}${canMove ? '. Reachable Move destination' : ''}${canChoose ? '. Available Wizard destination' : ''}${isChosen ? '. Selected destination, awaiting confirmation' : ''}${markers ? `. Board markers ${markers}` : ''}`;
         return <g key={location.id}>
           <ellipse className={`game-board-floor ${location.kind}${isCurrent ? ' current' : ''}${canMove ? ' reachable' : ''}${isWizardDestination ? ' wizard-destination' : ''}${choices.has(location.id) ? ' choice-available' : ''}${isChosen ? ' choice-selected' : ''}${isInspected ? ' inspected' : ''}`} cx={position.x} cy={position.y} rx={NODE_WIDTH / 2 - 2} ry={NODE_HEIGHT / 2 - 1} aria-hidden="true" />
           {location.kind === 'circle' && <ellipse className="game-board-portal-runes" cx={position.x} cy={position.y} rx={NODE_WIDTH / 2 - 7} ry={NODE_HEIGHT / 2 - 6} aria-hidden="true" />}
@@ -112,15 +116,15 @@ export function GameBoard({ data, game, moving, locked, onMove, buttonRefs, onIn
             ref={element => { if (element) buttonRefs.current.set(location.id, element); else buttonRefs.current.delete(location.id); }}
             aria-label={title} aria-disabled={!canMove && !canChoose && !onInspect} title={title}
             onClick={() => { if (canChoose) onChooseDestination?.(location.id); else if (canMove) onMove(location.id); else onInspect?.(location.id); }}>
-            {passageLabels && <span className="game-board-passage-badge" aria-hidden="true">{passageLabels}</span>}
-            {location.number ? <b className="game-board-number" aria-hidden="true">{location.number}</b> : null}
-            {isChosen && <span className="game-board-selected" aria-hidden="true">✓</span>}
+            {passageLabels && <span className="game-board-passage-badge" aria-hidden="true">{passageLabels}{' '}</span>}
+            {location.number ? <b className="game-board-number" aria-hidden="true">{location.number}{' '}</b> : null}
+            {isChosen && <span className="game-board-selected" aria-hidden="true">✓{' '}</span>}
             <span className="game-board-pieces" aria-hidden="true">
               {isCurrent && <span className="piece piece-hero"><PieceArtwork kind="hero" variant={game.hero.definitionId} /></span>}
               {hasBeholder && <span className="piece piece-beholder"><PieceArtwork kind="beholder" /></span>}
               {hasDisplacer && <span className="piece piece-displacer"><PieceArtwork kind="displacer" /></span>}
-              {itemCount > 0 && <span className="piece piece-item" data-count={itemCount}><PieceArtwork kind="item" /><b className="piece-count">×{itemCount}</b></span>}
-              {citizens > 0 && <span className="piece piece-citizen" data-count={citizens}><PieceArtwork kind="citizen" />{citizens > 1 && <b className="piece-count">×{citizens}</b>}</span>}
+              {itemCount > 0 && <span className="piece piece-item" data-count={itemCount}><PieceArtwork kind="item" /><b className="piece-count">×{itemCount}{' '}</b></span>}
+              {citizens > 0 && <span className="piece piece-citizen" data-count={citizens}><PieceArtwork kind="citizen" />{citizens > 1 && <b className="piece-count">×{citizens}{' '}</b>}</span>}
               {lair && <span className={`piece piece-lair${lair.revealed ? ' revealed' : ''}`}><PieceArtwork kind="lair" revealed={lair.revealed} /></span>}
             </span>
           </button>

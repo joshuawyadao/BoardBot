@@ -23,6 +23,7 @@ describe('game board pieces', () => {
     const locationButton = html.match(/<button[^>]*aria-label="Room 2\.[\s\S]*?<\/button>/)?.[0];
 
     expect(locationButton).toBeDefined();
+    expect(locationButton).toContain('aria-label="Room 2. Test Hero, Beholder, Displacer Beast, 2 Items, 1 Citizen, Unrevealed Lair. Board markers 2 ×2"');
     expect(locationButton).toContain('Test Hero, Beholder, Displacer Beast, 2 Items, 1 Citizen');
     for (const kind of ['hero', 'beholder', 'displacer', 'item', 'citizen', 'lair']) {
       expect(locationButton).toContain(`class="piece piece-${kind}`);
@@ -37,6 +38,30 @@ describe('game board pieces', () => {
     expect(html).not.toContain('hidden-face-must-not-leak');
     expect(html).toContain('Beholder');
     expect(html).toContain('Displacer');
+  });
+
+  it('includes passage, floor, selection and quantity markers in visible order without revealing hidden Lairs', async () => {
+    const data = fighterFixture();
+    data.board.locations.find(location => location.id === 'b')!.name = 'North gate';
+    data.board.edges.push({ from: 'b', to: 'd', kind: 'passage' });
+    const state = await createFighterGame(data, 9);
+    const view = getFighterView(data, state);
+    view.boardItems.b = Object.keys(state.items).slice(0, 2);
+    view.citizens['citizen-a'] = { status: 'board', location: 'b' };
+    view.citizens['citizen-b'] = { status: 'board', location: 'b' };
+    view.lairs.b = { revealed: false };
+
+    const html = renderToStaticMarkup(createElement(GameBoard, {
+      data, game: view, moving: false, locked: false, onMove: () => {},
+      buttonRefs: { current: new Map() }, choiceDestinations: ['b'], chosenDestination: 'b',
+      onChooseDestination: () => {},
+    }));
+    const button = html.match(/<button[^>]*aria-label="North gate\.[\s\S]*?<\/button>/)?.[0];
+
+    expect(button).toContain('aria-label="North gate. Secret passage A.');
+    expect(button).toContain('Board markers A 2 ✓ ×2 ×2"');
+    expect(button).toContain('2 Items, 2 Citizens, Unrevealed Lair');
+    expect(button).toContain('Selected destination, awaiting confirmation');
   });
 
   it('marks a pending Wizard Monster destination without making it a Move target', async () => {

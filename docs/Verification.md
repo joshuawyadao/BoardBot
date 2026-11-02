@@ -26,6 +26,8 @@ Owners with prepared private components can additionally run `npm run test:priva
 
 ## What the checks cover
 
+The pinned axe 4.14 accessibility scans retain all configured WCAG and best-practice checks, including label-in-name checks on floor buttons and save-failure states. Board rendering tests cover visible passage/floor/selection/count markers in accessible-name order alongside named public contents, without exposing hidden Lair identities. Automated checks do not certify speech-input or VoiceOver usability; those remain manual acceptance checks.
+
 - Required public project files are present and nonempty.
 - Inline Markdown links and images that point to local files resolve inside the repository.
 - Selected private or generated files are rejected when included in Git's tracked/nonignored file inventory, including files forcibly tracked despite ignore rules.

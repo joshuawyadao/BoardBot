@@ -9,10 +9,10 @@ Upgrade the accessibility scanner to axe 4.14.0 and correct the board label mism
 ## Action items
 - [x] Inspect locked versions, current main, official release metadata, and PR #17 failures; confirm npm audit reports zero current vulnerabilities.
 - [x] Create `codex/axe-4-14-compatibility` from current `origin/main` (`da170fa`); preserve the completed Node/Vite security updates.
-- [ ] Checkpoint this resolved plan before implementation.
-- [ ] Upgrade only axe and reproduce the `label-content-name-mismatch` failures with existing accessibility/recovery tests.
-- [ ] Fix visible-label/accessibility-name agreement without exposing hidden Lair data, changing gameplay, or disabling scanner rules; add focused regression coverage.
-- [ ] Update `docs/UI-Design.md` and `docs/Verification.md` to describe the label contract and coverage.
+- [x] Checkpoint this resolved plan before implementation (`70b6193`).
+- [x] Upgrade only axe and reproduce the `label-content-name-mismatch` failures with existing accessibility/recovery tests.
+- [x] Fix visible-label/accessibility-name agreement without exposing hidden Lair data, changing gameplay, or disabling scanner rules; add focused regression coverage.
+- [x] Update `docs/UI-Design.md` and `docs/Verification.md` to describe the label contract and coverage.
 - [ ] Run clean install, peer/lock checks, npm audit, `npm run verify`, public browser suites and production acceptance; keep generated artifacts temporary and record host limitations.
 - [ ] Run Brooks review, save/push the branch, open a PR, request Codex review, and address actionable feedback and CI failures until merge-ready or concretely blocked.
 
@@ -26,3 +26,7 @@ Upgrade the accessibility scanner to axe 4.14.0 and correct the board label mism
 
 ## Review and validation ledger
 - Discovery: clean base `da170fa`; Node 26.12.1/npm 11.20.0; npm audit reports zero vulnerabilities before upgrading. GitHub alerts: zero open.
+- Reproduction: upgrading only axe reproduces both existing accessibility and recovery failures on Chromium. The remaining six grouped upgrades are unnecessary to reproduce the issue.
+- Fix: append visible markers to the existing accessible-name prefix, retaining semantic descriptions and actions. Explicit text separators keep passage letters and floor numbers distinct for speech matching. Passage identity assertions trim only these intentional boundary spaces; their expected A/B identities and all axe rules remain intact.
+- Focused validation: both formerly failing browser cases pass. Clean npm ci/npm ls and lock audit pass; only the two axe package records change and Node/Playwright peer constraints match. Build/typecheck, 155 unit cases and 12 repository checks pass. Full Chromium/WebKit and final production runs are in progress.
+- Independent read-only correctness review: no actionable findings; hidden-information, naming order, interaction and dependency compatibility checked. No private data or live game was used.
