@@ -13,7 +13,7 @@ Preserve private components outside disposable worktrees with validated archival
 - [x] Add npm commands and restore before `dev:private`; preserve plain `dev` for isolated public/synthetic tests.
 - [x] Add synthetic tests for archival/restoration, malformed input, corruption, and overwrite protection.
 - [x] Update canonical storage/recovery docs and README with exact commands and limitations.
-- [ ] Run focused tests, npm run verify, and npm run test:e2e; inspect publication boundaries and save/push the feature branch.
+- [x] Run focused tests, npm run verify, and npm run test:e2e; inspect publication boundaries and save the feature branch. Firefox runtime verification is limited by the local launch failure recorded below.
 
 ## Open questions
 - None. Use ~/Documents/BoardBot Private Data by default; an explicit environment override supports other owner-controlled backup locations. Creating the store does not mean the missing packet has been recovered.
@@ -26,4 +26,7 @@ The original in-app-browser origin at 127.0.0.1:5173 retained base components an
 
 - Focused private-store suite: 11/11 synthetic cases passed, including save-component recovery, exact export retention, integrity failure, nested paths, symlinks, and non-overwrite restoration.
 - `npm run verify`: build, 166 unit tests, repository policy checks, and 12 repository tests passed.
-- `npm run test:e2e`: running across Chromium, WebKit, and Firefox.
+- `npm run test:e2e`: 214 cases passed across Chromium and WebKit. All 107 Firefox cases failed before test execution because the local browser reported `Could not find profile folder`. A standalone `firefox.launch()` with no app or URL reproduces the failure, including with `TMPDIR=/private/tmp`; this is an environment limitation, not a verified Firefox application result.
+- Independent read-only archive safety review: no actionable data-loss or path-boundary findings.
+- Live recovery: original browser save resumed, exported, archived, restored, and restored idempotently. Source packet/photos remain missing.
+- Save sequence: plan checkpoint `e3c2a95`, implementation checkpoint `309305c`, final verification record committed separately on `codex/durable-private-data`.
