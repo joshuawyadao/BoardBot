@@ -18,6 +18,7 @@ interface Props {
   inspectedLocation?: string | null;
   choiceDestinations?: readonly string[];
   chosenDestination?: string | null;
+  recentLocations?: readonly string[];
   onChooseDestination?: (id: string) => void;
 }
 
@@ -34,11 +35,12 @@ function routePath(points: { x: number; y: number }[]): string {
 }
 
 export function GameBoard({ data, game, moving, locked, onMove, buttonRefs, onInspect, inspectedLocation,
-  choiceDestinations = [], chosenDestination, onChooseDestination }: Props) {
+  choiceDestinations = [], chosenDestination, onChooseDestination, recentLocations = [] }: Props) {
   const positions = useMemo(() => boardPositions(data), [data]);
   const routes = useMemo(() => boardRoutes(data, positions), [data, positions]);
   const targets = new Set(game.moveDestinations);
   const choices = new Set(choiceDestinations);
+  const recentlyChanged = new Set(recentLocations);
   const current = game.hero.location;
   const heroName = data.heroes.find(hero => hero.id === game.hero.definitionId)?.name ?? 'Hero';
   const showTeleport = moving && !!current;
@@ -99,8 +101,6 @@ export function GameBoard({ data, game, moving, locked, onMove, buttonRefs, onIn
           lair ? `${lair.revealed ? 'Revealed' : 'Unrevealed'} Lair` : null,
         ].filter(Boolean) as string[];
         const displayName = location.name;
-        const captionWidth = Math.min(154, Math.max(110, displayName.length * 5.6));
-        const captionX = Math.max(4, Math.min(BOARD_WIDTH - captionWidth - 4, position.x - captionWidth / 2));
         const passageLabels = passages.get(location.id)?.join('/');
         // Speech input needs the visible badge text in the same order as the button's contents.
         const markers = [passageLabels, location.number, isChosen ? '✓' : null,
@@ -109,6 +109,7 @@ export function GameBoard({ data, game, moving, locked, onMove, buttonRefs, onIn
         const title = `${location.name}${passageLabels ? `. Secret passage ${passageLabels}` : ''}${details.length ? `. ${details.join(', ')}` : ''}${isWizardDestination ? '. Wizard Monster destination' : ''}${canMove ? '. Reachable Move destination' : ''}${canChoose ? '. Available Wizard destination' : ''}${isChosen ? '. Selected destination, awaiting confirmation' : ''}${markers ? `. Board markers ${markers}` : ''}`;
         return <g key={location.id}>
           <ellipse className={`game-board-floor ${location.kind}${isCurrent ? ' current' : ''}${canMove ? ' reachable' : ''}${isWizardDestination ? ' wizard-destination' : ''}${choices.has(location.id) ? ' choice-available' : ''}${isChosen ? ' choice-selected' : ''}${isInspected ? ' inspected' : ''}`} cx={position.x} cy={position.y} rx={NODE_WIDTH / 2 - 2} ry={NODE_HEIGHT / 2 - 1} aria-hidden="true" />
+          {recentlyChanged.has(location.id) && <ellipse className="game-board-floor recent-event game-board-recent-ring" cx={position.x} cy={position.y} rx={NODE_WIDTH / 2 + 4} ry={NODE_HEIGHT / 2 + 5} aria-hidden="true" />}
           {location.kind === 'circle' && <ellipse className="game-board-portal-runes" cx={position.x} cy={position.y} rx={NODE_WIDTH / 2 - 7} ry={NODE_HEIGHT / 2 - 6} aria-hidden="true" />}
           <foreignObject x={position.x - NODE_WIDTH / 2} y={position.y - NODE_HEIGHT / 2} width={NODE_WIDTH} height={NODE_HEIGHT}>
           <button type="button" className={`h-location game-board-node ${location.kind}${displayName.length > 15 ? ' long-name' : ''}${passageLabels ? ' has-passage' : ''}${isCurrent ? ' current' : ''}${canMove ? ' reachable' : ''}${isWizardDestination ? ' wizard-destination' : ''}`}
@@ -119,20 +120,61 @@ export function GameBoard({ data, game, moving, locked, onMove, buttonRefs, onIn
             {passageLabels && <span className="game-board-passage-badge" aria-hidden="true">{passageLabels}{' '}</span>}
             {location.number ? <b className="game-board-number" aria-hidden="true">{location.number}{' '}</b> : null}
             {isChosen && <span className="game-board-selected" aria-hidden="true">✓{' '}</span>}
-            <span className="game-board-pieces" aria-hidden="true">
-              {isCurrent && <span className="piece piece-hero"><PieceArtwork kind="hero" variant={game.hero.definitionId} /></span>}
-              {hasBeholder && <span className="piece piece-beholder"><PieceArtwork kind="beholder" /></span>}
-              {hasDisplacer && <span className="piece piece-displacer"><PieceArtwork kind="displacer" /></span>}
-              {itemCount > 0 && <span className="piece piece-item" data-count={itemCount}><PieceArtwork kind="item" /><b className="piece-count">×{itemCount}{' '}</b></span>}
-              {citizens > 0 && <span className="piece piece-citizen" data-count={citizens}><PieceArtwork kind="citizen" />{citizens > 1 && <b className="piece-count">×{citizens}{' '}</b>}</span>}
-              {lair && <span className={`piece piece-lair${lair.revealed ? ' revealed' : ''}`}><PieceArtwork kind="lair" revealed={lair.revealed} /></span>}
-            </span>
           </button>
           </foreignObject>
-          <foreignObject data-caption-for={location.id} x={captionX} y={position.y + 20} width={captionWidth} height="42" className="game-board-caption" aria-hidden="true">
-            <span className={`h-node-name${location.kind === 'circle' ? ' portal-caption' : ''}`}>{displayName}</span>
-          </foreignObject>
         </g>;
+      })}
+      <g className="game-board-piece-layer" aria-hidden="true">
+        {data.board.locations.map(location => {
+          const position = positions.get(location.id);
+          if (!position) return null;
+          const itemCount = game.boardItems[location.id]?.length ?? 0;
+          const citizenCount = Object.values(game.citizens).filter(citizen => citizen.status === 'board' && citizen.location === location.id).length;
+          const lair = game.lairs[location.id];
+          const pieces = [
+            current === location.id && { kind: 'hero', variant: game.hero.definitionId },
+            game.monsters.beholder.location === location.id && !game.monsters.beholder.defeated && { kind: 'beholder' },
+            game.monsters.displacerBeast.location === location.id && !game.monsters.displacerBeast.defeated && { kind: 'displacer' },
+            itemCount > 0 && { kind: 'item', count: itemCount },
+            citizenCount > 0 && { kind: 'citizen', count: citizenCount },
+            !!lair && { kind: 'lair', revealed: lair.revealed },
+          ] .filter(Boolean) as { kind: string; variant?: string; count?: number; revealed?: boolean }[];
+          if (!pieces.length) return null;
+          const pieceWidth = 52;
+          const columns = Math.min(3, pieces.length);
+          const rows = Math.ceil(pieces.length / columns);
+          const width = columns * pieceWidth;
+          const left = Math.max(2, Math.min(BOARD_WIDTH - width - 2, position.x - width / 2));
+          const top = Math.max(2, position.y - 70 - (rows - 1) * 26);
+          return <g key={location.id} data-pieces-for={location.id} className="game-board-piece-cluster" aria-hidden="true">
+            {pieces.map((piece, index) => {
+              const row = Math.floor(index / columns);
+              const rowSize = Math.min(columns, pieces.length - row * columns);
+              const x = left + (columns - rowSize) * pieceWidth / 2 + (index % columns) * pieceWidth;
+              const y = top + row * 26 + (piece.kind === 'item' || piece.kind === 'lair' ? 10 : 0);
+              const kind = piece.kind as 'hero' | 'beholder' | 'displacer' | 'item' | 'citizen' | 'lair';
+              return <g key={kind}>
+                <svg className={`piece piece-${kind}`} x={x} y={y} width={pieceWidth} height={74} viewBox="0 0 100 110">
+                  <PieceArtwork kind={kind} variant={piece.variant} revealed={piece.revealed} />
+                </svg>
+                {piece.count && (kind === 'item' || piece.count > 1) && <g className="board-piece-count">
+                  <rect x={x + 11} y={y + 44} width="24" height="18" rx="7" />
+                  <text x={x + 23} y={y + 57} textAnchor="middle">×{piece.count}</text>
+                </g>}
+              </g>;
+            })}
+          </g>;
+        })}
+      </g>
+      {data.board.locations.map(location => {
+        const position = positions.get(location.id);
+        if (!position) return null;
+        const displayName = location.name;
+        const captionWidth = Math.min(154, Math.max(110, displayName.length * 5.6));
+        const captionX = Math.max(4, Math.min(BOARD_WIDTH - captionWidth - 4, position.x - captionWidth / 2));
+        return <foreignObject key={location.id} data-caption-for={location.id} x={captionX} y={position.y + 20} width={captionWidth} height="42" className="game-board-caption" aria-hidden="true">
+          <span className={`h-node-name${location.kind === 'circle' ? ' portal-caption' : ''}`}>{displayName}</span>
+        </foreignObject>;
       })}
     </svg>
     <div className="h-map-key game-board-key" aria-label="Board key">
@@ -141,6 +183,7 @@ export function GameBoard({ data, game, moving, locked, onMove, buttonRefs, onIn
       <span><i className="key-circle" /> Teleport network</span>
       <span><i className="key-current" /> Your Hero</span>
       <span><i className="key-reachable" /> Move destination</span>
+      {recentLocations.length > 0 && <span><i className="key-recent" /> Changed this action</span>}
       {wizardDestination && <span><i className="key-wizard-destination" /> Wizard destination</span>}
       <span><i className="piece piece-hero"><PieceArtwork kind="hero" /></i> Hero</span>
       <span><i className="piece piece-beholder"><PieceArtwork kind="beholder" /></i> Beholder</span>

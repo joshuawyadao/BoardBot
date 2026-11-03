@@ -339,7 +339,7 @@
 .h-workspace-table .app-header .h-workspace-heading .hero span { max-width: 185px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .h-workspace-table .app-header .h-workspace-heading .h-status { flex-wrap: wrap; gap: 4px 12px; font-size: 10px; }
 .h-workspace-table .app-header .header-tools { flex: none; }
-.h-workspace-table .h-workspace { grid-template-rows: auto minmax(0, 1fr) auto; }
+.h-workspace-table .h-workspace { grid-template-rows: auto auto minmax(0, 1fr) auto; }
 .h-workspace-table .notice { margin: 3px 0; padding: 0 9px; }
 .h-workspace-table .save-status .quiet-button { min-height: 22px; padding: 2px 8px; }
 .h-workspace-table .h-tray .action-help { height: auto; min-height: 20px; max-height: 40px; padding-top: 4px; display: flex; flex-wrap: wrap; align-content: flex-start; align-items: baseline; gap: 0 6px; overflow-y: auto; }

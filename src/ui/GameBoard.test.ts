@@ -22,22 +22,26 @@ describe('game board pieces', () => {
     }));
     const locationButton = html.match(/<button[^>]*aria-label="Room 2\.[\s\S]*?<\/button>/)?.[0];
 
+    const cluster = html.slice(html.indexOf('data-pieces-for="b"'), html.indexOf('data-caption-for'));
     expect(locationButton).toBeDefined();
+    expect(cluster).toBeDefined();
     expect(locationButton).toContain('aria-label="Room 2. Test Hero, Beholder, Displacer Beast, 2 Items, 1 Citizen, Unrevealed Lair. Board markers 2 ×2"');
     expect(locationButton).toContain('Test Hero, Beholder, Displacer Beast, 2 Items, 1 Citizen');
     for (const kind of ['hero', 'beholder', 'displacer', 'item', 'citizen', 'lair']) {
-      expect(locationButton).toContain(`class="piece piece-${kind}`);
-      expect(locationButton).toContain(`tabletop-art--${kind}`);
+      expect(cluster).toContain(`class="piece piece-${kind}`);
+      expect(cluster).toContain(`tabletop-art--${kind}`);
     }
-    expect(locationButton).toContain('data-count="2"');
-    expect(locationButton).toContain('×2');
-    expect(locationButton).toContain('aria-hidden="true"');
+    expect(cluster).toContain('class="board-piece-count"');
+    expect(cluster).toContain('×2');
+    expect(cluster).toContain('aria-hidden="true"');
     expect(html).toContain(`data-caption-for="${location}"`);
     expect(html).toContain('>Room 2</span>');
     expect(locationButton).toContain('Unrevealed Lair');
     expect(html).not.toContain('hidden-face-must-not-leak');
     expect(html).toContain('Beholder');
     expect(html).toContain('Displacer');
+    expect(locationButton).not.toContain('class="piece');
+    expect(html).toContain('game-board-piece-layer');
   });
 
   it('includes passage, floor, selection and quantity markers in visible order without revealing hidden Lairs', async () => {
@@ -62,6 +66,20 @@ describe('game board pieces', () => {
     expect(button).toContain('Board markers A 2 ✓ ×2 ×2"');
     expect(button).toContain('2 Items, 2 Citizens, Unrevealed Lair');
     expect(button).toContain('Selected destination, awaiting confirmation');
+  });
+
+  it('marks only public changed locations and keeps the highlight separate from legal Move targets', async () => {
+    const data = fighterFixture();
+    const state = await createFighterGame(data, 9);
+    const html = renderToStaticMarkup(createElement(GameBoard, {
+      data, game: getFighterView(data, state), moving: false, locked: false,
+      onMove: () => {}, buttonRefs: { current: new Map() }, recentLocations: ['b'],
+    }));
+    const b = html.match(/<g><ellipse class="game-board-floor[^"]*recent-event[^"]*"[^>]*>[\s\S]*?data-location-id="b"[\s\S]*?<\/g>/)?.[0];
+    expect(b).toBeUndefined();
+    expect(html).toContain('class="game-board-floor recent-event game-board-recent-ring"');
+    expect(html).toContain('Changed this action');
+    expect(html).not.toContain('hidden-face-must-not-leak');
   });
 
   it('marks a pending Wizard Monster destination without making it a Move target', async () => {

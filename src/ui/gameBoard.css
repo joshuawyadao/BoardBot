@@ -43,14 +43,8 @@
 .game-board-caption .portal-caption { background: #eee0f2; border-color: #765291; color: #3b2450; }
 .game-board-number { position: static; grid-area: 1 / 1; align-self: start; justify-self: start; display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; margin-right: 3px; border: 1px solid #b39360; border-radius: 50%; background: #293235; color: #ffe6b8; font: 700 15px/1 Georgia, serif; text-shadow: none; box-shadow: inset 0 0 2px #e8cb97; }
 .game-board-passage-badge { position: static; grid-area: 1 / 3; align-self: start; justify-self: end; min-width: 15px; height: 16px; padding: 0 2px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #ffeeaa; border-radius: 5px 5px 2px 2px; background: #a56920; color: #fff2cd; font: 800 11px/1 Georgia, serif; box-shadow: 0 1px 3px #302010; }
-.game-board-pieces { grid-area: 1 / 1 / 2 / 4; display: flex; flex: none; align-items: flex-end; justify-content: center; gap: 0; height: 42px; width: 100%; max-width: 100%; }
-.game-board-pieces:empty { display: none; }
-.h-game-board .piece { box-sizing: border-box; position: static; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); align-items: center; justify-content: center; flex: 0 1 32px; min-width: 0; width: 32px; height: 42px; padding: 0; border: 0; background: none; font-style: normal; }
-.game-board-pieces .piece:only-child { flex-basis: 40px; width: 40px; }
-.game-board-pieces .piece-item, .game-board-pieces .piece-lair { height: 31px; }
-/* WebKit paints filtered nested SVG outside its foreignObject floor. */
-.game-board-pieces .tabletop-art { grid-area: 1 / 1; filter: none; }
-.piece-count { position: static; grid-area: 1 / 1; align-self: end; justify-self: end; min-width: 16px; padding: 1px 2px; border: 1px solid #806644; border-radius: 4px; background: #fff0cd; color: #302820; font: 800 12px/1 system-ui, sans-serif; }
+/* Piece artwork is drawn in a separate native SVG layer below the captions. */
+.h-game-board .piece { box-sizing: border-box; pointer-events: none; }
 .h-game-board .game-board-floor.choice-available { stroke: #c3d5e4; stroke-width: 2; stroke-dasharray: 4 4; }
 .h-game-board .game-board-floor.choice-selected { stroke: #75c8ff; stroke-width: 5; stroke-dasharray: none; fill: #23579b; fill-opacity: .22; }
 .h-game-board .game-board-floor.inspected { stroke: #ffcf78; stroke-width: 3; }
@@ -68,3 +62,11 @@
 @media (max-width: 600px) { .game-board-key.h-map-key { font-size: 9px; gap: 2px 9px; } }
 
 .game-board-key .piece { width: 18px; height: 21px; }
+/* Native SVG pieces sit on the board painting and cannot intercept floor buttons. */
+.game-board-piece-layer, .game-board-piece-cluster, .game-board-piece-cluster * { pointer-events: none; }
+.h-game-board .game-board-piece-cluster .piece { display: block; overflow: visible; width: 52px; height: 74px; min-width: 0; padding: 0; background: none; border: 0; }
+.game-board-piece-cluster .tabletop-art { filter: none; }
+.board-piece-count rect { fill: #ffedb9; stroke: #413a2e; stroke-width: 2; }
+.board-piece-count text { fill: #302820; font: 900 19px/1 system-ui, sans-serif; }
+.h-game-board .game-board-floor.game-board-recent-ring { fill: none; stroke: #fff0a8; stroke-width: 4; stroke-dasharray: 4 3; pointer-events: none; }
+.game-board-key .key-recent { width: 11px; height: 11px; border: 3px solid #fff0a8; border-radius: 50%; background: #b87832; }

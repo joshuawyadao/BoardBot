@@ -6,6 +6,8 @@ import type { HeroAction } from '../engine/horrifiedRuntime';
 import { ActionTray } from './ActionTray';
 import { SessionLog } from './SessionLog';
 import { GameBoard } from './GameBoard';
+import { ActionFeedback } from './ActionUpdate';
+import { actionOutcomeSummary, changedBoardLocations } from './actionFeedback';
 import { RollResult, SpecialActionGuide } from './RollResult';
 import { AttackPanel, DecksPanel, LocationInspector, LocationsPanel } from './TabletopPanels';
 import { ItemArtwork, PieceArtwork } from './TabletopPieces';
@@ -125,6 +127,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
   const [setupOpen, setSetupOpen] = useState(game.revision === 0);
   const [choiceFocus, setChoiceFocus] = useState(0);
   const [feedbackStart, setFeedbackStart] = useState<number | null>(null);
+  const [feedbackBaseline, setFeedbackBaseline] = useState<{ view: GameView; action: HeroAction['kind'] } | null>(null);
   const mapButtons = useRef(new Map<string, HTMLButtonElement>());
   const locationName = (id: string | null | undefined) => data.board.locations.find(location => location.id === id)?.name ?? 'off board';
   const itemName = (id: string) => game.visibleItems[id]?.name ?? 'Unknown Item';
@@ -175,6 +178,7 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
     actionFocus.current = { revision: game.revision, kind: action.kind, initiator: document.activeElement,
       ...(action.kind === 'move' ? { destination: action.destination } : {}) };
     setFeedbackStart(game.entries.length);
+    setFeedbackBaseline({ view: game, action: action.kind });
     onAction(action);
     setSelected(null);
     if (action.kind !== 'move' && action.kind !== 'end-phase') showPanel('result');
@@ -246,6 +250,9 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
   const recentStart = feedbackStart ?? Math.max(0, game.entries.length - 8);
   const recentEvents = game.entries.slice(recentStart);
   const awaitingSavedResult = busy && feedbackStart === game.entries.length;
+  const hasCommittedFeedback = !!feedbackBaseline && game.revision > feedbackBaseline.view.revision;
+  const changedLocations = hasCommittedFeedback ? changedBoardLocations(feedbackBaseline.view, game) : [];
+  const updateEvents = hasCommittedFeedback ? game.entries.slice(feedbackBaseline.view.entries.length) : game.entries.slice(game.revision === 0 ? -1 : -8);
   function showPanel(next: InfoPanel, toggleOpen = false) {
     setPanels(current => {
       if (current.open.includes(next)) return toggleOpen ? { ...current, open: current.open.filter(id => id !== next) } : current;
@@ -367,8 +374,13 @@ export function FighterTable({ data, game, onAction, reasonFor, busy, error, onR
         </nav>
         {(game.currentRoll || game.rolls.length > 0) && <div className="h-roll-peek"><RollResult data={data} game={game} compact /></div>}
         </div>
+        <ActionFeedback revision={game.revision} events={updateEvents}
+          action={hasCommittedFeedback ? feedbackBaseline.action : undefined}
+          summary={hasCommittedFeedback ? actionOutcomeSummary(data, feedbackBaseline.view, game, feedbackBaseline.action) : undefined}
+          saving={awaitingSavedResult} pendingTitle={pending?.title} changedCount={changedLocations.length}
+          onDetails={opener => { panelOpeners.current.set('result', opener); if (!pending) { if (panels.open.includes('result')) resultHeadingRef.current?.focus(); else focusResultAfterChoice.current = true; } showPanel('result'); }} />
         <div className="h-play-area">
-          <div className="h-board-fit"><GameBoard data={data} game={game} moving={selected === 'move' && !pending} locked={busy || terminal} onMove={destination => commit(moveAction(destination))} buttonRefs={mapButtons}
+          <div className="h-board-fit"><GameBoard data={data} game={game} moving={selected === 'move' && !pending} locked={busy || terminal} onMove={destination => commit(moveAction(destination))} buttonRefs={mapButtons} recentLocations={changedLocations}
             onInspect={(id: string) => inspectLocation(id, mapButtons.current.get(id))} inspectedLocation={inspectedLocation}
             choiceDestinations={pending?.kind === 'wizard-hero-destination' ? pending.options.map(option => option.id) : []}
             chosenDestination={pending?.kind === 'wizard-hero-destination' ? pendingSelected[0] ?? null : null}

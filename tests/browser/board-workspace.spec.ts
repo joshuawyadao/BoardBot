@@ -185,7 +185,8 @@ for (const [at, label] of [
   data.items.forEach(item => { item.locations = Array.from({ length: item.quantity }, () => at); });
   await load(page, data);
   const floor = page.locator(`[data-location-id="${at}"]`);
-  await expect(floor.locator('.piece')).toHaveCount(5); // Hero, both Monsters, 12 Items and unrevealed Lair
+  const cluster = page.locator(`[data-pieces-for="${at}"]`);
+  await expect(cluster.locator('.piece')).toHaveCount(5); // Hero, both Monsters, 12 Items and unrevealed Lair
   await expect(floor).toHaveAttribute('aria-label', /Beholder, Displacer Beast, 12 Items.*Unrevealed Lair/);
   for (const viewport of [{ width: 1440, height: 900 }, { width: 1024, height: 768 }]) {
     await page.setViewportSize(viewport);
@@ -194,17 +195,25 @@ for (const [at, label] of [
     await expect(name).toHaveText(label);
     const nameBounds = (await name.boundingBox())!;
     const boardBounds = (await page.locator('.game-board-svg').boundingBox())!;
+    const itemBox = (await cluster.locator('.piece-item').boundingBox())!;
+    const countBox = (await cluster.locator('.board-piece-count').boundingBox())!;
+    // A physical badge may overhang its piece, but must stay attached at its base.
+    expect(countBox.x).toBeGreaterThanOrEqual(itemBox.x - itemBox.width * .35);
+    expect(countBox.x + countBox.width).toBeLessThanOrEqual(itemBox.x + itemBox.width * 1.35);
+    expect(countBox.y + countBox.height).toBeGreaterThan(itemBox.y + itemBox.height * .5);
+    expect(countBox.y).toBeLessThan(itemBox.y + itemBox.height * 1.35);
     expect(nameBounds.y, 'caption sits on the lower rim outside the pieces').toBeGreaterThan(bounds.y + bounds.height / 2);
     expect(nameBounds.x).toBeGreaterThanOrEqual(boardBounds.x);
     expect(nameBounds.x + nameBounds.width).toBeLessThanOrEqual(boardBounds.x + boardBounds.width);
     expect(nameBounds.y + nameBounds.height).toBeLessThanOrEqual(boardBounds.y + boardBounds.height);
-    for (const piece of await floor.locator('.piece').all()) {
+    for (const piece of await cluster.locator('.piece').all()) {
       await expect(piece).toBeVisible();
       const box = (await piece.boundingBox())!;
-      expect(box.x).toBeGreaterThanOrEqual(bounds.x - 1);
-      expect(box.y).toBeGreaterThanOrEqual(bounds.y - 1);
-      expect(box.x + box.width).toBeLessThanOrEqual(bounds.x + bounds.width + 1);
-      expect(box.y + box.height).toBeLessThanOrEqual(bounds.y + bounds.height + 1);
+      expect(box.x).toBeGreaterThanOrEqual(boardBounds.x - 1);
+      expect(box.y).toBeGreaterThanOrEqual(boardBounds.y - 1);
+      expect(box.x + box.width).toBeLessThanOrEqual(boardBounds.x + boardBounds.width + 1);
+      expect(box.y + box.height).toBeLessThanOrEqual(boardBounds.y + boardBounds.height + 1);
+      expect(box.y, "pieces rise above the floor").toBeLessThan(bounds.y + bounds.height / 2);
     }
   }
 });
@@ -353,11 +362,11 @@ test('new games visibly contain setup pieces before the first action', async ({ 
   await expect(setup).toContainText('12 Items');
   await expect(setup).toContainText('Beholder');
   await expect(setup).toContainText('Displacer Beast');
-  await expect(page.locator('.h-location .piece-beholder')).toHaveCount(1);
-  await expect(page.locator('.h-location .piece-displacer')).toHaveCount(1);
-  await expect(page.locator('.h-location .piece-hero')).toHaveCount(1);
-  await expect(page.locator('.h-location .piece-lair')).toHaveCount(data.board.lairLocations.length);
-  const items = await page.locator('.h-location .piece-item').allTextContents();
+  await expect(page.locator('.game-board-piece-layer .piece-beholder')).toHaveCount(1);
+  await expect(page.locator('.game-board-piece-layer .piece-displacer')).toHaveCount(1);
+  await expect(page.locator('.game-board-piece-layer .piece-hero')).toHaveCount(1);
+  await expect(page.locator('.game-board-piece-layer .piece-lair')).toHaveCount(data.board.lairLocations.length);
+  const items = await page.locator('.game-board-piece-cluster:has(.piece-item) .board-piece-count').allTextContents();
   expect(items.reduce((sum, text) => sum + Number(text.slice(1)), 0)).toBe(12);
   const revisionBefore = (await readSavedState(page)).revision;
   expect(revisionBefore).toBe(0);
@@ -393,7 +402,7 @@ test('Wizard destination 17 explains relocating a Monster already on the board a
   await expect(page.getByRole('button', { name: 'Confirm choice', exact: true })).toBeInViewport();
   await page.getByRole('button', { name: 'Confirm choice', exact: true }).click();
   await expect(page.getByRole('button', { name: /^Test room 17\. Displacer Beast/ })).toBeVisible();
-  await expect(page.locator('.h-location .piece-displacer')).toHaveCount(1);
+  await expect(page.locator('.game-board-piece-layer .piece-displacer')).toHaveCount(1);
 });
 
 test('inspection preserves a Pick Up draft, shows Strength, and restores keyboard focus', async ({ page }) => {
@@ -610,7 +619,7 @@ test.describe('touch-sized tabletop controls', () => {
   });
 });
 
-test('every illustrated location keeps its named caption and physical pieces inside the compact map', async ({ page }) => {
+test('every illustrated location keeps its caption and raised pieces on the compact map', async ({ page }) => {
   const data = illustratedFixture();
   await load(page, data);
   await expect(page.locator('.game-board-caption')).toHaveCount(29);
@@ -626,7 +635,7 @@ test('every illustrated location keeps its named caption and physical pieces ins
         floors: Array.from(board.querySelectorAll<HTMLElement>('.h-location'), floor => {
           const caption = board.querySelector(`[data-caption-for="${floor.dataset.locationId}"] .h-node-name`)!;
           return { id: floor.dataset.locationId, name: caption.textContent, aria: floor.getAttribute('aria-label'),
-            floor: rect(floor), caption: rect(caption), pieces: Array.from(floor.querySelectorAll('.piece'), rect) };
+            floor: rect(floor), caption: rect(caption), pieces: Array.from(board.querySelectorAll(`[data-pieces-for="${floor.dataset.locationId}"] .piece`), rect) };
         }),
       };
     });
@@ -641,10 +650,10 @@ test('every illustrated location keeps its named caption and physical pieces ins
       expect(entry.caption.x + entry.caption.width).toBeLessThanOrEqual(measurements.board.x + measurements.board.width + 1);
       expect(entry.caption.y + entry.caption.height).toBeLessThanOrEqual(measurements.board.y + measurements.board.height + 1);
       for (const piece of entry.pieces) {
-        expect(piece.x).toBeGreaterThanOrEqual(entry.floor.x - 1);
-        expect(piece.y).toBeGreaterThanOrEqual(entry.floor.y - 1);
-        expect(piece.x + piece.width).toBeLessThanOrEqual(entry.floor.x + entry.floor.width + 1);
-        expect(piece.y + piece.height).toBeLessThanOrEqual(entry.floor.y + entry.floor.height + 1);
+        expect(piece.x).toBeGreaterThanOrEqual(measurements.board.x - 1);
+        expect(piece.y).toBeGreaterThanOrEqual(measurements.board.y - 1);
+        expect(piece.x + piece.width).toBeLessThanOrEqual(measurements.board.x + measurements.board.width + 1);
+        expect(piece.y + piece.height).toBeLessThanOrEqual(measurements.board.y + measurements.board.height + 1);
       }
     }
     expect(measurements.floors.some(floor => floor.pieces.length > 1), 'setup shows clustered physical pieces').toBe(true);
