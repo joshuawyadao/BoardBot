@@ -102,7 +102,7 @@ export function GameBoard({ data, game, moving, locked, onMove, buttonRefs, onIn
         ].filter(Boolean) as string[];
         const displayName = location.name;
         const passageLabels = passages.get(location.id)?.join('/');
-        // Speech input needs the visible badge text in the same order as the button's contents.
+        // Keep visible passage, nameplate and quantity markers in the floor control's accessible name.
         const markers = [passageLabels, location.number, isChosen ? '✓' : null,
           itemCount ? `×${itemCount}` : null, citizens > 1 ? `×${citizens}` : null,
         ].filter(Boolean).join(' ');
@@ -118,14 +118,13 @@ export function GameBoard({ data, game, moving, locked, onMove, buttonRefs, onIn
             aria-label={title} aria-disabled={!canMove && !canChoose && !onInspect} title={title}
             onClick={() => { if (canChoose) onChooseDestination?.(location.id); else if (canMove) onMove(location.id); else onInspect?.(location.id); }}>
             {passageLabels && <span className="game-board-passage-badge" aria-hidden="true">{passageLabels}{' '}</span>}
-            {location.number ? <b className="game-board-number" aria-hidden="true">{location.number}{' '}</b> : null}
             {isChosen && <span className="game-board-selected" aria-hidden="true">✓{' '}</span>}
           </button>
           </foreignObject>
         </g>;
       })}
       <g className="game-board-piece-layer" aria-hidden="true">
-        {data.board.locations.map(location => {
+        {[...data.board.locations].sort((a, b) => (positions.get(a.id)?.y ?? 0) - (positions.get(b.id)?.y ?? 0)).map(location => {
           const position = positions.get(location.id);
           if (!position) return null;
           const itemCount = game.boardItems[location.id]?.length ?? 0;
@@ -140,26 +139,33 @@ export function GameBoard({ data, game, moving, locked, onMove, buttonRefs, onIn
             !!lair && { kind: 'lair', revealed: lair.revealed },
           ] .filter(Boolean) as { kind: string; variant?: string; count?: number; revealed?: boolean }[];
           if (!pieces.length) return null;
-          const pieceWidth = 52;
+          const slotWidth = 88;
           const columns = Math.min(3, pieces.length);
           const rows = Math.ceil(pieces.length / columns);
-          const width = columns * pieceWidth;
+          const width = columns * slotWidth;
           const left = Math.max(2, Math.min(BOARD_WIDTH - width - 2, position.x - width / 2));
-          const top = Math.max(2, position.y - 70 - (rows - 1) * 26);
+          const baseY = Math.min(BOARD_HEIGHT - 4, position.y + 12);
+          const rowStep = rows > 1 ? Math.min(30, Math.max(0, baseY - 120) / (rows - 1)) : 0;
           return <g key={location.id} data-pieces-for={location.id} className="game-board-piece-cluster" aria-hidden="true">
             {pieces.map((piece, index) => {
               const row = Math.floor(index / columns);
               const rowSize = Math.min(columns, pieces.length - row * columns);
-              const x = left + (columns - rowSize) * pieceWidth / 2 + (index % columns) * pieceWidth;
-              const y = top + row * 26 + (piece.kind === 'item' || piece.kind === 'lair' ? 10 : 0);
               const kind = piece.kind as 'hero' | 'beholder' | 'displacer' | 'item' | 'citizen' | 'lair';
+              const isToken = kind === 'item' || kind === 'lair';
+              const pieceWidth = isToken ? 68 : kind === 'hero' || kind === 'citizen' ? 80 : 88;
+              const pieceHeight = isToken ? 82 : 118;
+              const x = left + (columns - rowSize) * slotWidth / 2 + (index % columns) * slotWidth + (slotWidth - pieceWidth) / 2;
+              const y = Math.max(2, baseY - (rows - row - 1) * rowStep - pieceHeight);
+              const badgeWidth = Math.max(32, String(piece.count ?? '').length * 12 + 18);
+              const badgeX = Math.min(BOARD_WIDTH - badgeWidth - 3, x + pieceWidth - 18);
+              const badgeY = y + pieceHeight - 35;
               return <g key={kind}>
-                <svg className={`piece piece-${kind}`} x={x} y={y} width={pieceWidth} height={74} viewBox="0 0 100 110">
+                <svg className={`piece piece-${kind}`} x={x} y={y} width={pieceWidth} height={pieceHeight} preserveAspectRatio="xMidYMax meet" viewBox="0 0 100 110">
                   <PieceArtwork kind={kind} variant={piece.variant} revealed={piece.revealed} />
                 </svg>
                 {piece.count && (kind === 'item' || piece.count > 1) && <g className="board-piece-count">
-                  <rect x={x + 11} y={y + 44} width="24" height="18" rx="7" />
-                  <text x={x + 23} y={y + 57} textAnchor="middle">×{piece.count}</text>
+                  <rect x={badgeX} y={badgeY} width={badgeWidth} height="24" rx="8" />
+                  <text x={badgeX + badgeWidth / 2} y={badgeY + 18} textAnchor="middle">×{piece.count}</text>
                 </g>}
               </g>;
             })}
@@ -170,10 +176,13 @@ export function GameBoard({ data, game, moving, locked, onMove, buttonRefs, onIn
         const position = positions.get(location.id);
         if (!position) return null;
         const displayName = location.name;
-        const captionWidth = Math.min(154, Math.max(110, displayName.length * 5.6));
+        const captionWidth = Math.min(170, Math.max(130, displayName.length * 6 + (location.number ? 38 : 0)));
         const captionX = Math.max(4, Math.min(BOARD_WIDTH - captionWidth - 4, position.x - captionWidth / 2));
-        return <foreignObject key={location.id} data-caption-for={location.id} x={captionX} y={position.y + 20} width={captionWidth} height="42" className="game-board-caption" aria-hidden="true">
-          <span className={`h-node-name${location.kind === 'circle' ? ' portal-caption' : ''}`}>{displayName}</span>
+        return <foreignObject key={location.id} data-caption-for={location.id} x={captionX} y={position.y + 20} width={captionWidth} height="54" className="game-board-caption" aria-hidden="true">
+          <span className={`game-board-nameplate${location.kind === 'circle' ? ' portal-caption' : ''}`}>
+            {location.number ? <b className="game-board-caption-number">{location.number}</b> : null}
+            <span className="h-node-name">{displayName}</span>
+          </span>
         </foreignObject>;
       })}
     </svg>

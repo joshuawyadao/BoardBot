@@ -63,7 +63,7 @@ async function expectWholeBoard(page: Page) {
       fits: element.scrollWidth <= element.clientWidth && element.scrollHeight <= element.clientHeight,
       nodes: Array.from(element.querySelectorAll('.h-location'), node => ({
         box: rect(node),
-        markers: Array.from(node.querySelectorAll('.game-board-number, .game-board-passage-badge, .piece-count, .game-board-selected'), rect),
+        markers: Array.from(node.querySelectorAll('.game-board-passage-badge, .piece-count, .game-board-selected'), rect),
       })),
     };
   });
@@ -194,14 +194,22 @@ for (const [at, label] of [
     const name = page.locator(`[data-caption-for="${at}"] .h-node-name`);
     await expect(name).toHaveText(label);
     const nameBounds = (await name.boundingBox())!;
+    const plate = page.locator(`[data-caption-for="${at}"] .game-board-nameplate`);
+    const plateBounds = (await plate.boundingBox())!;
+    const number = plate.locator('.game-board-caption-number');
+    if (at === 'location-2') await expect(number).toHaveText('2');
+    else await expect(number).toHaveCount(0);
     const boardBounds = (await page.locator('.game-board-svg').boundingBox())!;
     const itemBox = (await cluster.locator('.piece-item').boundingBox())!;
     const countBox = (await cluster.locator('.board-piece-count').boundingBox())!;
     // A physical badge may overhang its piece, but must stay attached at its base.
-    expect(countBox.x).toBeGreaterThanOrEqual(itemBox.x - itemBox.width * .35);
-    expect(countBox.x + countBox.width).toBeLessThanOrEqual(itemBox.x + itemBox.width * 1.35);
+    expect(countBox.x + countBox.width / 2, 'counter sits beside the base, clear of the sack body').toBeGreaterThan(itemBox.x + itemBox.width / 2);
+    expect(countBox.x).toBeLessThanOrEqual(itemBox.x + itemBox.width + 3);
+    expect(countBox.x + countBox.width).toBeLessThanOrEqual(boardBounds.x + boardBounds.width);
     expect(countBox.y + countBox.height).toBeGreaterThan(itemBox.y + itemBox.height * .5);
     expect(countBox.y).toBeLessThan(itemBox.y + itemBox.height * 1.35);
+    expect(plateBounds.x).toBeGreaterThanOrEqual(boardBounds.x);
+    expect(plateBounds.x + plateBounds.width).toBeLessThanOrEqual(boardBounds.x + boardBounds.width);
     expect(nameBounds.y, 'caption sits on the lower rim outside the pieces').toBeGreaterThan(bounds.y + bounds.height / 2);
     expect(nameBounds.x).toBeGreaterThanOrEqual(boardBounds.x);
     expect(nameBounds.x + nameBounds.width).toBeLessThanOrEqual(boardBounds.x + boardBounds.width);
@@ -214,6 +222,7 @@ for (const [at, label] of [
       expect(box.x + box.width).toBeLessThanOrEqual(boardBounds.x + boardBounds.width + 1);
       expect(box.y + box.height).toBeLessThanOrEqual(boardBounds.y + boardBounds.height + 1);
       expect(box.y, "pieces rise above the floor").toBeLessThan(bounds.y + bounds.height / 2);
+      expect(box.height, 'physical piece stands visibly taller than its floor').toBeGreaterThan(bounds.height * 1.15);
     }
   }
 });
@@ -623,6 +632,8 @@ test('every illustrated location keeps its caption and raised pieces on the comp
   const data = illustratedFixture();
   await load(page, data);
   await expect(page.locator('.game-board-caption')).toHaveCount(29);
+  await expect(page.locator('.game-board-number')).toHaveCount(0);
+  await expect(page.locator('.game-board-caption-number')).toHaveCount(20);
   for (const viewport of [{ width: 390, height: 844 }, { width: 800, height: 800 }]) {
     await page.setViewportSize(viewport);
     const measurements = await page.locator('.h-game-board.illustrated').evaluate(board => {
@@ -634,8 +645,10 @@ test('every illustrated location keeps its caption and raised pieces on the comp
         board: rect(board.querySelector('.game-board-svg')!),
         floors: Array.from(board.querySelectorAll<HTMLElement>('.h-location'), floor => {
           const caption = board.querySelector(`[data-caption-for="${floor.dataset.locationId}"] .h-node-name`)!;
-          return { id: floor.dataset.locationId, name: caption.textContent, aria: floor.getAttribute('aria-label'),
-            floor: rect(floor), caption: rect(caption), pieces: Array.from(board.querySelectorAll(`[data-pieces-for="${floor.dataset.locationId}"] .piece`), rect) };
+          const plate = board.querySelector(`[data-caption-for="${floor.dataset.locationId}"] .game-board-nameplate`)!;
+          const number = plate.querySelector('.game-board-caption-number');
+          return { id: floor.dataset.locationId, name: caption.textContent, number: number?.textContent ?? null, aria: floor.getAttribute('aria-label'),
+            floor: rect(floor), caption: rect(caption), plate: rect(plate), pieces: Array.from(board.querySelectorAll(`[data-pieces-for="${floor.dataset.locationId}"] .piece`), rect) };
         }),
       };
     });
@@ -643,6 +656,9 @@ test('every illustrated location keeps its caption and raised pieces on the comp
     for (const location of data.board.locations) {
       const entry = measurements.floors.find(floor => floor.id === location.id)!;
       expect(entry.name).toBe(location.name);
+      expect(entry.number).toBe(location.number ? String(location.number) : null);
+      expect(entry.plate.x).toBeGreaterThanOrEqual(measurements.board.x - 1);
+      expect(entry.plate.x + entry.plate.width).toBeLessThanOrEqual(measurements.board.x + measurements.board.width + 1);
       expect(entry.aria).toContain(location.name);
       expect(entry.caption.width).toBeGreaterThan(0);
       expect(entry.caption.y, `${location.name} caption follows its floor`).toBeGreaterThan(entry.floor.y + entry.floor.height / 2);

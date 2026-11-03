@@ -42,6 +42,9 @@ describe('game board pieces', () => {
     expect(html).toContain('Displacer');
     expect(locationButton).not.toContain('class="piece');
     expect(html).toContain('game-board-piece-layer');
+    expect(html).not.toContain('class="game-board-number"');
+    expect(html).toContain('class="game-board-nameplate');
+    expect(html).toContain('class="game-board-caption-number"');
   });
 
   it('includes passage, floor, selection and quantity markers in visible order without revealing hidden Lairs', async () => {
@@ -99,4 +102,23 @@ describe('game board pieces', () => {
     expect(targetButton).toContain('aria-disabled="true"');
     expect(html).toContain('Wizard destination');
   });
+  it('puts floor numbers in nameplates while keeping unnumbered captions plain', async () => {
+    const data = fighterFixture();
+    const state = await createFighterGame(data, 9);
+    const html = renderToStaticMarkup(createElement(GameBoard, {
+      data, game: getFighterView(data, state), moving: false, locked: false,
+      onMove: () => {}, buttonRefs: { current: new Map() },
+    }));
+    expect(html).not.toContain('class="game-board-number"');
+    for (const location of data.board.locations) {
+      const beginning = html.indexOf(`data-caption-for="${location.id}"`);
+      expect(beginning).toBeGreaterThan(-1);
+      const caption = html.slice(beginning, html.indexOf('</foreignObject>', beginning));
+      expect(caption).toContain('game-board-nameplate');
+      expect(caption).toContain(`>${location.name}</span>`);
+      if (location.number) expect(caption).toContain(`class="game-board-caption-number"`);
+      else expect(caption).not.toContain('game-board-caption-number');
+    }
+  });
+
 });

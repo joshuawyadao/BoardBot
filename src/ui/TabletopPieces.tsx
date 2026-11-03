@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import './tabletopPieces.css';
 
 export type PieceKind = 'hero' | 'beholder' | 'displacer' | 'item' | 'citizen' | 'lair' | 'perk';
@@ -8,20 +9,25 @@ type DieProps = { face: number | 'hit' | 'power' | 'blank'; className?: string }
 
 const classes = (base: string, extra?: string) => extra ? `${base} ${extra}` : base;
 
-function Standee({ variant = 'adventurer', citizen = false }: { variant?: string; citizen?: boolean }) {
+function Standee({ variant = 'adventurer', citizen = false, id }: { variant?: string; citizen?: boolean; id: string }) {
   const role = variant.toLowerCase().replace(/^hero-/, '');
   const cloak = citizen ? '#80918e' : ({ fighter: '#a55e47', bard: '#81659a', cleric: '#c4a66d', rogue: '#526c60', wizard: '#546f9b' }[role] ?? '#657d79');
   const trim = citizen ? '#d8bca0' : '#e4ca91';
   return <>
-    <ellipse cx="50" cy="100" rx="34" ry="6" fill="#17232b" opacity=".27" />
-    <path d="M17 94q33-9 66 0v8q-33 9-66 0z" fill={citizen ? '#394955' : '#233e51'} />
-    <ellipse cx="50" cy="94" rx="33" ry="7" fill={citizen ? '#8296a0' : '#557c93'} stroke="#172b38" strokeWidth="2" />
+    <defs><linearGradient id={`${id}-cloak`} x1="0" y1="0" x2="1" y2=".18"><stop stopColor={trim} /><stop offset=".13" stopColor={cloak} /><stop offset=".58" stopColor={cloak} /><stop offset="1" stopColor="#26313a" /></linearGradient></defs>
+    <ellipse cx="53" cy="104" rx="37" ry="4" fill="#101920" opacity=".37" />
+    <path d="M16 91q34-10 68 0v9q-34 10-68 0z" fill={citizen ? `url(#${id}-neutral-side)` : `url(#${id}-blue-side)`} stroke="#14222b" strokeWidth="1.5" />
+    <ellipse cx="50" cy="91" rx="34" ry="8" fill={citizen ? `url(#${id}-neutral-top)` : `url(#${id}-blue-top)`} stroke="#172b38" strokeWidth="2" />
+    <path d="M22 91q27-8 55-1" fill="none" stroke="#e5e7db" strokeWidth="1.7" opacity=".48" />
     <path d="M47 84h6v11h-6z" fill="#ad9172" stroke="#5e5146" strokeWidth="1.5" />
     <path d="M32 82 29 65 35 44 40 35 47 33 54 33 62 37 68 62 66 82 56 87 42 87z" fill="#bba384" stroke="#514d42" strokeWidth="2" strokeLinejoin="round" />
-    <path d="M33 79 36 50 42 40 59 40 65 50 67 79 55 85 43 85z" fill={cloak} stroke="#354148" strokeWidth="2" strokeLinejoin="round" />
+    <path d="M33 79 36 50 42 40 59 40 65 50 67 79 55 85 43 85z" fill={`url(#${id}-cloak)`} stroke="#354148" strokeWidth="2" strokeLinejoin="round" />
+    <path d="M39 47q-3 18-3 29l7 6 4-37z" fill="#fff1cc" opacity=".14" />
+    <path d="M60 42q9 22 7 37l-11 6q8-20 4-43z" fill="#111b25" opacity=".28" />
     <path d="M41 48q9 6 18 0M39 76q10 4 22 0" fill="none" stroke={trim} strokeWidth="2" opacity=".8" />
     <path d="M38 41 34 55 25 63 24 69 30 71 39 62 44 45M62 42 67 55 75 63 76 68 71 70 62 61 57 45" fill={cloak} stroke="#364147" strokeWidth="2" strokeLinejoin="round" />
-    <path d="M43 26q0-11 8-11 9 0 9 11l-2 9q-6 6-14 0z" fill="#d2a77f" stroke="#544741" strokeWidth="2" />
+    <path d="M43 26q0-11 8-11 9 0 9 11l-2 9q-6 6-14 0z" fill={`url(#${id}-skin)`} stroke="#544741" strokeWidth="2" />
+    <path d="M45 29q2 7 6 8" fill="none" stroke="#f7d2a4" strokeWidth="1.6" opacity=".65" />
     <path d="M42 25q1-12 10-13 9 2 9 14l-4-3-4-5-7 6z" fill={citizen ? '#665a4e' : '#3b3e43'} />
     {role === 'fighter' && !citizen && <><path d="M46 13 50 8 54 13 63 17 62 24 39 24 39 17z" fill="#abb7bb" stroke="#46535a" strokeWidth="2" /><path d="M76 38v39M70 47l6-11 6 11" fill="none" stroke="#d8dce0" strokeWidth="3" strokeLinecap="round" /></>}
     {role === 'bard' && !citizen && <><path d="M42 15q12-10 20 1l-4 6H42z" fill="#743f61" /><path d="M76 52q7 2 3 10-2 6-8 4-8-5-5-10 2-6 10-4zM72 52l6-13" fill="#c08d50" stroke="#634a36" strokeWidth="2" /></>}
@@ -32,64 +38,88 @@ function Standee({ variant = 'adventurer', citizen = false }: { variant?: string
   </>;
 }
 
-function Beholder() {
+function Beholder({ id }: { id: string }) {
   return <>
-    <ellipse cx="50" cy="99" rx="33" ry="6" fill="#17232b" opacity=".3" />
-    <path d="M17 94q33-9 66 0v8q-33 9-66 0z" fill="#101a20" />
-    <ellipse cx="50" cy="94" rx="33" ry="7" fill="#3c4246" stroke="#0e171b" strokeWidth="2" />
+    <ellipse cx="53" cy="104" rx="38" ry="4" fill="#101920" opacity=".4" />
+    <path d="M16 91q34-10 68 0v10q-34 10-68 0z" fill={`url(#${id}-monster-side)`} stroke="#0e171b" strokeWidth="1.5" />
+    <ellipse cx="50" cy="91" rx="34" ry="8" fill={`url(#${id}-monster-top)`} stroke="#0e171b" strokeWidth="2" />
+    <path d="M21 91q26-9 56-1" fill="none" stroke="#969b91" strokeWidth="1.7" opacity=".48" />
     <path d="M47 84h6v10h-6z" fill="#242c2b" />
-    <g fill="none" stroke="#792b35" strokeWidth="6" strokeLinecap="round"><path d="M27 42 19 25M37 32 31 13M48 29 49 10M61 31 70 13M71 41 83 27" /></g>
+    <g fill="none" stroke={`url(#${id}-stalk)`} strokeWidth="7" strokeLinecap="round"><path d="M27 42 19 25M37 32 31 13M48 29 49 10M61 31 70 13M71 41 83 27" /></g>
     <g fill="#d6b78d" stroke="#672e32" strokeWidth="2"><ellipse cx="18" cy="24" rx="6" ry="5"/><ellipse cx="30" cy="13" rx="6" ry="5"/><ellipse cx="49" cy="10" rx="6" ry="5"/><ellipse cx="70" cy="13" rx="6" ry="5"/><ellipse cx="83" cy="27" rx="6" ry="5"/></g>
     <g fill="#241c25"><circle cx="19" cy="24" r="2"/><circle cx="31" cy="13" r="2"/><circle cx="49" cy="10" r="2"/><circle cx="69" cy="13" r="2"/><circle cx="82" cy="27" r="2"/></g>
-    <path d="M23 53q0-23 27-25 27 2 28 25-2 28-28 30-25-2-27-30z" fill="#922f39" stroke="#45262c" strokeWidth="3" />
+    <path d="M23 53q0-23 27-25 27 2 28 25-2 28-28 30-25-2-27-30z" fill={`url(#${id}-beholder-body)`} stroke="#45262c" strokeWidth="3" />
+    <path d="M31 40q9-12 22-11" fill="none" stroke="#ffe1bc" strokeWidth="2" opacity=".3" />
     <path d="M28 46q9-17 27-13M30 67q8 11 23 11" fill="none" stroke="#c56b56" strokeWidth="3" opacity=".55" />
-    <ellipse cx="51" cy="52" rx="18" ry="16" fill="#e7d8ad" stroke="#583d3b" strokeWidth="3" />
-    <circle cx="51" cy="52" r="9" fill="#ba7b53" /><circle cx="51" cy="52" r="5" fill="#28242c" /><circle cx="48" cy="49" r="2" fill="#f8edcc" />
+    <ellipse cx="51" cy="52" rx="18" ry="16" fill={`url(#${id}-eye)`} stroke="#583d3b" strokeWidth="3" />
+    <circle cx="51" cy="52" r="9" fill="#ba7b53" /><circle cx="51" cy="52" r="5" fill="#28242c" /><circle cx="47" cy="47" r="3" fill="#fff9db" />
     <path d="M38 69q12 8 26 0l-3 7q-10 6-20 0z" fill="#351f26" /><path d="M44 72v4m7-3v5m7-6v4" stroke="#e3d5b1" strokeWidth="2" />
   </>;
 }
 
-function Displacer() {
+function Displacer({ id }: { id: string }) {
   return <>
-    <ellipse cx="50" cy="99" rx="35" ry="6" fill="#14202b" opacity=".3" />
-    <path d="M15 94q35-9 70 0v8q-35 9-70 0z" fill="#10161c" />
-    <ellipse cx="50" cy="94" rx="35" ry="7" fill="#414347" stroke="#0b1117" strokeWidth="2" />
-    <path d="M23 61Q8 35 16 25t18 18M77 60q18-27 8-36T67 43" fill="none" stroke="#43304d" strokeWidth="7" strokeLinecap="round" />
+    <ellipse cx="53" cy="104" rx="39" ry="4" fill="#101920" opacity=".4" />
+    <path d="M14 91q36-10 72 0v10q-36 10-72 0z" fill={`url(#${id}-monster-side)`} stroke="#0b1117" strokeWidth="1.5" />
+    <ellipse cx="50" cy="91" rx="36" ry="8" fill={`url(#${id}-monster-top)`} stroke="#0b1117" strokeWidth="2" />
+    <path d="M20 91q28-8 61-1" fill="none" stroke="#969b91" strokeWidth="1.7" opacity=".45" />
+    <path d="M23 61Q8 35 16 25t18 18M77 60q18-27 8-36T67 43" fill="none" stroke={`url(#${id}-tentacle)`} strokeWidth="8" strokeLinecap="round" />
     <circle cx="16" cy="25" r="5" fill="#5b4869" /><circle cx="85" cy="24" r="5" fill="#5b4869" />
     <path d="M66 72q22-9 20-27" fill="none" stroke="#3e304a" strokeWidth="8" strokeLinecap="round" />
-    <path d="M29 58Q39 43 61 48L75 59 68 73 61 80 54 67 41 70 33 82 25 80 27 66z" fill="#514064" stroke="#2b293b" strokeWidth="3" strokeLinejoin="round" />
-    <path d="M30 51 29 39 39 47 53 44 66 36 64 54 56 61 38 61z" fill="#594769" stroke="#2b293b" strokeWidth="3" strokeLinejoin="round" />
+    <path d="M29 58Q39 43 61 48L75 59 68 73 61 80 54 67 41 70 33 82 25 80 27 66z" fill={`url(#${id}-displacer-body)`} stroke="#2b293b" strokeWidth="3" strokeLinejoin="round" />
+    <path d="M36 51q18-9 31 6l-2 10q-9-14-29-9z" fill="#a893ae" opacity=".32" />
+    <path d="M30 51 29 39 39 47 53 44 66 36 64 54 56 61 38 61z" fill={`url(#${id}-displacer-head)`} stroke="#2b293b" strokeWidth="3" strokeLinejoin="round" />
     <path d="M34 53q8-4 16-1M40 67q12-6 22 0" fill="none" stroke="#8a7193" strokeWidth="2" opacity=".7" />
     <path d="M33 55h7m13-1h7" stroke="#e1b49d" strokeWidth="3" strokeLinecap="round" /><path d="M44 60l5 5 5-5" fill="#261f2d" />
     <path d="M30 78 25 89 34 90 40 78M60 76l5 13 8-1-3-17" fill="#40334e" stroke="#292838" strokeWidth="2" />
   </>;
 }
 
-function Bag({ perk = false }: { perk?: boolean }) {
+function Bag({ perk = false, id }: { perk?: boolean; id: string }) {
   return <>
-    <ellipse cx="50" cy="94" rx="30" ry="6" fill="#1a2021" opacity=".24" />
-    {perk ? <><path d="M50 13 64 31 83 36 75 56 78 79 50 87 22 79 25 56 17 36 36 31z" fill="#91754d" stroke="#423a30" strokeWidth="3" strokeLinejoin="round" /><path d="M50 22 62 39 72 41 68 56 70 70 50 77 30 70 32 56 28 41 39 39z" fill="#d2b986" stroke="#6d593d" strokeWidth="2" /><path d="M50 37 54 47 64 50 55 56 57 67 50 61 43 67 45 56 36 50 46 47z" fill="#776197" /></> : <><path d="M36 26q14-7 28 0l-4 14q19 20 13 42-18 13-46 0-6-22 13-42z" fill="#8f6441" stroke="#4d3a2d" strokeWidth="3" strokeLinejoin="round" /><path d="M31 72q17 12 40 0M34 58q16 10 32 0" fill="none" stroke="#b88d60" strokeWidth="3" opacity=".55" /><path d="M37 39q13 5 26 0l-2 8q-11 4-22 0z" fill="#6a4936" stroke="#d0aa73" strokeWidth="2" /><path d="M40 28q-7-11 1-16 7-3 11 8 6-9 12-5 6 7-4 14" fill="none" stroke="#6b4a33" strokeWidth="6" strokeLinecap="round" /><path d="M60 42q-3 8 3 17" fill="none" stroke="#d1ae73" strokeWidth="3" strokeLinecap="round" /></>}
+    <ellipse cx="54" cy="99" rx="35" ry="5" fill="#101920" opacity=".3" />
+    {perk ? <><path d="M50 13 64 31 83 36 75 56 78 79 50 87 22 79 25 56 17 36 36 31z" fill={`url(#${id}-bronze-side)`} stroke="#423a30" strokeWidth="3" strokeLinejoin="round" /><path d="M50 22 62 39 72 41 68 56 70 70 50 77 30 70 32 56 28 41 39 39z" fill={`url(#${id}-bronze-top)`} stroke="#e6d4aa" strokeWidth="2" /><path d="M50 37 54 47 64 50 55 56 57 67 50 61 43 67 45 56 36 50 46 47z" fill="#776197" /></> : <><path d="M36 26q14-7 28 0l-4 14q19 20 13 42-18 13-46 0-6-22 13-42z" fill={`url(#${id}-bag)`} stroke="#4d3a2d" strokeWidth="3" strokeLinejoin="round" /><path d="M29 78q18 12 42 1" fill="none" stroke="#eed5a7" strokeWidth="2" opacity=".32" /><path d="M31 72q17 12 40 0M34 58q16 10 32 0" fill="none" stroke="#b88d60" strokeWidth="3" opacity=".55" /><path d="M37 39q13 5 26 0l-2 8q-11 4-22 0z" fill="#6a4936" stroke="#d0aa73" strokeWidth="2" /><path d="M40 28q-7-11 1-16 7-3 11 8 6-9 12-5 6 7-4 14" fill="none" stroke="#6b4a33" strokeWidth="6" strokeLinecap="round" /><path d="M60 42q-3 8 3 17" fill="none" stroke="#d1ae73" strokeWidth="3" strokeLinecap="round" /></>}
   </>;
 }
 
-function Lair({ revealed = false }: { revealed?: boolean }) {
+function Lair({ revealed = false, id }: { revealed?: boolean; id: string }) {
   return <>
-    <path d="M30 11h40l21 21v42L70 95H30L9 74V32z" fill="#4d3c30" stroke="#322b27" strokeWidth="3" />
-    <path d="M31 15h38l18 18v39L69 90H31L13 72V33z" fill={revealed ? '#62534c' : '#b9a37e'} stroke="#e3cfaa" strokeWidth="2" />
+    <ellipse cx="52" cy="101" rx="43" ry="5" fill="#101920" opacity=".31" />
+    <path d="M30 11h40l21 21v43L70 98H30L9 75V32z" fill={`url(#${id}-bronze-side)`} stroke="#322b27" strokeWidth="3" />
+    <path d="M31 15h38l18 18v39L69 90H31L13 72V33z" fill={revealed ? `url(#${id}-monster-top)` : `url(#${id}-bronze-top)`} stroke="#e3cfaa" strokeWidth="2" />
     <path d="M32 22h36l12 12v37L68 83H32L20 71V34z" fill={revealed ? '#3f3c46' : '#9b886d'} stroke={revealed ? '#9d8e82' : '#d8c19a'} strokeWidth="2" />
     {revealed ? <><path d="M26 67 40 44 50 56 62 34 75 69z" fill="#777180" /><path d="M36 70q14-19 28 0z" fill="#181f29" /><path d="M43 60 50 53 57 60" fill="none" stroke="#d5a66c" strokeWidth="2" /><circle cx="50" cy="70" r="2" fill="#d6af76" /></> : <><path d="M50 29 67 43 62 65 50 75 38 65 33 43z" fill="none" stroke="#ddc89d" strokeWidth="3" /><path d="M50 35v35M38 46l12 12 12-12" fill="none" stroke="#ddc89d" strokeWidth="3" strokeLinecap="round" /></>}
   </>;
 }
 
 export function PieceArtwork({ kind, variant, revealed, className }: ArtworkProps) {
+  const id = useId().replace(/:/g, '');
   return <svg className={classes(`tabletop-art tabletop-art--${kind}`, className)} viewBox="0 0 100 110" aria-hidden="true" focusable="false">
-    {kind === 'hero' && <Standee variant={variant} />}
-    {kind === 'citizen' && <Standee citizen />}
-    {kind === 'beholder' && <Beholder />}
-    {kind === 'displacer' && <Displacer />}
-    {kind === 'item' && <Bag />}
-    {kind === 'perk' && <Bag perk />}
-    {kind === 'lair' && <Lair revealed={revealed} />}
+    <defs>
+      <linearGradient id={`${id}-blue-side`} x1="0" y1="0" x2="0" y2="1"><stop stopColor="#426b85" /><stop offset="1" stopColor="#102d42" /></linearGradient>
+      <linearGradient id={`${id}-blue-top`} x1="0" y1="0" x2="1" y2="1"><stop stopColor="#a2d0e2" /><stop offset=".43" stopColor="#598ead" /><stop offset="1" stopColor="#2c5269" /></linearGradient>
+      <linearGradient id={`${id}-neutral-side`} x1="0" y1="0" x2="0" y2="1"><stop stopColor="#65767b" /><stop offset="1" stopColor="#2b3b41" /></linearGradient>
+      <linearGradient id={`${id}-neutral-top`} x1="0" y1="0" x2="1" y2="1"><stop stopColor="#d9e0d8" /><stop offset=".48" stopColor="#9aaaa8" /><stop offset="1" stopColor="#596d73" /></linearGradient>
+      <linearGradient id={`${id}-monster-side`} x1="0" y1="0" x2="0" y2="1"><stop stopColor="#454750" /><stop offset="1" stopColor="#0c1119" /></linearGradient>
+      <linearGradient id={`${id}-monster-top`} x1="0" y1="0" x2="1" y2="1"><stop stopColor="#a6a49f" /><stop offset=".4" stopColor="#53545a" /><stop offset="1" stopColor="#25252d" /></linearGradient>
+      <linearGradient id={`${id}-skin`} x1="0" y1="0" x2="1" y2="1"><stop stopColor="#f3d3a6" /><stop offset=".55" stopColor="#d4a780" /><stop offset="1" stopColor="#7c594c" /></linearGradient>
+      <linearGradient id={`${id}-stalk`} x1="0" y1="0" x2="1" y2="0"><stop stopColor="#dd8263" /><stop offset=".35" stopColor="#943946" /><stop offset="1" stopColor="#4b2534" /></linearGradient>
+      <radialGradient id={`${id}-beholder-body`} cx=".28" cy=".2" r=".83"><stop stopColor="#e29370" /><stop offset=".32" stopColor="#ab4750" /><stop offset=".72" stopColor="#762b3b" /><stop offset="1" stopColor="#301e2b" /></radialGradient>
+      <radialGradient id={`${id}-eye`} cx=".3" cy=".26" r=".85"><stop stopColor="#fff9dc" /><stop offset=".58" stopColor="#e9dbb4" /><stop offset="1" stopColor="#a68f79" /></radialGradient>
+      <linearGradient id={`${id}-tentacle`} x1="0" y1="0" x2="1" y2=".25"><stop stopColor="#9b80a5" /><stop offset=".4" stopColor="#584567" /><stop offset="1" stopColor="#29283c" /></linearGradient>
+      <linearGradient id={`${id}-displacer-body`} x1="0" y1="0" x2=".9" y2="1"><stop stopColor="#a083ad" /><stop offset=".36" stopColor="#665074" /><stop offset="1" stopColor="#29283b" /></linearGradient>
+      <linearGradient id={`${id}-displacer-head`} x1="0" y1="0" x2="1" y2="1"><stop stopColor="#a48baa" /><stop offset=".45" stopColor="#614b70" /><stop offset="1" stopColor="#292638" /></linearGradient>
+      <linearGradient id={`${id}-bag`} x1="0" y1="0" x2="1" y2=".1"><stop stopColor="#d5ad72" /><stop offset=".32" stopColor="#a77549" /><stop offset=".72" stopColor="#855b3d" /><stop offset="1" stopColor="#493b31" /></linearGradient>
+      <linearGradient id={`${id}-bronze-side`} x1="0" y1="0" x2="0" y2="1"><stop stopColor="#a1875e" /><stop offset="1" stopColor="#3f322a" /></linearGradient>
+      <linearGradient id={`${id}-bronze-top`} x1="0" y1="0" x2="1" y2="1"><stop stopColor="#f1dcb0" /><stop offset=".55" stopColor="#bca478" /><stop offset="1" stopColor="#76634c" /></linearGradient>
+    </defs>
+    {kind === 'hero' && <Standee variant={variant} id={id} />}
+    {kind === 'citizen' && <Standee citizen id={id} />}
+    {kind === 'beholder' && <Beholder id={id} />}
+    {kind === 'displacer' && <Displacer id={id} />}
+    {kind === 'item' && <Bag id={id} />}
+    {kind === 'perk' && <Bag perk id={id} />}
+    {kind === 'lair' && <Lair revealed={revealed} id={id} />}
   </svg>;
 }
 

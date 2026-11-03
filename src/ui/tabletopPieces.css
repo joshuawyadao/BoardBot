@@ -9,7 +9,8 @@
   overflow: visible;
   pointer-events: none;
   flex: none;
-  filter: drop-shadow(0 1px 1px rgb(13 22 25 / 30%));
+  /* Each SVG paints its own contact shadow so repeated pieces stay aligned in WebKit. */
+  filter: none;
 }
 
 .tabletop-art--lair,

@@ -39,9 +39,11 @@
 .h-game-board .game-board-node.h-location:focus-visible { outline: 4px solid #fff1b7; outline-offset: -4px; background: #14253bd9 !important; box-shadow: inset 0 0 0 7px #1a3049 !important; }
 /* Live captions follow each floor's lower rim, outside the piece area. */
 .game-board-caption { overflow: visible; pointer-events: none; }
-.game-board-caption .h-node-name { box-sizing: border-box; display: block; padding: 3px 6px; border: 1px solid #886d43; border-radius: 8px 8px 45% 45% / 6px 6px 7px 7px; background: #f2e4c8; color: #302920; text-align: center; font: 700 16px/1.04 Georgia, serif; overflow-wrap: anywhere; box-shadow: 0 2px 3px #10182088; }
+.game-board-nameplate { box-sizing: border-box; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 5px; padding: 3px 6px; border: 1px solid #886d43; border-radius: 8px 8px 45% 45% / 6px 6px 7px 7px; background: #f2e4c8; color: #302920; text-align: center; box-shadow: 0 2px 3px #10182088; }
+.game-board-nameplate:not(:has(.game-board-caption-number)) { grid-template-columns: minmax(0, 1fr); }
+.game-board-caption .h-node-name { min-width: 0; font: 700 16px/1.04 Georgia, serif; overflow-wrap: anywhere; }
+.game-board-caption-number { display: grid; place-items: center; min-width: 22px; min-height: 22px; padding-inline: 1px; border-right: 1px solid #b6a17b; color: #57432b; font: 800 18px/1 Georgia, serif; }
 .game-board-caption .portal-caption { background: #eee0f2; border-color: #765291; color: #3b2450; }
-.game-board-number { position: static; grid-area: 1 / 1; align-self: start; justify-self: start; display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; margin-right: 3px; border: 1px solid #b39360; border-radius: 50%; background: #293235; color: #ffe6b8; font: 700 15px/1 Georgia, serif; text-shadow: none; box-shadow: inset 0 0 2px #e8cb97; }
 .game-board-passage-badge { position: static; grid-area: 1 / 3; align-self: start; justify-self: end; min-width: 15px; height: 16px; padding: 0 2px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #ffeeaa; border-radius: 5px 5px 2px 2px; background: #a56920; color: #fff2cd; font: 800 11px/1 Georgia, serif; box-shadow: 0 1px 3px #302010; }
 /* Piece artwork is drawn in a separate native SVG layer below the captions. */
 .h-game-board .piece { box-sizing: border-box; pointer-events: none; }
@@ -64,9 +66,9 @@
 .game-board-key .piece { width: 18px; height: 21px; }
 /* Native SVG pieces sit on the board painting and cannot intercept floor buttons. */
 .game-board-piece-layer, .game-board-piece-cluster, .game-board-piece-cluster * { pointer-events: none; }
-.h-game-board .game-board-piece-cluster .piece { display: block; overflow: visible; width: 52px; height: 74px; min-width: 0; padding: 0; background: none; border: 0; }
+.h-game-board .game-board-piece-cluster .piece { display: block; overflow: visible; min-width: 0; padding: 0; background: none; border: 0; }
 .game-board-piece-cluster .tabletop-art { filter: none; }
 .board-piece-count rect { fill: #ffedb9; stroke: #413a2e; stroke-width: 2; }
-.board-piece-count text { fill: #302820; font: 900 19px/1 system-ui, sans-serif; }
+.board-piece-count text { fill: #302820; font: 900 21px/1 system-ui, sans-serif; }
 .h-game-board .game-board-floor.game-board-recent-ring { fill: none; stroke: #fff0a8; stroke-width: 4; stroke-dasharray: 4 3; pointer-events: none; }
 .game-board-key .key-recent { width: 11px; height: 11px; border: 3px solid #fff0a8; border-radius: 50%; background: #b87832; }
