@@ -36,7 +36,7 @@ This is not a full-box accessory inventory. No claim is made that every miniatur
 
 ## Private local evidence packet
 
-The working checkout contains an ignored `local-data/horrified-dnd/` packet:
+A checkout with the original evidence restored contains an ignored `local-data/horrified-dnd/` packet:
 
 | File | Purpose |
 | --- | --- |
@@ -51,9 +51,11 @@ A separate ignored `setup-evidence/` directory holds `online-monster-setup.jpg` 
 
 The packet contains legacy absolute and temporary reference paths. Use the packet's own two photo files and source URLs; a legacy path does not imply the file still exists. Not every research image/PDF was archived. The structured confirmations remain available without those transient files.
 
-**Git does not back up this packet.** A fresh clone or another checkout receives the public research notes, not the raw component fields/photos. The original persistent source packet is also retained outside this worktree on the owner's machine. Before removing a worktree, verify that separate copy or preserve the local packet to an owner-controlled backup. Managed worktree snapshots do not preserve needed ignored files automatically.
+**Git does not back up this packet.** A fresh clone or another checkout receives the public research notes, not the raw component fields/photos. The historical setup recorded a separate persistent source packet, but its current location must be verified before relying on it. The durable archive workflow in [Game-Data-Format.md](Game-Data-Format.md) now preserves either the verified original packet or recoverable prepared components/save exports outside worktrees. Before removing a worktree, verify that separate copy or preserve the local packet to an owner-controlled backup. Managed worktree snapshots do not preserve needed ignored files automatically.
 
 To continue in another checkout, copy this private packet into the same ignored directory from an owner-controlled source and compare its manifest hashes and record version. Do not force-add it to Git. If unavailable, stop exact-data work at that dependency; do not fabricate a replacement deck or claim the public coverage table is a complete executable manifest.
+
+A runtime reference recovered from a browser save restores playable components, not the original evidence packet or photos. On November 3, 2026, the original browser origin yielded a resumable Cleric save and its complete embedded components; these were archived privately and restored for local play. The original evidence photos/record remain unlocated. Do not label this runtime recovery as recovery of the full source packet.
 
 ## Publication boundary
 

@@ -26,6 +26,8 @@ Deletion compares the listed version of both save-slot tokens inside one `games`
 
 The earlier `boardbot-local-game` database is copied once into a game named by its Hero, with internal ID `legacy`. Both current and previous records are preserved where recoverable. The old database is retained; future opens never import it again or overwrite newer library progress. Resume still performs complete replay validation before play. An incompatible current save leaves recovery or backup import available.
 
+For durable copies outside worktrees, export a save and run `npm run data:backup -- /path/to/boardbot-save.json`. This retains that export and validates its components in the private store; the app still replays its history on import. `npm run dev:private` restores components into a new checkout before starting the server. See [durable private storage](Game-Data-Format.md#durable-private-storage). New browser progress still requires another explicit export/backup.
+
 These saves are browser records, not automatically written Mac-folder files. Clearing site storage removes the library and cached components. Portable JSON backups remain the way to retain copies outside browser storage.
 
 ## Compatibility and validation

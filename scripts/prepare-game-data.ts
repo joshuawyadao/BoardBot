@@ -29,18 +29,24 @@ export async function verifyPacket(packetDirectory: string): Promise<Uint8Array>
   return recordBytes;
 }
 
+/** Validate and normalize a packet without writing into its source directory. */
+export async function readVerifiedGameData(packetDirectory: string) {
+  const recordBytes = await verifyPacket(packetDirectory);
+  const source = JSON.parse(new TextDecoder().decode(recordBytes)) as unknown;
+  const base = normalizeVerifiedRecord(source, EXPECTED_RECORD_HASH, RULESET_VERSION);
+  const setupDirectory = join(packetDirectory, "setup-evidence");
+  const supplement = JSON.parse(await readFile(join(setupDirectory, "setup-supplement.json"), "utf8")) as unknown;
+  const setupPhoto = await readFile(join(setupDirectory, "online-monster-setup.jpg"));
+  const normalized = attachVerifiedSetup(base, supplement, sha256(setupPhoto));
+  return normalized;
+}
+
 export async function prepareGameData(packetDirectory: string) {
   const safeDirectory = await realpath(packetDirectory);
   const safeRoot = await realpath(localDataRoot);
   if (!safeDirectory.startsWith(`${safeRoot}${sep}`)) throw new Error("Output must stay under ignored local-data");
   const output = join(safeDirectory, "game-data.json");
-  const recordBytes = await verifyPacket(safeDirectory);
-  const source = JSON.parse(new TextDecoder().decode(recordBytes)) as unknown;
-  const base = normalizeVerifiedRecord(source, EXPECTED_RECORD_HASH, RULESET_VERSION);
-  const setupDirectory = join(safeDirectory, "setup-evidence");
-  const supplement = JSON.parse(await readFile(join(setupDirectory, "setup-supplement.json"), "utf8")) as unknown;
-  const setupPhoto = await readFile(join(setupDirectory, "online-monster-setup.jpg"));
-  const normalized = attachVerifiedSetup(base, supplement, sha256(setupPhoto));
+  const normalized = await readVerifiedGameData(safeDirectory);
   const temporary = `${output}.${process.pid}.tmp`;
   try {
     await writeFile(temporary, `${JSON.stringify(normalized, null, 2)}\n`, { flag: "wx", mode: 0o600 });

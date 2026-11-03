@@ -16,7 +16,11 @@
     "test:production": "npm run build && playwright test --config playwright.production.config.ts",
     "test:private": "playwright test --config playwright.prepared.config.ts",
     "verify": "npm run build && npm test && ./scripts/verify-repository.sh",
-    "data:prepare": "node scripts/prepare-game-data.ts"
+    "data:prepare": "node scripts/prepare-game-data.ts",
+    "data:init": "node scripts/private-data.ts init",
+    "data:backup": "node scripts/private-data.ts backup",
+    "data:restore": "node scripts/private-data.ts restore",
+    "dev:private": "node scripts/private-data.ts restore --if-present && npm run dev"
   },
   "dependencies": {
     "react": "19.3.0",

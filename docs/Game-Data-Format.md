@@ -2,6 +2,31 @@
 
 The data preparation tool converts the private, owner-verified component record and separately photographed setup instructions into a versioned JSON reference. The preparation tool itself does not execute effects. The local app loads its output automatically at startup, caches it separately from saved games, and executes the selected solo game after Hero selection. A one-time local file picker remains available when the prepared file is absent. A fresh clone can run the synthetic prototype and public tests without the private packet.
 
+## Durable private storage
+
+Keep the owner's durable copy outside Git and disposable worktrees. The default is `~/Documents/BoardBot Private Data`, with owner-only directories (0700) and files (0600). Set `BOARDBOT_PRIVATE_HOME` to an absolute owner-controlled location to override it. The tools reject a store inside a Git checkout; do not point it at disposable or publicly shared storage. A folder on this Mac protects against worktree deletion, but still needs the owner's normal disk backup for device failure.
+
+```sh
+npm run data:init
+npm run data:backup -- /path/to/horrified-dnd
+npm run data:restore
+npm run dev:private
+```
+
+`data:init` only creates the store; it cannot recover missing content. `data:backup` defaults to this checkout's `local-data/horrified-dnd` when no source is given. A directory source must contain the complete canonical version-6 packet and setup supplement. Only its six known evidence files are archived, after canonical fingerprint/setup verification; prepared components are regenerated from those exact bytes. Other source files are excluded.
+
+A prepared `game-data.json` or exported `boardbot-save.json` can also be supplied to `data:backup`. The tool validates the embedded components and retains a byte-exact copy of a supplied save. It does not replay or certify that save's game history; the app performs replay validation on import. Recovering playable components from a save does not recover the original photos, verification record, or evidence manifest. Keep that distinction when recording provenance.
+
+Archives live at `archives/<sha256>/` with an integrity manifest and a separate `latest.json` pointer. Existing snapshots are retained; new valid backups select the latest snapshot. Malformed inputs and corrupted archives fail without replacing that pointer. The store is private and never served by Vite or committed. The checksums detect accidental damage; they are not encryption or an independent authenticity signature.
+
+`data:restore` verifies the selected archive before copying components and any archived evidence into this checkout's ignored `local-data/horrified-dnd`. It leaves saved-game exports in the archive for explicit import through the app. A matching local copy is accepted; a differing/incomplete existing copy blocks restoration without overwriting it. Back that copy up and move it aside intentionally before restoring. The tools reject symbolic-link inputs and output directories.
+
+Use `npm run dev:private` in a fresh worktree to restore when an archive is available and start the ordinary development server. With no archive it reports the missing copy and still allows browser-cache/manual-import use. Corruption or conflicting local data stops startup for review. `npm run dev` remains available without this restoration step, including for isolated synthetic tests. None of these commands automatically exports future browser autosaves: use **Export backup** and archive the downloaded JSON to preserve later progress outside the browser.
+
+## Recover before re-entering components
+
+First open the original browser profile and exact URL (including host and port). Browser storage at `127.0.0.1:5173` is separate from `127.0.0.1:5174` and `localhost:5173`. Resume an existing adventure and choose **Export backup**, then archive that downloaded file with `data:backup`. The existing save includes its complete components. You do not need to re-enter cards if a valid cache, prepared file, or exported save is recoverable. If every such copy and the evidence packet is unavailable, reconstructing exact components becomes a real dependency; never substitute guessed card data.
+
 ## Prepare the reference
 
 Use Node 26 and restore the ignored packet described in [Game-Data-Checklist.md](Game-Data-Checklist.md). From the repository root, run:
