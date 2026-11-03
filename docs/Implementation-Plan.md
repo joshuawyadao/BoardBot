@@ -12,8 +12,8 @@ Make physical pieces readable above the illustrated map and keep committed actio
 - [x] Add view-only changed-location comparisons and an always-visible event navigator for each committed action; preserve focus, pending decisions, and reduced-motion preferences.
 - [x] Add focused tests for crowded pieces, click-through, hidden information, event stepping, saved-result timing, and responsive layouts.
 - [x] Update README, UI-Design, Architecture, Work-Plan, and Verification with the refined behavior and acceptance limits.
-- [ ] Run focused checks, npm run verify, and npm run test:e2e; inspect the live recovered game without advancing the owner's save.
-- [ ] Commit checkpoints and push the completed feature branch.
+- [x] Run focused checks, npm run verify, and npm run test:e2e; inspect the live recovered game without advancing the owner's save.
+- [x] Commit checkpoints and push the completed feature branch.
 
 ## Open questions
 - None. Keep the current original artwork and use code-native pieces; changed-location hints compare public views only. Give events manual Previous/Next controls, with no timed playback or extra game commands.
@@ -23,7 +23,12 @@ Make physical pieces readable above the illustrated map and keep committed actio
 - Separate native SVG piece layer, larger original standee/miniature/token silhouettes, attached quantity badges and staggered crowded groups. Separate public-change rings preserve legal destination strokes. No map paint, engine, data or save changes.
 - Persistent event review waits for the committed save, explains Move/Pick Up with public outcomes, preserves required choices/focus, and starts at the latest saved event after resume. Event stepping never submits a game command.
 - New unit/browser suites: actionFeedback.test.ts and action-feedback.spec.ts; updated GameBoard.test.ts and board-workspace.spec.ts for raised pieces, count proximity and click-through.
-- Focused feedback browser checks: 14/14 Chromium/WebKit. Final crowded/raised layout checks: 6/6 Chromium/WebKit. All 171 unit tests, build/type checks and 12 repository tests passed via npm run verify. Full browser suite running.
+- Focused feedback browser checks: 14/14 Chromium/WebKit. Final crowded/raised layout checks: 6/6 Chromium/WebKit. All 171 unit tests, build/type checks and 12 repository tests passed via npm run verify. Final full run: 228/228 Chromium and WebKit cases passed. Firefox failed before its first case with the pre-existing local `Could not find profile folder` launch error; `--max-failures=1` left the other 113 Firefox cases unrun. This does not establish Firefox application acceptance.
 - A screenshot caught a foreignObject count-painting offset that geometry checks alone missed. Replaced that counter layer with native SVG; inspected the corrected painting. Live owner save was resumed for inspection only, without submitting a game command.
 
 - Full-suite first pass found a fractionally clipped Confirm choice at enlarged text/short windows. Added response-control scroll margin; the existing strict viewport test and axe checks then passed in both Chromium and WebKit (6/6), without weakening their assertions. Full suite restarted after that correction.
+
+- Updated the older Hero browser assertion to locate the current Hero in its raised SVG cluster instead of requiring it to be inside the native floor button; all ten focused Hero cases passed. The final full run includes this update.
+- Final `npm run verify`: 171/171 unit tests, build/type checks, repository checks and 12 repository tests passed. The final report records the Firefox environment limit rather than claiming the full three-browser command passed.
+- Final native SVG screenshots inspected in Chromium/WebKit using isolated synthetic games; saved in the chat's visualization output outside Git. Private components, owner progress, and generated test artifacts are excluded from commits.
+- Branch `codex/tabletop-ui-refinements` builds on the prior private-data branch. Checkpoints: `1faa415` (plan), `64b70cc` (implementation); final verification/test-selector changes saved separately. No pull request or merge is part of this task.

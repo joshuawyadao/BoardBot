@@ -12,7 +12,8 @@ for (const hero of ['Fighter', 'Bard', 'Cleric', 'Rogue', 'Wizard']) {
     await expect(page.getByText(`Local ${hero} game`)).toBeVisible();
     await page.getByRole('button', { name: /^Inventory/ }).click();
     await expect(page.getByRole('heading', { name: `${hero} inventory` })).toBeVisible();
-    await expect(page.locator('.h-location.current .piece-hero')).toBeVisible();
+    const location = await page.locator('.h-location.current').getAttribute('data-location-id');
+    await expect(page.locator(`[data-pieces-for="${location}"] .piece-hero`)).toBeVisible();
     await page.getByRole('button', { name: 'Special Action Hero ability' }).click();
     await expect(page.getByRole('heading', { name: `${hero} special action` })).toBeVisible();
     await expect(page.getByTestId('special-action-guide').getByRole('row')).toHaveCount(6);
